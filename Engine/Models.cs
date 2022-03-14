@@ -9,7 +9,7 @@ public class GameState
 {
     public Settings? Settings { get; set; }
     public List<Player> Players { get; set; }
-    public List<Card> CenterCards { get; set; }
+    public List<List<Card>> CenterPiles { get; set; }
 }
 
 public class Player
@@ -25,17 +25,15 @@ public class Player
 
 public class Card
 {
-    public Card(int id, Suit suit, int value)
-    {
-        Id = id;
-        Suit = suit;
-        Value = value;
-    }
-
     public int Id { get; set; }
     public Suit Suit { get; set; }
     public int Value { get; set; }
     public Coords? UpdatedCoords { get; set; }
+}
+
+public enum CardPile
+{
+    Hand, Kitty, Topup, Center
 }
 
 public struct Coords

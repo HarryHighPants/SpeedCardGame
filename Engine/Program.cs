@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 
 namespace Engine;
@@ -8,48 +9,101 @@ class Program
 {
     public static void Main(string[] args)
     {
-        const int botSpeedMs = 3000;
+        const int botSpeedMs = 5000;
         var gameState = Engine.NewGame(new List<string>{"Botty the quick", "You"}, null);
         
         Console.WriteLine("Game Created --------");
         Console.WriteLine($"Your opponent is: Botty the quick");
         
         Console.WriteLine($"Ready to start");
-        Console.ReadKey();
+        Console.ReadLine();
 
+        var loops = 0;
         while (Engine.CalculateWinner(gameState) == null)
         {
             // Display the game state
             DrawGameState();
             
             // Ask what card the user would like to play before bot plays
-            Console.WriteLine($"Play card or take from (k)itty");
+            Console.WriteLine($"{loops} Play card or take from (k)itty?");
+            HandleUserInput(ReadlineWithBot());
+            loops++;
+        }
+
+        string? ReadlineWithBot()
+        {
             try {
-                var input = Reader.ReadLine(botSpeedMs);
-                HandleUserInput(input);
+                return Reader.ReadLine(botSpeedMs);
             } catch (TimeoutException) {
                 // Bot tries to play
-                Console.WriteLine("Bot moved");
-                
+                MessageAndWait("Bot moved", 2000);
+                // Ask Bot what it would do with gamestate
+                // Engine.AttemptPlay(card)
+                return null;
             }
         }
         
-        void HandleUserInput(string input)
+        void HandleUserInput(string? input)
         {
-            var parsedInput = Regex.Replace(
-                input, // Our input
-                "[^0-9]", // Select everything that is not in the range of 0-9
-                "");        // Replace that with an empty string.
-            
-            if (input == "k")
+            switch (input)
             {
-                // Try and pickup from kitty
+                case null:
+                    return;
+                case "k":
+                    // Try and pickup from kitty
+                    // todo
+                    break;
+                default: 
+                    SelectCard(input);
+                    break;
+            }
+        }
+
+        void SelectCard(string input)
+        {
+            var inputValue = input.ExtractInt();
+            if (inputValue == null) return;
+            
+            // Find card in hand
+            var card = GetCardWithValue(gameState.Players[1].HandCards, inputValue);
+            if (card == null)
+            {
+                MessageAndWait($"No card with value: {input} found");
+                return;
+            }
+                
+            // Which center pile?
+            Console.WriteLine($"On which pile, 1 or 2?");
+            var pile = ReadlineWithBot()?.ExtractInt();
+            if (pile == null || ((int)pile != 1 && (int)pile != 2))
+            {
+                MessageAndWait($"Invalid pile {pile}");
+                return;
             }
             
-            if (int.TryParse(parsedInput, out int result))
+            // Try to play the card onto the pile
+            var result = Engine.AttemptPlay(gameState, card, (int)pile-1);
+            if (result.errorMessage != null)
             {
-                // Try to play card
+                MessageAndWait(result.errorMessage);
+                return;
             }
+
+            // Update the state with the move
+            gameState = result.updatedGameState;
+            MessageAndWait($"Moved card {CardToString(card)} to pile {pile}");
+        }
+
+        void MessageAndWait(string message, int clearTimeMs = 2000)
+        {
+            Console.WriteLine(message);
+            Console.WriteLine("---");
+            Thread.Sleep(clearTimeMs);
+        }
+
+        Card? GetCardWithValue(List<Card> cards, int? value)
+        {
+            return cards.FirstOrDefault(card => card.Value == value);
         }
         
         void DrawGameState()
@@ -64,7 +118,7 @@ class Program
             // Display the middle two cards
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.Black;
-            Console.WriteLine($"                             {CardsToString(gameState.CenterCards)}      ");
+            Console.WriteLine($"                             {CardToString(gameState.CenterPiles[0].Last())} {CardToString(gameState.CenterPiles[1].Last())}      ");
             Console.ResetColor();
             Console.WriteLine();
             
@@ -74,7 +128,6 @@ class Program
             Console.WriteLine($"{player.Name}:                   {CardsToString(player.HandCards)}     Kitty count: {player.KittyCards.Count}");
             Console.ResetColor();
             Console.WriteLine();
-
         }
 
         string CardsToString(List<Card> cards)
@@ -98,27 +151,4 @@ class Program
             return $"{card.Value}{card.Suit.ToString().ToLower()[0]}";
         }
     }
-
-
-
-
-    // static void getInput() {
-    //
-    //     while (!Console.KeyAvailable) {
-    //         Move();
-    //         updateScreen();
-    //     }
-    //     ConsoleKeyInfo input;
-    //     input = Console.ReadKey();
-    //     doInput(input.KeyChar);
-    // }
-    //
-    // static void checkCell(Cell cell) {
-    //     if (cell.val == "%") {
-    //         eatFood();
-    //     }
-    //     if (cell.visited) {
-    //         Lose();
-    //     }
-    // }
 }

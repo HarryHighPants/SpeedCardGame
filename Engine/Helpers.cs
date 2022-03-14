@@ -1,3 +1,6 @@
+using System.Text.RegularExpressions;
+using static System.Int32;
+
 namespace Engine;
 
 public static class Helpers
@@ -22,5 +25,20 @@ public static class Helpers
             stack.RemoveAt(stack.Count-1);
         }
         return result;
+    }
+
+    public static int? ExtractInt(this string input)
+    {
+        var stripped = Regex.Replace(
+            input, // Our input
+            "[^0-9]", // Select everything that is not in the range of 0-9
+            "");  // Replace that with an empty string.
+        if(TryParse(stripped, out int number))
+        {
+            return number;
+        } else
+        {
+            return null;
+        }
     }
 }

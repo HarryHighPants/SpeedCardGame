@@ -1,7 +1,7 @@
 class Reader {
     private static Thread inputThread;
     private static AutoResetEvent getInput, gotInput;
-    private static string input;
+    private static string? input;
 
     static Reader() {
         getInput = new AutoResetEvent(false);
@@ -20,7 +20,7 @@ class Reader {
     }
 
     // omit the parameter to read a line without a timeout
-    public static string ReadLine(int timeOutMillisecs = Timeout.Infinite) {
+    public static string? ReadLine(int timeOutMillisecs = Timeout.Infinite) {
         getInput.Set();
         bool success = gotInput.WaitOne(timeOutMillisecs);
         if (success)
