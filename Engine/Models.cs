@@ -14,13 +14,12 @@ public class GameState
 
 public class Player
 {
-
     public int Id { get; set; }
     public string Name { get; set; }
     public List<Card> HandCards { get; set; }
     public List<Card> KittyCards { get; set; }
-    
-    public List<Card> TopupCards { get; set; }
+    public List<Card> TopUpCards { get; set; }
+    public bool RequestingTopUp { get; set; }
 }
 
 public class Card
@@ -33,7 +32,10 @@ public class Card
 
 public enum CardPile
 {
-    Hand, Kitty, Topup, Center
+    Hand,
+    Kitty,
+    TopUp,
+    Center
 }
 
 public struct Coords
@@ -44,5 +46,8 @@ public struct Coords
 
 public enum Suit
 {
-    Hearts, Diamonds, Clubs, Spades
+    Hearts,
+    Diamonds,
+    Clubs,
+    Spades
 }

@@ -8,6 +8,8 @@ public static class Program
 {
     private static GameState _gameState;
 
+    public static Random random = new();
+
     public static GameState gameState
     {
         get => _gameState;
@@ -20,7 +22,8 @@ public static class Program
 
     public static void Main(string[] args)
     {
-        const int botSpeedMs = 5000;
+        (int min, int max) botSpeedMs = (500, 5000);
+
         var instructionsTitle = "------ Instructions -----";
         Console.Clear();
         Console.WriteLine(instructionsTitle);
@@ -40,6 +43,7 @@ public static class Program
         Console.WriteLine(instructionsTitle);
         Console.WriteLine("For example to play a 7 onto the 2nd center pile use '7 2'");
         Console.WriteLine("You can also pickup from your kitty by typing 'k'");
+        Console.WriteLine("If you can't make any moves request a top up of the center pile with 't'");
         Console.WriteLine();
         Console.WriteLine("Press any key to continue..");
         Console.ReadKey(true);
@@ -66,16 +70,30 @@ public static class Program
                     return;
                 case "k":
                     // Try and pickup from kitty
-                    (GameState? updatedGameState, string? error, Card? pickedUpCard)
+                    (GameState? updatedGameState, Card? pickedUpCard, string? errorMessage) pickcupKitty
                         = GameEngine.TryPickupFromKitty(gameState, gameState.Players[1]);
-                    if (error != null)
+                    if (pickcupKitty.errorMessage != null)
                     {
-                        UpdateMessage(error);
+                        UpdateMessage(pickcupKitty.errorMessage);
                         return;
                     }
 
-                    gameState = updatedGameState;
-                    UpdateMessage($"picked up a {CliGameUtils.CardToString(pickedUpCard!)}");
+                    gameState = pickcupKitty.updatedGameState!;
+                    UpdateMessage($"picked up a {CliGameUtils.CardToString(pickcupKitty.pickedUpCard!)}");
+                    break;
+                case "t":
+                    (GameState? updatedGameState, bool immediateTopUp, bool readyToTopUp, string? errorMessage)
+                        requestTopUp = GameEngine.TryRequestTopUp(gameState, gameState.Players[1]);
+                    if (requestTopUp.errorMessage != null)
+                    {
+                        UpdateMessage(requestTopUp.errorMessage);
+                        return;
+                    }
+
+                    gameState = requestTopUp.updatedGameState!;
+                    UpdateMessage(requestTopUp.immediateTopUp
+                        ? "topped up the center piles"
+                        : "requested to top up center piles");
                     break;
                 default:
                     SelectCard(input);
@@ -86,7 +104,7 @@ public static class Program
         void SelectCard(string input)
         {
             string[] splitInput = input.Split(new[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries);
-            int? inputCardValue = splitInput[0].ExtractInt();
+            int? inputCardValue = splitInput.Length > 0 ? splitInput[0].ExtractInt() : null;
             if (inputCardValue == null)
             {
                 UpdateMessage(
@@ -113,7 +131,7 @@ public static class Program
 
             // Try to play the card onto the pile
             (GameState? updatedGameState, string? errorMessage) result =
-                GameEngine.AttemptPlay(gameState, card, (int) pile - 1);
+                GameEngine.TryPlayCard(gameState, card, (int) pile - 1);
             if (result.errorMessage != null)
             {
                 UpdateMessage(result.errorMessage);
@@ -135,15 +153,21 @@ public static class Program
         {
             try
             {
-                return Reader.ReadLine(botSpeedMs);
+                return Reader.ReadLine(random.Next(botSpeedMs.min, botSpeedMs.max));
             }
             catch (TimeoutException)
             {
                 // Bot tries to play
-                // todo
-                // UpdateMessage("Bot moved");
-                // Ask Bot what it would do with gamestate
-                // GameEngine.AttemptPlay(card)
+                (GameState? updatedGameState, string? moveMade, string? errorMessage) =
+                    Bot.MakeMove(gameState, gameState.Players[0]);
+                if (updatedGameState == null)
+                {
+                    UpdateMessage($"{errorMessage}");
+                    return null;
+                }
+
+                gameState = updatedGameState;
+                UpdateMessage($"{gameState.Players[0].Name} {moveMade}");
                 return null;
             }
         }
