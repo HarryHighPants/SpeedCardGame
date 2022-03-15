@@ -1,8 +1,6 @@
 using System.Text.RegularExpressions;
 using static System.Int32;
 
-namespace Engine;
-
 public static class Helpers
 {
     private static Random rng = new Random();  
@@ -29,6 +27,11 @@ public static class Helpers
 
     public static int? ExtractInt(this string input)
     {
+        if (string.IsNullOrEmpty(input))
+        {
+            return null;
+        }
+        
         var stripped = Regex.Replace(
             input, // Our input
             "[^0-9]", // Select everything that is not in the range of 0-9

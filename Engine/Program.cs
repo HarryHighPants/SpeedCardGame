@@ -1,59 +1,83 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
-using System.Linq.Expressions;
-using System.Text.RegularExpressions;
+using Engine.CliHelpers;
 
 namespace Engine;
 
-class Program
+public static class Program
 {
+    private static GameState _gameState;
+
+    public static GameState gameState
+    {
+        get => _gameState;
+        set
+        {
+            CliGameUtils.DrawGameState(value);
+            _gameState = value;
+        }
+    }
+
     public static void Main(string[] args)
     {
         const int botSpeedMs = 5000;
-        var gameState = Engine.NewGame(new List<string>{"Botty the quick", "You"}, null);
-        
-        Console.WriteLine("Game Created --------");
-        Console.WriteLine($"Your opponent is: Botty the quick");
-        
-        Console.WriteLine($"Ready to start");
-        Console.ReadLine();
+        var instructionsTitle = "------ Instructions -----";
+        Console.Clear();
+        Console.WriteLine(instructionsTitle);
+        Console.WriteLine("Welcome to the speed card game cli version");
+        Console.WriteLine();
+        Console.WriteLine("Press any key to continue..");
+        Console.ReadKey(true);
+        Console.Clear();
 
-        var loops = 0;
-        while (Engine.CalculateWinner(gameState) == null)
-        {
-            // Display the game state
-            DrawGameState();
-            
-            // Ask what card the user would like to play before bot plays
-            Console.WriteLine($"{loops} Play card or take from (k)itty?");
+        Console.WriteLine(instructionsTitle);
+        Console.WriteLine("To play a card in your hand, enter its value followed by the center pile to play it on..");
+        Console.WriteLine();
+        Console.WriteLine("Press any key to continue..");
+        Console.ReadKey(true);
+        Console.Clear();
+
+        Console.WriteLine(instructionsTitle);
+        Console.WriteLine("For example to play a 7 onto the 2nd center pile use '7 2'");
+        Console.WriteLine("You can also pickup from your kitty by typing 'k'");
+        Console.WriteLine();
+        Console.WriteLine("Press any key to continue..");
+        Console.ReadKey(true);
+        Console.Clear();
+
+        Console.WriteLine("------ Game initialised ------");
+        Console.WriteLine("Your opponent is: Botty the quick");
+        Console.WriteLine();
+        Console.WriteLine("Press any key to start the match!");
+        Console.ReadKey(true);
+
+        gameState = GameEngine.NewGame(new List<string> {"Botty the quick", "You"}, null);
+
+        while (GameEngine.CalculateWinner(gameState) == null)
+            // Ask what the user would like to do
             HandleUserInput(ReadlineWithBot());
-            loops++;
-        }
 
-        string? ReadlineWithBot()
-        {
-            try {
-                return Reader.ReadLine(botSpeedMs);
-            } catch (TimeoutException) {
-                // Bot tries to play
-                MessageAndWait("Bot moved", 2000);
-                // Ask Bot what it would do with gamestate
-                // Engine.AttemptPlay(card)
-                return null;
-            }
-        }
-        
         void HandleUserInput(string? input)
         {
             switch (input)
             {
                 case null:
+                    // UpdateMessage("");
                     return;
                 case "k":
                     // Try and pickup from kitty
-                    // todo
+                    (GameState? updatedGameState, string? error, Card? pickedUpCard)
+                        = GameEngine.TryPickupFromKitty(gameState, gameState.Players[1]);
+                    if (error != null)
+                    {
+                        UpdateMessage(error);
+                        return;
+                    }
+
+                    gameState = updatedGameState;
+                    UpdateMessage($"picked up a {CliGameUtils.CardToString(pickedUpCard!)}");
                     break;
-                default: 
+                default:
                     SelectCard(input);
                     break;
             }
@@ -61,94 +85,67 @@ class Program
 
         void SelectCard(string input)
         {
-            var inputValue = input.ExtractInt();
-            if (inputValue == null) return;
-            
+            string[] splitInput = input.Split(new[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries);
+            int? inputCardValue = splitInput[0].ExtractInt();
+            if (inputCardValue == null)
+            {
+                UpdateMessage(
+                    "Enter a card followed by the pile to play it on e.g '6 1'. To pickup from the kitty enter 'k' ");
+                return;
+            }
+
             // Find card in hand
-            var card = GetCardWithValue(gameState.Players[1].HandCards, inputValue);
+            Card? card = CliGameUtils.GetCardWithValue(gameState.Players[1].HandCards, inputCardValue);
             if (card == null)
             {
-                MessageAndWait($"No card with value: {input} found");
+                UpdateMessage($"No card with value: {input} found");
                 return;
             }
-                
+
             // Which center pile?
-            Console.WriteLine($"On which pile, 1 or 2?");
-            var pile = ReadlineWithBot()?.ExtractInt();
-            if (pile == null || ((int)pile != 1 && (int)pile != 2))
+            // Try and get it as a second param
+            int? pile = splitInput.Length > 1 ? splitInput[1].ExtractInt() : null;
+            if (pile == null || (int) pile != 1 && (int) pile != 2)
             {
-                MessageAndWait($"Invalid pile {pile}");
+                UpdateMessage("Invalid pile, specify it after the card like: '7, 2'");
                 return;
             }
-            
+
             // Try to play the card onto the pile
-            var result = Engine.AttemptPlay(gameState, card, (int)pile-1);
+            (GameState? updatedGameState, string? errorMessage) result =
+                GameEngine.AttemptPlay(gameState, card, (int) pile - 1);
             if (result.errorMessage != null)
             {
-                MessageAndWait(result.errorMessage);
+                UpdateMessage(result.errorMessage);
                 return;
             }
 
             // Update the state with the move
             gameState = result.updatedGameState;
-            MessageAndWait($"Moved card {CardToString(card)} to pile {pile}");
+            UpdateMessage($"Moved card {CliGameUtils.CardToString(card)} to pile {pile}");
         }
 
-        void MessageAndWait(string message, int clearTimeMs = 2000)
+        void UpdateMessage(string message)
         {
+            CliGameUtils.DrawGameState(gameState);
             Console.WriteLine(message);
-            Console.WriteLine("---");
-            Thread.Sleep(clearTimeMs);
         }
 
-        Card? GetCardWithValue(List<Card> cards, int? value)
+        string? ReadlineWithBot()
         {
-            return cards.FirstOrDefault(card => card.Value == value);
-        }
-        
-        void DrawGameState()
-        {
-            Console.Clear();
-            
-            // Display the bots cards
-            var player = gameState.Players[0];
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Console.WriteLine($"{player.Name}:       {CardsToString(player.HandCards)}     Kitty count: {player.KittyCards.Count}");
-            
-            // Display the middle two cards
-            Console.WriteLine();
-            Console.ForegroundColor = ConsoleColor.Black;
-            Console.WriteLine($"                             {CardToString(gameState.CenterPiles[0].Last())} {CardToString(gameState.CenterPiles[1].Last())}      ");
-            Console.ResetColor();
-            Console.WriteLine();
-            
-            // Display the players cards
-            player = gameState.Players[1];
-            Console.ForegroundColor = ConsoleColor.DarkBlue;
-            Console.WriteLine($"{player.Name}:                   {CardsToString(player.HandCards)}     Kitty count: {player.KittyCards.Count}");
-            Console.ResetColor();
-            Console.WriteLine();
-        }
-
-        string CardsToString(List<Card> cards)
-        {
-            string line = "";
-            for (var index = 0; index < cards.Count; index++)
+            try
             {
-                var card = cards[index];
-                line += CardToString(card);
-                if (index < cards.Count)
-                {
-                    line += "  ";
-                }
+                return Reader.ReadLine(botSpeedMs);
             }
-
-            return line;
-        }
-
-        string CardToString(Card card)
-        {
-            return $"{card.Value}{card.Suit.ToString().ToLower()[0]}";
+            catch (TimeoutException)
+            {
+                // Bot tries to play
+                // todo
+                // UpdateMessage("Bot moved");
+                // Ask Bot what it would do with gamestate
+                // GameEngine.AttemptPlay(card)
+                return null;
+            }
         }
     }
 }
