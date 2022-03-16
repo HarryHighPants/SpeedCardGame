@@ -1,3 +1,5 @@
+using Engine.Helpers;
+
 namespace Engine;
 
 public static class GameEngine
@@ -63,36 +65,43 @@ public static class GameEngine
         return gameState;
     }
 
-    public static Player? CalculateWinner(GameState gameState)
+    public static Result<Player> TryGetWinner(GameState gameState)
     {
+        // Check if a player has no cards in their hand or kitty
         foreach (Player player in gameState.Players)
-            // Check if a player has no cards in their hand or kitty
         {
             if (player.HandCards.Count <= 0 && player.KittyCards.Count <= 0)
             {
-                return player;
+                // Return any player that does
+                return new SuccessResult<Player>(player);
             }
         }
 
-        return null;
+        return new ErrorResult<Player>("No winner yet!");
     }
 
-    public static (GameState? updatedGameState, string? errorMessage) TryTopUp(GameState gameState)
+    public static GameResult TryTopUp(IGameState gameState)
     {
-        // Check all players are requesting top up
-        (bool canTopUp, string? errorMessage) = CanTopUp(gameState);
-        if (!canTopUp) return (null, errorMessage);
+        // if (gameState is ErrorGameResult errorResult) return errorResult;
 
-        GameState updatedGameState = TopUp(gameState);
-        return (updatedGameState, null);
+
+        // Check all players are requesting top up
+        // gameState.CanTopUp().TopUp()
+        Result canTopUpResult = CanTopUp(gameState);
+        if (canTopUpResult is ErrorResult errorResult)
+        {
+            return new ErrorGameResult(errorResult.Message);
+        }
+
+        return new SuccessGameResult(TopUp(gameState));
     }
 
-    public static (bool canTopUp, string? errorMessage) CanTopUp(GameState gameState)
+    public static Result CanTopUp(GameState gameState)
     {
         // Check all players are requesting top up
         return !gameState.Players.All(p => p.RequestingTopUp)
-            ? (false, "Not all players are requesting top up")
-            : (true, null);
+            ? new ErrorResult("Not all players are requesting top up")
+            : new SuccessResult();
     }
 
     public static GameState TopUp(GameState gameState)

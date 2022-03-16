@@ -1,3 +1,5 @@
+using Engine.Helpers;
+
 namespace Engine;
 
 public class Settings
@@ -6,7 +8,7 @@ public class Settings
     public int? RandomSeed { get; set; }
 }
 
-public class GameState
+public class GameState : IGameState
 {
     public Settings? Settings { get; set; }
     public List<Player> Players { get; set; }

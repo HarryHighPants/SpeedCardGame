@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using Engine.CliHelpers;
+using Engine.Helpers;
 
 namespace Engine;
 
@@ -26,12 +27,14 @@ public static class Program
 
         CliGameUtils.GameIntro();
 
-        gameState = GameEngine.NewGame(new List<string> {"Botty the quick", "You"}, null);
+        gameState = GameEngine.NewGame(new List<string> {"Botty the quick", "You"});
 
-        while (GameEngine.CalculateWinner(gameState) == null)
+        while (GameEngine.TryGetWinner(gameState).Failure)
+        {
             HandleUserInput(ReadlineWithBot());
+        }
 
-        Player? winner = GameEngine.CalculateWinner(gameState);
+        Player winner = GameEngine.TryGetWinner(gameState).Data;
         Console.WriteLine("------ Game over ----");
         UpdateMessage($"Winner is {winner!.Name}");
 
