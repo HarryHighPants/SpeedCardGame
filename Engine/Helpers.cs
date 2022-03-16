@@ -3,15 +3,14 @@ using static System.Int32;
 
 public static class Helpers
 {
-    private static readonly Random rng = new();
-
-    public static void Shuffle<T>(this IList<T> list)
+    public static void Shuffle<T>(this IList<T> list, int? randomSeed = null)
     {
+        var random = new Random(randomSeed ?? Guid.NewGuid().GetHashCode());
         int n = list.Count;
         while (n > 1)
         {
             n--;
-            int k = rng.Next(n + 1);
+            int k = random.Next(n + 1);
             (list[k], list[n]) = (list[n], list[k]);
         }
     }

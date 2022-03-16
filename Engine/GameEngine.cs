@@ -12,8 +12,16 @@ public static class GameEngine
     public const int CardsInKitty = 15;
     public const int CardsInTopUp = 5;
 
-    public static GameState NewGame(List<string>? playerNames, Settings? settings)
+    public static GameState NewGame(List<string>? playerNames = null,
+        Settings? settings = null)
     {
+        // Initialise player names if none were supplied
+        if (playerNames == null)
+        {
+            playerNames = new List<string>();
+            for (var i = 0; i < PlayersPerGame; i++) playerNames.Add($"Player {i + 1}");
+        }
+
         // Create deck
         var deck = new List<Card>();
         for (var i = 0; i < CardsInDeck; i++)
@@ -30,11 +38,12 @@ public static class GameEngine
         }
 
         // Shuffle the new deck
-        deck.Shuffle();
+        deck.Shuffle(settings?.RandomSeed);
 
         // Deal cards to players
         var players = new List<Player>();
         for (var i = 0; i < PlayersPerGame; i++)
+        {
             players.Add(new Player
             {
                 Id = i + 1,
@@ -43,6 +52,7 @@ public static class GameEngine
                 KittyCards = deck.PopRange(CardsInKitty),
                 TopUpCards = deck.PopRange(CardsInTopUp)
             });
+        }
 
         var gameState = new GameState
         {
@@ -57,8 +67,13 @@ public static class GameEngine
     {
         foreach (Player player in gameState.Players)
             // Check if a player has no cards in their hand or kitty
+        {
             if (player.HandCards.Count <= 0 && player.KittyCards.Count <= 0)
+            {
                 return player;
+            }
+        }
+
         return null;
     }
 
@@ -87,7 +102,9 @@ public static class GameEngine
 
         // Move each top up card to their respective center piles
         for (var i = 0; i < gameState.CenterPiles.Count; i++)
+        {
             gameState.CenterPiles[i].Add(gameState.Players[i].TopUpCards.Pop());
+        }
 
         return gameState;
     }
@@ -98,12 +115,14 @@ public static class GameEngine
         List<Card> combinedCenterPiles = gameState.CenterPiles.SelectMany(cp => cp, (list, card) => card).ToList();
 
         // Shuffle them
-        combinedCenterPiles.Shuffle();
+        combinedCenterPiles.Shuffle(gameState.Settings?.RandomSeed);
 
         // Split all but center piles count into top up piles
         int topUpPileSize = combinedCenterPiles.Count / gameState.Players.Count;
         for (var i = 0; i < gameState.Players.Count; i++)
+        {
             gameState.Players[i].TopUpCards = combinedCenterPiles.PopRange(topUpPileSize);
+        }
 
         // Reset the center piles
         var newCenterPiles = new List<List<Card>>(gameState.CenterPiles.Count);
@@ -117,7 +136,10 @@ public static class GameEngine
         int centerPileIndex)
     {
         if (centerPileIndex >= gameState.CenterPiles.Count)
+        {
             return (null, $"No center pile found at index {centerPileIndex}");
+        }
+
         (CardPile? pile, int? pileIndex, int? playerIndex, int? centerIndex) cardLocation =
             FindCardLocation(gameState, card);
         switch (cardLocation.pile)
@@ -125,8 +147,10 @@ public static class GameEngine
             case CardPile.Hand:
                 // Check that the card can be played onto the relevant center piles top card
                 if (!ValidMove(card, gameState.CenterPiles[centerPileIndex].Last()))
+                {
                     return (null,
                         $"Card with value {card.Value} can't be played onto {gameState.CenterPiles[centerPileIndex].Last().Value}");
+                }
 
                 // This is a valid play so update gamestate
                 GameState updatedGameState = PlayCard(gameState, card, centerPileIndex);
@@ -163,7 +187,9 @@ public static class GameEngine
     {
         // Check the player has room in their hand
         if (player.HandCards.Count >= (gameState.Settings?.MaxHandCards ?? MaxHandCardsBase))
+        {
             return (false, $"Player {player.Name} hand is full");
+        }
 
         // Check there is enough cards from players kitty 
         if (player.KittyCards.Count < 1) return (false, $"No cards left it {player.Name} kitty to pickup");
@@ -171,10 +197,12 @@ public static class GameEngine
         return (true, null);
     }
 
-    public static bool ValidMove(Card topCard, Card bottomCard)
+    public static bool ValidMove(Card? topCard, Card? bottomCard)
     {
+        if (topCard == null || bottomCard == null) return false;
+        if (topCard.Value < 0 || bottomCard.Value < 0) return false;
         int valueDiff = Math.Abs(topCard.Value - bottomCard.Value);
-        return valueDiff is 1 or CardsPerSuit;
+        return valueDiff is 1 or CardsPerSuit - 1;
     }
 
     public static (CardPile? pile, int? pileIndex, int? playerIndex, int? centerIndex) FindCardLocation(
@@ -185,15 +213,21 @@ public static class GameEngine
             Player player = gameState.Players[i];
             int handIndex = player.HandCards.IndexOf(card);
             if (handIndex != -1)
+            {
                 return (CardPile.Hand, pileIndex: handIndex, playerIndex: i, centerIndex: null);
+            }
 
             int kittyIndex = player.KittyCards.IndexOf(card);
             if (kittyIndex != -1)
+            {
                 return (CardPile.Kitty, pileIndex: kittyIndex, playerIndex: i, centerIndex: null);
+            }
 
             int topUpIndex = player.TopUpCards.IndexOf(card);
             if (topUpIndex != -1)
+            {
                 return (CardPile.TopUp, pileIndex: topUpIndex, playerIndex: i, centerIndex: null);
+            }
         }
 
         for (var i = 0; i < gameState.CenterPiles.Count; i++)
@@ -201,7 +235,9 @@ public static class GameEngine
             List<Card> centerPile = gameState.CenterPiles[i];
             int centerPileIndex = centerPile.IndexOf(card);
             if (centerPileIndex != -1)
+            {
                 return (CardPile.Center, pileIndex: centerPileIndex, playerIndex: null, centerIndex: i);
+            }
         }
 
         return (null, null, null, null);
@@ -245,9 +281,12 @@ public static class GameEngine
     {
         for (var i = 0; i < gameState.CenterPiles.Count; i++)
         {
-            Card pileCard = gameState.CenterPiles[i].Last();
+            if (gameState.CenterPiles[i].Count < 1) continue;
+            Card? pileCard = gameState.CenterPiles[i]?.Last();
             if (ValidMove(card, pileCard))
+            {
                 return (true, i);
+            }
         }
 
         return (false, null);

@@ -3,6 +3,7 @@ namespace Engine;
 public class Settings
 {
     public int MaxHandCards { get; set; } = 5;
+    public int? RandomSeed { get; set; }
 }
 
 public class GameState

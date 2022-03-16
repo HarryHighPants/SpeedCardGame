@@ -24,42 +24,16 @@ public static class Program
     {
         (int min, int max) botSpeedMs = (500, 5000);
 
-        var instructionsTitle = "------ Instructions -----";
-        Console.Clear();
-        Console.WriteLine(instructionsTitle);
-        Console.WriteLine("Welcome to the speed card game cli version");
-        Console.WriteLine();
-        Console.WriteLine("Press any key to continue..");
-        Console.ReadKey(true);
-        Console.Clear();
-
-        Console.WriteLine(instructionsTitle);
-        Console.WriteLine("To play a card in your hand, enter its value followed by the center pile to play it on..");
-        Console.WriteLine();
-        Console.WriteLine("Press any key to continue..");
-        Console.ReadKey(true);
-        Console.Clear();
-
-        Console.WriteLine(instructionsTitle);
-        Console.WriteLine("For example to play a 7 onto the 2nd center pile use '7 2'");
-        Console.WriteLine("You can also pickup from your kitty by typing 'k'");
-        Console.WriteLine("If you can't make any moves request a top up of the center pile with 't'");
-        Console.WriteLine();
-        Console.WriteLine("Press any key to continue..");
-        Console.ReadKey(true);
-        Console.Clear();
-
-        Console.WriteLine("------ Game initialised ------");
-        Console.WriteLine("Your opponent is: Botty the quick");
-        Console.WriteLine();
-        Console.WriteLine("Press any key to start the match!");
-        Console.ReadKey(true);
+        CliGameUtils.GameIntro();
 
         gameState = GameEngine.NewGame(new List<string> {"Botty the quick", "You"}, null);
 
         while (GameEngine.CalculateWinner(gameState) == null)
-            // Ask what the user would like to do
             HandleUserInput(ReadlineWithBot());
+
+        Player? winner = GameEngine.CalculateWinner(gameState);
+        Console.WriteLine("------ Game over ----");
+        UpdateMessage($"Winner is {winner!.Name}");
 
         void HandleUserInput(string? input)
         {
