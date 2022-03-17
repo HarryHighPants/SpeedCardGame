@@ -1,4 +1,5 @@
 using System.Linq;
+using Engine.Helpers;
 using Xunit;
 
 namespace Engine.UnitTests;
@@ -24,21 +25,21 @@ public class UnitTest1
         // Arrange
         GameState gameState = ScenarioHelper.CreateGameBasic(centerCard, player1Card: player1Card);
 
-
         // Act
         // See if we have a play
-        (bool canPlay, Card? card, int? centerPile) = GameEngine.PlayerHasPlay(gameState, gameState.Players[0]);
+        Result<(Card card, int centerPile)> hasPlayResult = GameEngine.PlayerHasPlay(gameState, gameState.Players[0]);
 
         // Try to play it
-        (GameState? updatedGameState, string? errorMessage) tryPlay =
-            GameEngine.TryPlayCard(gameState, gameState.Players[0].HandCards[0], 0);
-
+        Result<GameState> tryPlayResult =
+            GameEngine.TryPlayCard(gameState, gameState.Players[0], gameState.Players[0].HandCards[0], 0);
 
         // Assertion
-        Assert.Equal(expectedCanPlay, canPlay);
-        Assert.Equal(expectedCanPlay, tryPlay.errorMessage == null);
-        Assert.Equal(expectedCanPlay, tryPlay.updatedGameState != null);
-        Assert.Equal(expectedCanPlay ? player1Card : null, tryPlay.updatedGameState?.CenterPiles[0].Last().Value);
+        Assert.Equal(expectedCanPlay, hasPlayResult.Success);
+        Assert.Equal(expectedCanPlay, tryPlayResult.Success);
+        if (expectedCanPlay)
+        {
+            Assert.Equal(player1Card, tryPlayResult.Data.CenterPiles[0].Last().Value);
+        }
     }
 
     [Theory]

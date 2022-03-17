@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using Engine.CliHelpers;
+using Engine.Helpers;
 
 namespace Engine;
 
@@ -26,12 +27,14 @@ public static class Program
 
         CliGameUtils.GameIntro();
 
-        gameState = GameEngine.NewGame(new List<string> {"Botty the quick", "You"}, null);
+        gameState = GameEngine.NewGame(new List<string> {"Botty the quick", "You"});
 
-        while (GameEngine.CalculateWinner(gameState) == null)
+        while (GameEngine.TryGetWinner(gameState).Failure)
+        {
             HandleUserInput(ReadlineWithBot());
+        }
 
-        Player? winner = GameEngine.CalculateWinner(gameState);
+        Player winner = GameEngine.TryGetWinner(gameState).Data;
         Console.WriteLine("------ Game over ----");
         UpdateMessage($"Winner is {winner!.Name}");
 
@@ -44,28 +47,29 @@ public static class Program
                     return;
                 case "k":
                     // Try and pickup from kitty
-                    (GameState? updatedGameState, Card? pickedUpCard, string? errorMessage) pickcupKitty
+                    Result<(GameState updatedGameState, Card pickedUpCard)> pickupKittyResult
                         = GameEngine.TryPickupFromKitty(gameState, gameState.Players[1]);
-                    if (pickcupKitty.errorMessage != null)
+                    if (pickupKittyResult is IErrorResult
+                        pickupKittyResultError)
                     {
-                        UpdateMessage(pickcupKitty.errorMessage);
+                        UpdateMessage(pickupKittyResultError.Message);
                         return;
                     }
 
-                    gameState = pickcupKitty.updatedGameState!;
-                    UpdateMessage($"picked up a {CliGameUtils.CardToString(pickcupKitty.pickedUpCard!)}");
+                    gameState = pickupKittyResult.Data.updatedGameState;
+                    UpdateMessage($"picked up a {CliGameUtils.CardToString(pickupKittyResult.Data.pickedUpCard)}");
                     break;
                 case "t":
-                    (GameState? updatedGameState, bool immediateTopUp, bool readyToTopUp, string? errorMessage)
-                        requestTopUp = GameEngine.TryRequestTopUp(gameState, gameState.Players[1]);
-                    if (requestTopUp.errorMessage != null)
+                    Result<(GameState updatedGameState, bool immediateTopUp, bool readyToTopUp)> requestTopUpResult =
+                        GameEngine.TryRequestTopUp(gameState, gameState.Players[1]);
+                    if (requestTopUpResult is IErrorResult requestTopUpResultError)
                     {
-                        UpdateMessage(requestTopUp.errorMessage);
+                        UpdateMessage(requestTopUpResultError.Message);
                         return;
                     }
 
-                    gameState = requestTopUp.updatedGameState!;
-                    UpdateMessage(requestTopUp.immediateTopUp
+                    gameState = requestTopUpResult.Data.updatedGameState;
+                    UpdateMessage(requestTopUpResult.Data.immediateTopUp
                         ? "topped up the center piles"
                         : "requested to top up center piles");
                     break;
@@ -104,16 +108,16 @@ public static class Program
             }
 
             // Try to play the card onto the pile
-            (GameState? updatedGameState, string? errorMessage) result =
-                GameEngine.TryPlayCard(gameState, card, (int) pile - 1);
-            if (result.errorMessage != null)
+            Result<GameState> playCardResult =
+                GameEngine.TryPlayCard(gameState, gameState.Players[1], card, (int) pile - 1);
+            if (playCardResult is IErrorResult playCardResultError)
             {
-                UpdateMessage(result.errorMessage);
+                UpdateMessage(playCardResultError.Message);
                 return;
             }
 
             // Update the state with the move
-            gameState = result.updatedGameState;
+            gameState = playCardResult.Data;
             UpdateMessage($"Moved card {CliGameUtils.CardToString(card)} to pile {pile}");
         }
 
@@ -132,16 +136,16 @@ public static class Program
             catch (TimeoutException)
             {
                 // Bot tries to play
-                (GameState? updatedGameState, string? moveMade, string? errorMessage) =
+                Result<(GameState updatedGameState, string moveMade)> botMoveResult =
                     Bot.MakeMove(gameState, gameState.Players[0]);
-                if (updatedGameState == null)
+                if (botMoveResult is IErrorResult botMoveResultError)
                 {
-                    UpdateMessage($"{errorMessage}");
+                    UpdateMessage($"{botMoveResultError.Message}");
                     return null;
                 }
 
-                gameState = updatedGameState;
-                UpdateMessage($"{gameState.Players[0].Name} {moveMade}");
+                gameState = botMoveResult.Data.updatedGameState;
+                UpdateMessage($"{gameState.Players[0].Name} {botMoveResult.Data.moveMade}");
                 return null;
             }
         }

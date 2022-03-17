@@ -1,7 +1,9 @@
 using System.Text.RegularExpressions;
 using static System.Int32;
 
-public static class Helpers
+namespace Engine.Helpers;
+
+public static class Extensions
 {
     public static void Shuffle<T>(this IList<T> list, int? randomSeed = null)
     {
@@ -43,7 +45,10 @@ public static class Helpers
             "[^0-9]", // Select everything that is not in the range of 0-9
             ""); // Replace that with an empty string.
         if (TryParse(stripped, out int number))
+        {
             return number;
+        }
+
         return null;
     }
 }

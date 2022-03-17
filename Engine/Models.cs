@@ -31,7 +31,7 @@ public class Card
     public Coords? UpdatedCoords { get; set; }
 }
 
-public enum CardPile
+public enum CardPileName
 {
     Hand,
     Kitty,
