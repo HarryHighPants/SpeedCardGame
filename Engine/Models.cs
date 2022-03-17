@@ -1,5 +1,3 @@
-using Engine.Helpers;
-
 namespace Engine;
 
 public class Settings
@@ -8,7 +6,7 @@ public class Settings
     public int? RandomSeed { get; set; }
 }
 
-public class GameState : IGameState
+public class GameState
 {
     public Settings? Settings { get; set; }
     public List<Player> Players { get; set; }
@@ -33,7 +31,7 @@ public class Card
     public Coords? UpdatedCoords { get; set; }
 }
 
-public enum CardPile
+public enum CardPileName
 {
     Hand,
     Kitty,
