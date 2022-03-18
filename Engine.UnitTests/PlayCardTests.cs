@@ -38,7 +38,11 @@ public class PlayCardTests
         Assert.Equal(expectedCanPlay, tryPlayResult.Success);
         if (expectedCanPlay)
         {
+            // Check the card has been added to the center pile
             Assert.Equal(player1Card, tryPlayResult.Data.CenterPiles[0].Last().Value);
+
+            // Check the card has been removed from players hand
+            Assert.DoesNotContain(tryPlayResult.Data.Players[0].HandCards, card => card.Value == player1Card);
         }
     }
 

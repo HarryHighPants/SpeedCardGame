@@ -39,13 +39,13 @@ public class Bot
         }
 
         // Request Top up
-        Result<(GameState updatedGameState, bool immediateTopUp, bool readyToTopUp)> topUpResult =
+        Result<(GameState updatedGameState, bool couldTopUp)> topUpResult =
             GameEngine.TryRequestTopUp(gameState, player);
         if (topUpResult.Success)
         {
             return new SuccessResult<(GameState updatedGameState, string moveMade)>((
                 topUpResult.Data.updatedGameState,
-                "is ready to top up"));
+                topUpResult.Data.couldTopUp ? "topped up the center piles" : "is ready to top up"));
         }
 
         return new ErrorResult<(GameState updatedGameState, string moveMade)>("Bot can't do anything");

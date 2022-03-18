@@ -119,6 +119,11 @@ public static class GameEngine
         // combine middle piles
         List<Card> combinedCenterPiles = gameState.CenterPiles.SelectMany(cp => cp, (list, card) => card).ToList();
 
+        if (combinedCenterPiles.Count < 1)
+        {
+            return new ErrorResult<GameState>("Can't replenish top up piles without any center cards");
+        }
+
         // Shuffle them
         combinedCenterPiles.Shuffle(gameState.Settings?.RandomSeed);
 
@@ -130,8 +135,8 @@ public static class GameEngine
         }
 
         // Reset the center piles
-        var newCenterPiles = new List<List<Card>>(gameState.CenterPiles.Count);
-        for (var i = 0; i < newCenterPiles.Count; i++) newCenterPiles[i] = new List<Card>();
+        var newCenterPiles = new List<List<Card>>();
+        for (var i = 0; i < gameState.CenterPiles.Count; i++) newCenterPiles.Add(new List<Card>());
         gameState.CenterPiles = newCenterPiles;
 
         return new SuccessResult<GameState>(gameState);
@@ -258,16 +263,15 @@ public static class GameEngine
     }
 
 
-    public static Result<(GameState updatedGameState, bool immediateTopUp, bool readyToTopUp)>
-        TryRequestTopUp(
-            GameState gameState,
-            Player player, bool immediateTopUp = true)
+    public static Result<(GameState updatedGameState, bool couldTopUp)> TryRequestTopUp(
+        GameState gameState,
+        Player player, bool immediateTopUp = true)
     {
         // Check the player can top up
         Result requestTopUpResult = CanRequestTopUp(gameState, player);
         if (requestTopUpResult is ErrorResult requestTopUpResultError)
         {
-            return new ErrorResult<(GameState updatedGameState, bool immediateTopUp, bool readyToTopUp)>(
+            return new ErrorResult<(GameState updatedGameState, bool couldTopUp)>(
                 requestTopUpResultError.Message);
         }
 
@@ -275,18 +279,18 @@ public static class GameEngine
         gameState.Players[gameState.Players.IndexOf(player)].RequestingTopUp = true;
 
         // Check if we can top up now
-        Result<GameState> topUpResult = TryTopUp(gameState);
+        Result<GameState> topUpResult = TryTopUp(gameState.DeepClone());
 
         // If we want to immediately top up and we can then do it
         if (immediateTopUp && topUpResult.Success)
         {
-            return new SuccessResult<(GameState updatedGameState, bool immediateTopUp, bool readyToTopUp)>(
-                (topUpResult.Data, true, false));
+            return new SuccessResult<(GameState updatedGameState, bool couldTopUp)>(
+                (topUpResult.Data, true));
         }
 
         // Otherwise just return the gameState with the new top up request 
-        return new SuccessResult<(GameState updatedGameState, bool immediateTopUp, bool readyToTopUp)>(
-            (gameState, false, topUpResult.Success));
+        return new SuccessResult<(GameState updatedGameState, bool couldTopUp)>(
+            (gameState, topUpResult.Success));
     }
 
     // Bot Helpers

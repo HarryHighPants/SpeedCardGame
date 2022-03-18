@@ -63,7 +63,7 @@ public static class Program
                     UpdateMessage($"picked up a {CliGameUtils.CardToString(pickupKittyResult.Data.pickedUpCard)}");
                     break;
                 case "t":
-                    Result<(GameState updatedGameState, bool immediateTopUp, bool readyToTopUp)> requestTopUpResult =
+                    Result<(GameState updatedGameState, bool couldTopUp)> requestTopUpResult =
                         GameEngine.TryRequestTopUp(gameState, gameState.Players[1]);
                     if (requestTopUpResult is IErrorResult requestTopUpResultError)
                     {
@@ -72,7 +72,7 @@ public static class Program
                     }
 
                     gameState = requestTopUpResult.Data.updatedGameState;
-                    UpdateMessage(requestTopUpResult.Data.immediateTopUp
+                    UpdateMessage(requestTopUpResult.Data.couldTopUp
                         ? "topped up the center piles"
                         : "requested to top up center piles");
                     break;

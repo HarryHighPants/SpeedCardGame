@@ -6,6 +6,7 @@ public class Settings
     public int? RandomSeed { get; set; }
 }
 
+[Serializable]
 public class GameState
 {
     public Settings? Settings { get; set; }
