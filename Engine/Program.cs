@@ -23,27 +23,30 @@ public static class Program
 
     public static void Main(string[] args)
     {
-        (int min, int max) botSpeedMs = (500, 5000);
+        // Difficulty
+        (int min, int max) botSpeedMs = (1000, 5000);
 
         CliGameUtils.GameIntro();
 
         gameState = GameEngine.NewGame(new List<string> {"Botty the quick", "You"});
 
+        // Main game loop
         while (GameEngine.TryGetWinner(gameState).Failure)
         {
             HandleUserInput(ReadlineWithBot());
         }
 
+        // End game
         Player winner = GameEngine.TryGetWinner(gameState).Data;
         Console.WriteLine("------ Game over ----");
         UpdateMessage($"Winner is {winner!.Name}");
+
 
         void HandleUserInput(string? input)
         {
             switch (input)
             {
                 case null:
-                    // UpdateMessage("");
                     return;
                 case "k":
                     // Try and pickup from kitty

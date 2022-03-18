@@ -151,6 +151,11 @@ public static class GameEngine
             return new ErrorResult<GameState>(cardLocationResultError.Message);
         }
 
+        if (cardLocationResult.Data.PlayerIndex != gameState.Players.IndexOf(player))
+        {
+            return new ErrorResult<GameState>($"Player {player.Name} does not have card {card.Value} in their hand");
+        }
+
         switch (cardLocationResult.Data.PileName)
         {
             case CardPileName.Hand:
@@ -338,7 +343,7 @@ public static class GameEngine
     {
         public readonly CardPileName PileName;
         public int PileIndex;
-        public int? PlayerIndex;
+        public readonly int? PlayerIndex;
         public int? CenterIndex;
 
         public CardLocation(CardPileName pileName, int pileIndex, int? playerIndex, int? centerIndex)

@@ -48,7 +48,6 @@ public class Bot
                 "is ready to top up"));
         }
 
-
         return new ErrorResult<(GameState updatedGameState, string moveMade)>("Bot can't do anything");
     }
 }

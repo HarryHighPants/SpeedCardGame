@@ -4,7 +4,7 @@ using Xunit;
 
 namespace Engine.UnitTests;
 
-public class UnitTest1
+public class PlayCardTests
 {
     [Theory]
     [InlineData(0, 1, true)]
@@ -42,18 +42,34 @@ public class UnitTest1
         }
     }
 
-    [Theory]
-    [InlineData(0, 1, true)]
-    public void PickupCard_Theory(int centerCard, int player1Card, bool expectedCanPlay)
+    [Fact]
+    public void PlayCard_NotOwned_False()
     {
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameBasic(centerCard, player1Card: player1Card);
+        GameState gameState = ScenarioHelper.CreateGameBasic(5, player1Card: 4, player2Card: 6);
 
-
-        // Act
-
+        // Try to play it
+        Result<GameState> tryPlayResult =
+            GameEngine.TryPlayCard(gameState, gameState.Players[0], gameState.Players[1].HandCards[0], 0);
 
         // Assertion
-        // Assert.Equal(expectedCanPlay, canPlay);
+        Assert.True(tryPlayResult.Failure);
+        Assert.Equal("Player Player 1 does not have card 6 in their hand", (tryPlayResult as IErrorResult)?.Message);
+    }
+
+    [Fact]
+    public void PlayCard_NotExist_False()
+    {
+        // Arrange
+        GameState gameState = ScenarioHelper.CreateGameBasic(5, player1Card: 4, player2Card: 6);
+        var randomCard = new Card {Id = 0, Suit = Suit.Clubs, Value = 4};
+
+        // Try to play it
+        Result<GameState> tryPlayResult =
+            GameEngine.TryPlayCard(gameState, gameState.Players[0], randomCard, 0);
+
+        // Assertion
+        Assert.True(tryPlayResult.Failure);
+        Assert.Equal("Card not found in gameState", (tryPlayResult as IErrorResult)?.Message);
     }
 }

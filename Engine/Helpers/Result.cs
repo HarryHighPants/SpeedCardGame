@@ -90,7 +90,7 @@ public class Error
     public string Details { get; }
 }
 
-internal interface IErrorResult
+public interface IErrorResult
 {
     string Message { get; }
     IReadOnlyCollection<Error> Errors { get; }
