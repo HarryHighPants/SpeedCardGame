@@ -1,5 +1,6 @@
 namespace Engine;
 
+[Serializable]
 public class Settings
 {
     public int MaxHandCards { get; set; } = 5;
@@ -14,6 +15,7 @@ public class GameState
     public List<List<Card>> CenterPiles { get; set; }
 }
 
+[Serializable]
 public class Player
 {
     public int Id { get; set; }
@@ -24,6 +26,7 @@ public class Player
     public bool RequestingTopUp { get; set; }
 }
 
+[Serializable]
 public class Card
 {
     public int Id { get; set; }
@@ -32,6 +35,7 @@ public class Card
     public Coords? UpdatedCoords { get; set; }
 }
 
+[Serializable]
 public enum CardPileName
 {
     Hand,
@@ -40,12 +44,14 @@ public enum CardPileName
     Center
 }
 
+[Serializable]
 public struct Coords
 {
     public int X;
     public int Y;
 }
 
+[Serializable]
 public enum Suit
 {
     Hearts,
