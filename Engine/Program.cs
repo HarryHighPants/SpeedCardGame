@@ -15,8 +15,6 @@ public static class Program
         Impossible
     }
 
-    private static GameState _gameState;
-
     public static Random random = new();
 
     public static Dictionary<BotDifficulty, BotData> Bots = new()
@@ -46,7 +44,7 @@ public static class Program
                 Name = "Masterful Mikaela", CustomIntroMessage = "She can't be trusted",
                 CustomLoseMessage = "Oof, rough one", CustomWinMessage = "Down falls Mikaela and her wicked ways",
                 QuickestResponseTimeMs = 1000,
-                SlowestResponseTimeMs = 3000
+                SlowestResponseTimeMs = 2000
             }
         },
         {
@@ -56,52 +54,54 @@ public static class Program
                 Name = "Chaotic Kate", CustomIntroMessage = "rip lol", CustomLoseMessage = "No chance",
                 CustomWinMessage = "No one will ever see this message so it doesn't matter",
                 QuickestResponseTimeMs = 500,
-                SlowestResponseTimeMs = 2000
+                SlowestResponseTimeMs = 1500
             }
         }
     };
 
     public static BotData Bot;
 
-    public static GameState gameState
-    {
-        get => _gameState;
-        set
-        {
-            CliGameUtils.DrawGameState(value);
-            _gameState = value;
-        }
-    }
+    public static GameState gameState { get; set; }
 
     public static void Main(string[] args)
     {
-        // Difficulty
-        BotDifficulty botDifficulty = CliGameUtils.GameIntro();
-        Bot = Bots[botDifficulty];
-        (int min, int max) botSpeedMs = (Bot.QuickestResponseTimeMs, Bot.SlowestResponseTimeMs);
+        PlayGame();
 
-        gameState = GameEngine.NewGame(new List<string> {Bot.Name, "You"});
-
-        // Main game loop
-        while (GameEngine.TryGetWinner(gameState).Failure)
+        void PlayGame(bool skipIntro = false)
         {
-            HandleUserInput(ReadlineWithBot());
+            // Difficulty
+            BotDifficulty botDifficulty = CliGameUtils.GameIntro(skipIntro);
+            Bot = Bots[botDifficulty];
+            (int min, int max) botSpeedMs = (Bot.QuickestResponseTimeMs, Bot.SlowestResponseTimeMs);
+
+            gameState = GameEngine.NewGame(new List<string> {Bot.Name, "You"});
+            UpdateMessage("Game started!");
+
+            // Main game loop
+            while (GameEngine.TryGetWinner(gameState).Failure)
+            {
+                HandleUserInput(ReadlineWithBot());
+            }
+
+            // End game
+            Player winner = GameEngine.TryGetWinner(gameState).Data;
+            bool winnerIsPlayer = gameState.Players.IndexOf(winner) == 1;
+
+            Console.WriteLine("------ Game over ----");
+            Console.WriteLine();
+            Console.WriteLine(winnerIsPlayer ? Bot.CustomWinMessage : Bot.CustomLoseMessage);
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.ForegroundColor = winnerIsPlayer ? ConsoleColor.DarkBlue : ConsoleColor.DarkRed;
+            UpdateMessage($"Winner is {winner.Name}");
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.WriteLine();
+            Console.WriteLine("Replay? (y/n)");
+            if (Console.ReadLine() == "y")
+            {
+                PlayGame(true);
+            }
         }
-
-        // End game
-        Player winner = GameEngine.TryGetWinner(gameState).Data;
-        bool winnerIsPlayer = gameState.Players.IndexOf(winner) == 1;
-
-        Console.WriteLine("------ Game over ----");
-        Console.WriteLine();
-        Console.WriteLine(winnerIsPlayer ? Bot.CustomWinMessage : Bot.CustomLoseMessage);
-        Console.WriteLine();
-        Console.WriteLine();
-        Console.ForegroundColor = winnerIsPlayer ? ConsoleColor.DarkBlue : ConsoleColor.DarkRed;
-        UpdateMessage($"Winner is {winner.Name}");
-        Console.ForegroundColor = ConsoleColor.Black;
-        Console.WriteLine();
-        Console.WriteLine();
 
 
         void HandleUserInput(string? input)
@@ -203,7 +203,7 @@ public static class Program
         {
             try
             {
-                return Reader.ReadLine(random.Next(botSpeedMs.min, botSpeedMs.max));
+                return Reader.ReadLine(random.Next(Bot.QuickestResponseTimeMs, Bot.SlowestResponseTimeMs));
             }
             catch (TimeoutException)
             {
@@ -217,7 +217,10 @@ public static class Program
                 }
 
                 gameState = botMoveResult.Data.updatedGameState;
-                UpdateMessage($"{gameState.Players[0].Name} {botMoveResult.Data.moveMade}");
+                if (!string.IsNullOrEmpty(botMoveResult.Data.moveMade))
+                {
+                    UpdateMessage($"{gameState.Players[0].Name} {botMoveResult.Data.moveMade}");
+                }
 
                 return null;
             }

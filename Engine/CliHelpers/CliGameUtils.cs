@@ -55,17 +55,21 @@ public static class CliGameUtils
     }
 
 
-    public static BotDifficulty GameIntro()
+    public static BotDifficulty GameIntro(bool skipIntro = false)
     {
-        Console.Clear();
-        Console.WriteLine("------ Speed Card Game ------");
-        Console.WriteLine("Welcome to the speed card game cli version");
-        Console.WriteLine();
-        Console.WriteLine("Would you like to hear the rules? (y/n)");
-        ConsoleKeyInfo hearRulesInput = Console.ReadKey(true);
-        Console.Clear();
+        var hearRulesInput = "";
+        if (!skipIntro)
+        {
+            Console.Clear();
+            Console.WriteLine("------ Speed Card Game ------");
+            Console.WriteLine("Welcome to the speed card game cli version");
+            Console.WriteLine();
+            Console.WriteLine("Would you like to hear the rules? (y/n)");
+            hearRulesInput = Console.ReadLine();
+            Console.Clear();
+        }
 
-        if (hearRulesInput.KeyChar == 'y')
+        if (hearRulesInput == "y")
         {
             var instructionsTitle = "------ Instructions -----";
             Console.WriteLine(instructionsTitle);
@@ -100,15 +104,15 @@ public static class CliGameUtils
         Console.WriteLine("------ Difficulty ------");
         Console.WriteLine("What difficulty opponent will you face?");
         Console.WriteLine("(e)asy, (m)edium, (h)ard, (i)mpossible");
-        ConsoleKeyInfo difficultyInput = Console.ReadKey(true);
+        string difficultyInput = Console.ReadLine();
         Console.Clear();
 
-        BotDifficulty difficulty = difficultyInput.KeyChar switch
+        BotDifficulty difficulty = difficultyInput switch
         {
-            'e' => BotDifficulty.Easy,
-            'm' => BotDifficulty.Medium,
-            'h' => BotDifficulty.Hard,
-            'i' => BotDifficulty.Impossible,
+            "e" => BotDifficulty.Easy,
+            "m" => BotDifficulty.Medium,
+            "h" => BotDifficulty.Hard,
+            "i" => BotDifficulty.Impossible,
             _ => BotDifficulty.Medium
         };
         BotData bot = Bots[difficulty];
