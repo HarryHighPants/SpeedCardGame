@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace Engine.Helpers;
 
 public abstract class Result
@@ -6,7 +8,7 @@ public abstract class Result
     public bool Failure => !Success;
 }
 
-public abstract class Result<T> : Result
+public abstract class Result<T> : Result, IEnumerable<T>
 {
     private T _data;
 
@@ -19,9 +21,23 @@ public abstract class Result<T> : Result
     {
         get => Success
             ? _data
-            // : throw new Exception($"You can't access .{nameof(Data)} when .{nameof(Success)} is false");
-            : default;
+            : throw new Exception($"You can't access .{nameof(Data)} when .{nameof(Success)} is false");
         set => _data = value;
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        if (Success)
+        {
+            return new List<T> {_data}.GetEnumerator();
+        }
+
+        return new List<T>().GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }
 

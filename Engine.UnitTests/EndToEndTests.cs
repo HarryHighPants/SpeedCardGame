@@ -28,12 +28,12 @@ public class EndToEndTests
                 BotRunner.MakeMove(gameState, gameState.Players[1]);
 
             // Debugging
-            if (!string.IsNullOrEmpty(move1.Data.moveMade))
+            if (move1 is not IErrorResult move1Error && !string.IsNullOrEmpty(move2.Data.moveMade))
             {
                 _testOutputHelper.WriteLine($"{gameState.Players[0].Name} {move1.Data.moveMade}");
             }
 
-            if (!string.IsNullOrEmpty(move2.Data.moveMade))
+            if (move1 is not IErrorResult move2Error && !string.IsNullOrEmpty(move2.Data.moveMade))
             {
                 _testOutputHelper.WriteLine($"{gameState.Players[1].Name} {move2.Data.moveMade}");
             }
@@ -51,7 +51,7 @@ public class EndToEndTests
     {
         // Arrange
         GameState gameState =
-            ScenarioHelper.CreateGameCustom(
+            ModelGenerator.CreateGameCustom(
                 new List<int?> {1},
                 new List<int?> {1},
                 new List<int?> {2},
@@ -65,7 +65,7 @@ public class EndToEndTests
         Player player2 = gameState.Players[1];
 
         // Act
-        Assert.True(GameEngine.TryRequestTopUp(gameState, player2).Success);
+        gameState = Assert.True(GameEngine.TryRequestTopUp(gameState, player2).Success);
         Assert.True(GameEngine.TryPlayCard(gameState, player1, player1.HandCards[0], 0).Success);
         Assert.True(GameEngine.TryPickupFromKitty(gameState, player1).Success);
         Assert.True(GameEngine.TryRequestTopUp(gameState, player1).Success);
@@ -82,7 +82,7 @@ public class EndToEndTests
     {
         // Arrange
         GameState gameState =
-            ScenarioHelper.CreateGameCustom(
+            ModelGenerator.CreateGameCustom(
                 new List<int?> {6, 6, 1},
                 new List<int?> {6, 6, 1},
                 new List<int?> {5},
@@ -98,7 +98,7 @@ public class EndToEndTests
         Assert.Single(gameState.CenterPiles[0]);
 
         // Manually add a 6 to ensure the 6 "was" shuffled in first
-        gameState.CenterPiles[0].Add(ScenarioHelper.CreateBasicCard(6));
+        gameState.CenterPiles[0].Add(ModelGenerator.CreateBasicCard(6));
         Assert.True(GameEngine.TryPlayCard(gameState, player1, player1.HandCards[0], 0).Success);
         Result<Player> winnerResult = GameEngine.TryGetWinner(gameState);
 

@@ -64,4 +64,22 @@ public static class Extensions
             return (T) formatter.Deserialize(ms);
         }
     }
+
+    public static IEnumerable<T> ReplaceElementAt<T>(this IEnumerable<T> source, int index, T element)
+    {
+        var i = 0;
+        foreach (var item in source)
+        {
+            if (i == index)
+            {
+                yield return element;
+            }
+            else
+            {
+                yield return item;
+            }
+
+            i++;
+        }
+    }
 }

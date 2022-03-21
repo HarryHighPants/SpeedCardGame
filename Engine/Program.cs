@@ -209,7 +209,7 @@ public static class Program
             {
                 // BotRunner tries to play
                 Result<(GameState updatedGameState, string moveMade)> botMoveResult =
-                    BotRunner.MakeMove(gameState, gameState.Players[0]);
+                    BotRunner.MakeMove(gameState, 0);
                 if (botMoveResult is IErrorResult botMoveResultError)
                 {
                     UpdateMessage($"{botMoveResultError.Message}");

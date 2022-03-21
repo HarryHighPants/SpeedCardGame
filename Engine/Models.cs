@@ -1,41 +1,37 @@
 namespace Engine;
 
-[Serializable]
-public class Settings
+public record Settings
 {
-    public int MaxHandCards { get; set; } = 5;
-    public int? RandomSeed { get; set; }
+    public int MaxHandCards { get; init; } = 5;
+    public int? RandomSeed { get; init; } = null;
 }
 
-[Serializable]
-public class GameState
+public record GameState
 {
-    public Settings? Settings { get; set; }
-    public List<Player> Players { get; set; }
-    public List<List<Card>> CenterPiles { get; set; }
+    public Settings? Settings { get; init; }
+    public List<Player> Players { get; init; } = new(0);
+    public List<List<Card>> CenterPiles { get; init; } = new(0);
 }
 
-[Serializable]
-public class Player
+public record Player
 {
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public List<Card> HandCards { get; set; }
-    public List<Card> KittyCards { get; set; }
-    public List<Card> TopUpCards { get; set; }
-    public bool RequestingTopUp { get; set; }
+    public int Id { get; init; }
+    public string Name { get; init; } = "";
+    public List<Card> HandCards { get; init; } = new(0);
+    public List<Card> KittyCards { get; init; } = new(0);
+    public List<Card> TopUpCards { get; init; } = new(0);
+    public bool RequestingTopUp { get; init; }
 }
 
-[Serializable]
-public class Card
+public record Card
 {
-    public int Id { get; set; }
-    public Suit Suit { get; set; }
-    public int Value { get; set; }
-    public Coords? UpdatedCoords { get; set; }
+    public int Id { get; init; }
+    public Suit Suit { get; init; }
+
+    public int Value { get; init; }
+    // public Coords? UpdatedCoords { get; init; }
 }
 
-[Serializable]
 public enum CardPileName
 {
     Hand,
@@ -44,14 +40,12 @@ public enum CardPileName
     Center
 }
 
-[Serializable]
-public struct Coords
-{
-    public int X;
-    public int Y;
-}
+// public struct Coords
+// {
+//     public int X;
+//     public int Y;
+// }
 
-[Serializable]
 public enum Suit
 {
     Hearts,

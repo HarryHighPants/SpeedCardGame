@@ -13,7 +13,7 @@ public class TopUpTests
     public void RequestTopUp_Theory(int centerCard, int player1Card, bool expectedCanRequestTopUp)
     {
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameBasic(centerCard, player1Card: player1Card);
+        GameState gameState = ModelGenerator.CreateGameBasic(centerCard, player1Card: player1Card);
 
         // Act
         // See if we can request top up
@@ -37,7 +37,7 @@ public class TopUpTests
         List<int?> nullablePlayer2TopUps = player2TopUps.Select(i => new int?(i)).ToList();
 
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameCustom(
+        GameState gameState = ModelGenerator.CreateGameCustom(
             nullableCenterPile1Cards, nullableCenterPile2Cards,
             player1TopUps: nullablePlayer1TopUps, player1RequestingTopup: true,
             player2TopUps: nullablePlayer2TopUps, player2RequestingTopup: true);
@@ -75,7 +75,7 @@ public class TopUpTests
             centerPile2 == null ? new List<int?>() : centerPile2.Select(i => new int?(i)).ToList();
 
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameCustom(
+        GameState gameState = ModelGenerator.CreateGameCustom(
             nullableCenterPile1Cards, nullableCenterPile2Cards,
             player1RequestingTopup: true,
             player2RequestingTopup: true);
@@ -112,7 +112,7 @@ public class TopUpTests
         List<int?> player2Nullable = player2.Select(i => new int?(i)).ToList();
 
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameCustom(
+        GameState gameState = ModelGenerator.CreateGameCustom(
             centerPileNullable,
             player1Cards: player1Nullable,
             player2Cards: player2Nullable,

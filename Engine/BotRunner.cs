@@ -6,7 +6,7 @@ namespace Engine;
 public class BotRunner
 {
     public static Result<(GameState updatedGameState, string moveMade)> MakeMove(
-        GameState gameState, Player player)
+        GameState gameState, int playerIndex)
     {
         Result<Player> winnerResult = GameEngine.TryGetWinner(gameState);
         if (winnerResult.Success)
@@ -16,11 +16,11 @@ public class BotRunner
         }
 
         // See if we can play any cards
-        Result<(Card card, int centerPile)> playCardResult = GameEngine.PlayerHasPlay(gameState, player);
+        Result<(Card card, int centerPile)> playCardResult = GameEngine.PlayerHasPlay(gameState, playerIndex);
         if (playCardResult.Success)
         {
             Result<GameState> playResult =
-                GameEngine.TryPlayCard(gameState, player, playCardResult.Data.card, playCardResult.Data.centerPile);
+                GameEngine.TryPlayCard(gameState, playerIndex, playCardResult.Data.card, playCardResult.Data.centerPile);
             if (playResult.Success)
             {
                 return new SuccessResult<(GameState updatedGameState, string moveMade)>((playResult.Data,
@@ -30,7 +30,7 @@ public class BotRunner
 
         // See if we can pickup
         Result<(GameState updatedGameState, Card pickedUpCard)> pickupFromKittyResult =
-            GameEngine.TryPickupFromKitty(gameState, player);
+            GameEngine.TryPickupFromKitty(gameState, playerIndex);
         if (pickupFromKittyResult.Success)
         {
             return new SuccessResult<(GameState updatedGameState, string moveMade)>((
@@ -39,10 +39,10 @@ public class BotRunner
         }
 
         // Request Top up
-        if (!player.RequestingTopUp)
+        if (!gameState.Players[playerIndex].RequestingTopUp)
         {
             Result<(GameState updatedGameState, bool couldTopUp)> topUpResult =
-                GameEngine.TryRequestTopUp(gameState, player);
+                GameEngine.TryRequestTopUp(gameState, playerIndex);
             if (topUpResult.Success)
             {
                 return new SuccessResult<(GameState updatedGameState, string moveMade)>((

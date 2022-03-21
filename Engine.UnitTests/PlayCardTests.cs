@@ -23,7 +23,7 @@ public class PlayCardTests
     public void PlayCard_Theory(int centerCard, int player1Card, bool expectedCanPlay)
     {
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameBasic(centerCard, player1Card: player1Card);
+        GameState gameState = ModelGenerator.CreateGameBasic(centerCard, player1Card: player1Card);
 
         // Act
         // See if we have a play
@@ -50,7 +50,7 @@ public class PlayCardTests
     public void PlayCard_NotOwned_False()
     {
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameBasic(5, player1Card: 4, player2Card: 6);
+        GameState gameState = ModelGenerator.CreateGameBasic(5, player1Card: 4, player2Card: 6);
 
         // Try to play it
         Result<GameState> tryPlayResult =
@@ -65,7 +65,7 @@ public class PlayCardTests
     public void PlayCard_NotExist_False()
     {
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameBasic(5, player1Card: 4, player2Card: 6);
+        GameState gameState = ModelGenerator.CreateGameBasic(5, player1Card: 4, player2Card: 6);
         var randomCard = new Card {Id = 0, Suit = Suit.Clubs, Value = 4};
 
         // Try to play it

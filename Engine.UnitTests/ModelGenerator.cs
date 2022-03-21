@@ -3,57 +3,8 @@ using System.Collections.Generic;
 
 namespace Engine.UnitTests;
 
-public class ScenarioHelper
+public class ModelGenerator
 {
-    public static GameState defaultGameState = new()
-    {
-        CenterPiles = new List<List<Card>>
-        {
-            new() {new Card {Id = 0, Suit = Suit.Hearts, Value = 0}},
-            new() {new Card {Id = 1, Suit = Suit.Hearts, Value = 1}}
-        },
-        Players = new List<Player>
-        {
-            new()
-            {
-                Id = 0, Name = "Player 1", HandCards = new List<Card>
-                {
-                    new() {Id = 2, Suit = Suit.Hearts, Value = 2},
-                    new() {Id = 3, Suit = Suit.Hearts, Value = 12}
-                },
-                KittyCards = new List<Card>
-                {
-                    new() {Id = 6, Suit = Suit.Hearts, Value = 3},
-                    new() {Id = 7, Suit = Suit.Hearts, Value = 11}
-                },
-                TopUpCards = new List<Card>
-                {
-                    new() {Id = 12, Suit = Suit.Hearts, Value = 10},
-                    new() {Id = 13, Suit = Suit.Hearts, Value = 9}
-                }
-            },
-            new()
-            {
-                Id = 0, Name = "Player 2", HandCards = new List<Card>
-                {
-                    new() {Id = 4, Suit = Suit.Clubs, Value = 2},
-                    new() {Id = 5, Suit = Suit.Clubs, Value = 12}
-                },
-                KittyCards = new List<Card>
-                {
-                    new() {Id = 8, Suit = Suit.Clubs, Value = 3},
-                    new() {Id = 9, Suit = Suit.Clubs, Value = 11}
-                },
-                TopUpCards = new List<Card>
-                {
-                    new() {Id = 10, Suit = Suit.Clubs, Value = 10},
-                    new() {Id = 11, Suit = Suit.Clubs, Value = 9}
-                }
-            }
-        },
-        Settings = new Settings {RandomSeed = 0}
-    };
-
     public static GameState CreateGameBasic(int? centerCard1, int? centerCard2 = null, int? player1Card = null,
         int? player2Card = null,
         int? player1Kitty = null,

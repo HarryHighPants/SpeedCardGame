@@ -105,18 +105,20 @@ public static class GameEngine
             gameState = replenishResult.Data;
         }
 
+
+        var newCenterPiles =
+            gameState.CenterPiles.Select((pile, i) => pile.Append(gameState.Players[i].TopUpCards.Last()).ToList()).ToList();
+        
         // Move each top up card to their respective center piles
         for (var i = 0; i < gameState.CenterPiles.Count; i++)
         {
             gameState.CenterPiles[i].Add(gameState.Players[i].TopUpCards.Pop());
         }
 
-        foreach (Player player in gameState.Players)
-        {
-            player.RequestingTopUp = false;
-        }
+        List<Player> newPlayers = gameState.Players.Select(player =>
+            player with {RequestingTopUp = false, TopUpCards = player.TopUpCards.Take(..^1).ToList()}).ToList();
 
-        return new SuccessResult<GameState>(gameState);
+        return new SuccessResult<GameState>(gameState with {Players = newPlayers, CenterPiles = newCenterPiles});
     }
 
     private static Result CanTopUp(GameState gameState)
@@ -146,17 +148,14 @@ public static class GameEngine
 
         // Split all but center piles count into top up piles
         int topUpPileSize = combinedCenterPiles.Count / gameState.Players.Count;
-        foreach (Player player in gameState.Players)
-        {
-            player.TopUpCards = combinedCenterPiles.PopRange(topUpPileSize);
-        }
+        var newPlayers =
+            gameState.Players.Select(player => player with {TopUpCards = combinedCenterPiles.PopRange(topUpPileSize)}).ToList();
 
         // Reset the center piles
         var newCenterPiles = new List<List<Card>>();
         for (var i = 0; i < gameState.CenterPiles.Count; i++) newCenterPiles.Add(new List<Card>());
-        gameState.CenterPiles = newCenterPiles;
 
-        return new SuccessResult<GameState>(gameState);
+        return new SuccessResult<GameState>(gameState with{Players = newPlayers, CenterPiles = newCenterPiles});
     }
 
     public static Result<GameState> TryPlayCard(GameState gameState, Player player, Card card,
@@ -204,15 +203,12 @@ public static class GameEngine
         playerWithCard?.HandCards.Remove(card);
 
         // Reset any ones request to top up if they can now move
-        foreach (Player player in gameState.Players)
-        {
-            if (player.RequestingTopUp && PlayerHasPlay(gameState, player).Success)
-            {
-                player.RequestingTopUp = false;
-            }
-        }
-
-        return new SuccessResult<GameState>(gameState);
+        var newPlayers = gameState.Players.Select(player =>
+            player.RequestingTopUp && PlayerHasPlay(gameState, player).Success
+                ? player with {RequestingTopUp = false}
+                : player).ToList();
+        
+        return new SuccessResult<GameState>(gameState with{Players = newPlayers});
     }
 
     public static Result<(GameState updatedGameState, Card pickedUpCard)> TryPickupFromKitty(
@@ -292,8 +288,10 @@ public static class GameEngine
 
     public static Result<(GameState updatedGameState, bool couldTopUp)> TryRequestTopUp(
         GameState gameState,
-        Player player, bool immediateTopUp = true)
+        int playerIndex, bool immediateTopUp = true)
     {
+        var player = gameState.Players[playerIndex];
+        
         // Check player isn't already topped up
         if (player.RequestingTopUp)
         {
@@ -309,7 +307,8 @@ public static class GameEngine
         }
 
         // Apply the top up request
-        gameState.Players[gameState.Players.IndexOf(player)].RequestingTopUp = true;
+        var newPlayer = player with {RequestingTopUp = true};
+        var newPlayers = gameState.Players.ReplaceElementAt(playerIndex, newPlayer).ToList();
 
         // Check if we can top up now
         Result canTopUpResult = CanTopUp(gameState);
@@ -324,7 +323,7 @@ public static class GameEngine
 
         // Otherwise just return the gameState with the new top up request 
         return new SuccessResult<(GameState updatedGameState, bool couldTopUp)>(
-            (gameState, canTopUpResult.Success));
+            (gameState with {Players = newPlayers}, canTopUpResult.Success));
     }
 
     // BotRunner Helpers

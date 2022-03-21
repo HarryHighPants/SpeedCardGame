@@ -18,7 +18,7 @@ public class PickupCardTests
         List<int?> nullablePlayer1Cards = player1Cards.Select(i => new int?(i)).ToList();
 
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameCustom(player1Cards: nullablePlayer1Cards,
+        GameState gameState = ModelGenerator.CreateGameCustom(player1Cards: nullablePlayer1Cards,
             player1Kittys: new List<int?> {kittyCard});
 
         // Act
