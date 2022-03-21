@@ -47,6 +47,9 @@ public class TopUpTests
 
         // Assertion
         Assert.Equal(expectedCanTopUp, topUpResult.Success);
+        Assert.Equal(!expectedCanTopUp, topUpResult.Data.Players[0].RequestingTopUp);
+        Assert.Equal(!expectedCanTopUp, topUpResult.Data.Players[1].RequestingTopUp);
+
         if (expectedCanTopUp && player1TopUps.Length > 1)
         {
             // Check the last top up cards have been added to the center piles
@@ -94,5 +97,34 @@ public class TopUpTests
             Assert.Empty(replenishedResult.Data.CenterPiles[0]);
             Assert.Empty(replenishedResult.Data.CenterPiles[1]);
         }
+    }
+
+    // Once a move takes place if a player requesting top up can now move then they should no longer be requesting top up
+    [Theory]
+    [InlineData(new[] {1}, new[] {2, 9}, new[] {3}, false)]
+    [InlineData(new[] {1}, new[] {2, 9}, new[] {4}, true)]
+    public void RequestTopUp_ResetsAfterMove_Theory(int[] centerPile, int[] player1, int[] player2,
+        bool expectedPlayer2Requesting)
+    {
+        // Convert inline data types to usable array
+        List<int?> centerPileNullable = centerPile.Select(i => new int?(i)).ToList();
+        List<int?> player1Nullable = player1.Select(i => new int?(i)).ToList();
+        List<int?> player2Nullable = player2.Select(i => new int?(i)).ToList();
+
+        // Arrange
+        GameState gameState = ScenarioHelper.CreateGameCustom(
+            centerPileNullable,
+            player1Cards: player1Nullable,
+            player2Cards: player2Nullable,
+            player1RequestingTopup: false,
+            player2RequestingTopup: true);
+
+        // Act
+        // Player 1 moves
+        Result<GameState> playResult = GameEngine.TryPlayCard(gameState,
+            gameState.Players[0], gameState.Players[0].HandCards[0], 0);
+
+        // Assertion
+        Assert.Equal(expectedPlayer2Requesting, playResult.Data.Players[1].RequestingTopUp);
     }
 }

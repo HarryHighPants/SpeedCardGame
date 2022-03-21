@@ -6,10 +6,12 @@ namespace Engine.UnitTests;
 public class WinningTests
 {
     [Theory]
-    [InlineData(1, null, 1, true, 0)]
-    [InlineData(1, 5, null, true, 1)]
-    [InlineData(1, 5, 1, false, 0)]
-    public void Winning_Theory(int centerPile1, int? player1Card, int? player2Card,
+    [InlineData(1, null, 1, null, true, 0)]
+    [InlineData(1, 5, null, null, true, 1)]
+    [InlineData(1, 5, 1, null, false, 0)]
+    [InlineData(1, null, 1, 9, true, 0)]
+    [InlineData(1, 5, null, 9, true, 1)]
+    public void Winning_Theory(int centerPile1, int? player1Card, int? player2Card, int? player1Kitty,
         bool expectedWinner, int expectedWinnerIndex)
     {
         // Arrange

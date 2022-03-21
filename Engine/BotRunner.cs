@@ -3,7 +3,7 @@ using Engine.Helpers;
 
 namespace Engine;
 
-public class Bot
+public class BotRunner
 {
     public static Result<(GameState updatedGameState, string moveMade)> MakeMove(
         GameState gameState, Player player)
@@ -39,15 +39,18 @@ public class Bot
         }
 
         // Request Top up
-        Result<(GameState updatedGameState, bool couldTopUp)> topUpResult =
-            GameEngine.TryRequestTopUp(gameState, player);
-        if (topUpResult.Success)
+        if (!player.RequestingTopUp)
         {
-            return new SuccessResult<(GameState updatedGameState, string moveMade)>((
-                topUpResult.Data.updatedGameState,
-                topUpResult.Data.couldTopUp ? "topped up the center piles" : "is ready to top up"));
+            Result<(GameState updatedGameState, bool couldTopUp)> topUpResult =
+                GameEngine.TryRequestTopUp(gameState, player);
+            if (topUpResult.Success)
+            {
+                return new SuccessResult<(GameState updatedGameState, string moveMade)>((
+                    topUpResult.Data.updatedGameState,
+                    topUpResult.Data.couldTopUp ? "topped up the center piles" : "is ready to top up"));
+            }
         }
 
-        return new ErrorResult<(GameState updatedGameState, string moveMade)>("Bot can't do anything");
+        return new SuccessResult<(GameState updatedGameState, string moveMade)>((gameState, null)!);
     }
 }

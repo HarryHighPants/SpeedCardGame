@@ -1,3 +1,5 @@
+using static Engine.Program;
+
 namespace Engine.CliHelpers;
 
 public static class CliGameUtils
@@ -52,37 +54,73 @@ public static class CliGameUtils
         return $"{card.Value}{card.Suit.ToString().ToLower()[0]}";
     }
 
-    public static void GameIntro()
+
+    public static BotDifficulty GameIntro()
     {
-        var instructionsTitle = "------ Instructions -----";
         Console.Clear();
-        Console.WriteLine(instructionsTitle);
+        Console.WriteLine("------ Speed Card Game ------");
         Console.WriteLine("Welcome to the speed card game cli version");
         Console.WriteLine();
-        Console.WriteLine("Press any key to continue..");
-        Console.ReadKey(true);
+        Console.WriteLine("Would you like to hear the rules? (y/n)");
+        ConsoleKeyInfo hearRulesInput = Console.ReadKey(true);
         Console.Clear();
 
-        Console.WriteLine(instructionsTitle);
-        Console.WriteLine("To play a card in your hand, enter its value followed by the center pile to play it on..");
-        Console.WriteLine();
-        Console.WriteLine("Press any key to continue..");
-        Console.ReadKey(true);
+        if (hearRulesInput.KeyChar == 'y')
+        {
+            var instructionsTitle = "------ Instructions -----";
+            Console.WriteLine(instructionsTitle);
+            Console.WriteLine("The goal of this game is to get rid of all your cards before your opponent.");
+            Console.WriteLine(
+                "To get rid of cards you can play them onto the center piles if it's 1 above or below the other card.");
+            Console.WriteLine("Also, an ace (12) can be played onto a 2(0) or vice versa.");
+            Console.WriteLine("You can pickup cards from your kitty if you have less than 5 cards in your hand.");
+            Console.WriteLine();
+            Console.WriteLine("Press any key to continue..");
+            Console.ReadKey(true);
+            Console.Clear();
+
+            Console.WriteLine(instructionsTitle);
+            Console.WriteLine("To play a card in your hand, enter its value followed by the card to play it on.");
+            Console.WriteLine("For example to play a 7 onto a 6 in the center pile use '7 6'");
+            Console.WriteLine();
+            Console.WriteLine("Press any key to continue..");
+            Console.ReadKey(true);
+            Console.Clear();
+
+            Console.WriteLine(instructionsTitle);
+            Console.WriteLine("You can also pickup from your kitty by typing 'k'");
+            Console.WriteLine("If you can't make any moves, request a top up of the center pile with 't'");
+            Console.WriteLine();
+            Console.WriteLine("Press any key to continue..");
+            Console.ReadKey(true);
+            Console.Clear();
+        }
+
+        Console.Clear();
+        Console.WriteLine("------ Difficulty ------");
+        Console.WriteLine("What difficulty opponent will you face?");
+        Console.WriteLine("(e)asy, (m)edium, (h)ard, (i)mpossible");
+        ConsoleKeyInfo difficultyInput = Console.ReadKey(true);
         Console.Clear();
 
-        Console.WriteLine(instructionsTitle);
-        Console.WriteLine("For example to play a 7 onto the 2nd center pile use '7 2'");
-        Console.WriteLine("You can also pickup from your kitty by typing 'k'");
-        Console.WriteLine("If you can't make any moves request a top up of the center pile with 't'");
-        Console.WriteLine();
-        Console.WriteLine("Press any key to continue..");
-        Console.ReadKey(true);
-        Console.Clear();
+        BotDifficulty difficulty = difficultyInput.KeyChar switch
+        {
+            'e' => BotDifficulty.Easy,
+            'm' => BotDifficulty.Medium,
+            'h' => BotDifficulty.Hard,
+            'i' => BotDifficulty.Impossible,
+            _ => BotDifficulty.Medium
+        };
+        BotData bot = Bots[difficulty];
 
         Console.WriteLine("------ Game initialised ------");
-        Console.WriteLine("Your opponent is: Botty the quick");
+        Console.ForegroundColor = ConsoleColor.DarkRed;
+        Console.WriteLine($"Your opponent is: {bot.Name}");
+        Console.ForegroundColor = ConsoleColor.Black;
+        Console.WriteLine(bot.CustomIntroMessage);
         Console.WriteLine();
         Console.WriteLine("Press any key to start the match!");
         Console.ReadKey(true);
+        return difficulty;
     }
 }

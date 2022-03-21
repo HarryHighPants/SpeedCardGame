@@ -91,10 +91,10 @@ public static class GameEngine
     public static Result<GameState> TryTopUp(GameState gameState)
     {
         // Check all players are requesting top up
-        Result allPlayersRequestingTopUp = AllPlayersRequestingTopUp(gameState);
-        if (allPlayersRequestingTopUp is ErrorResult allPlayersRequestingTopUpError)
+        Result canTopUpResult = CanTopUp(gameState);
+        if (canTopUpResult is IErrorResult canTopUpError)
         {
-            return new ErrorResult<GameState>(allPlayersRequestingTopUpError.Message);
+            return new ErrorResult<GameState>(canTopUpError.Message);
         }
 
         // Make sure we have cards in our top up pile
@@ -111,7 +111,24 @@ public static class GameEngine
             gameState.CenterPiles[i].Add(gameState.Players[i].TopUpCards.Pop());
         }
 
+        foreach (Player player in gameState.Players)
+        {
+            player.RequestingTopUp = false;
+        }
+
         return new SuccessResult<GameState>(gameState);
+    }
+
+    private static Result CanTopUp(GameState gameState)
+    {
+        // Check all players are requesting top up
+        Result allPlayersRequestingTopUp = AllPlayersRequestingTopUp(gameState);
+        if (allPlayersRequestingTopUp is ErrorResult allPlayersRequestingTopUpError)
+        {
+            return new ErrorResult(allPlayersRequestingTopUpError.Message);
+        }
+
+        return new SuccessResult();
     }
 
     public static Result<GameState> ReplenishTopUpCards(GameState gameState)
@@ -183,8 +200,18 @@ public static class GameEngine
     private static Result<GameState> PlayCard(GameState gameState, Card card, int centerPileIndex)
     {
         gameState.CenterPiles[centerPileIndex].Add(card);
-        Player? player = gameState.Players.FirstOrDefault(p => p.HandCards.Contains(card));
-        player?.HandCards.Remove(card);
+        Player? playerWithCard = gameState.Players.FirstOrDefault(p => p.HandCards.Contains(card));
+        playerWithCard?.HandCards.Remove(card);
+
+        // Reset any ones request to top up if they can now move
+        foreach (Player player in gameState.Players)
+        {
+            if (player.RequestingTopUp && PlayerHasPlay(gameState, player).Success)
+            {
+                player.RequestingTopUp = false;
+            }
+        }
+
         return new SuccessResult<GameState>(gameState);
     }
 
@@ -267,6 +294,12 @@ public static class GameEngine
         GameState gameState,
         Player player, bool immediateTopUp = true)
     {
+        // Check player isn't already topped up
+        if (player.RequestingTopUp)
+        {
+            return new ErrorResult<(GameState updatedGameState, bool couldTopUp)>("Already requesting to top up");
+        }
+
         // Check the player can top up
         Result requestTopUpResult = CanRequestTopUp(gameState, player);
         if (requestTopUpResult is ErrorResult requestTopUpResultError)
@@ -279,21 +312,22 @@ public static class GameEngine
         gameState.Players[gameState.Players.IndexOf(player)].RequestingTopUp = true;
 
         // Check if we can top up now
-        Result<GameState> topUpResult = TryTopUp(gameState.DeepClone());
+        Result canTopUpResult = CanTopUp(gameState);
 
         // If we want to immediately top up and we can then do it
-        if (immediateTopUp && topUpResult.Success)
+        if (immediateTopUp && canTopUpResult.Success)
         {
+            Result<GameState> topUpResult = TryTopUp(gameState);
             return new SuccessResult<(GameState updatedGameState, bool couldTopUp)>(
                 (topUpResult.Data, true));
         }
 
         // Otherwise just return the gameState with the new top up request 
         return new SuccessResult<(GameState updatedGameState, bool couldTopUp)>(
-            (gameState, topUpResult.Success));
+            (gameState, canTopUpResult.Success));
     }
 
-    // Bot Helpers
+    // BotRunner Helpers
     public static Result<(Card card, int centerPile)> PlayerHasPlay(GameState gameState, Player player)
     {
         foreach (Card card in player.HandCards)
@@ -326,6 +360,21 @@ public static class GameEngine
         }
 
         return new ErrorResult<int>("Card can't be played onto any center pile");
+    }
+
+    public static Result<int> CardWithValueIsInCenterPile(GameState gameState, int value)
+    {
+        for (var i = 0; i < gameState.CenterPiles.Count; i++)
+        {
+            if (gameState.CenterPiles[i].Count < 1) continue;
+            Card pileCard = gameState.CenterPiles[i].Last();
+            if (pileCard.Value == value)
+            {
+                return new SuccessResult<int>(i);
+            }
+        }
+
+        return new ErrorResult<int>("Card with value not found in center pile");
     }
 
     private static Result CanRequestTopUp(GameState gameState, Player player)

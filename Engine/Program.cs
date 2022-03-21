@@ -7,9 +7,61 @@ namespace Engine;
 
 public static class Program
 {
+    public enum BotDifficulty
+    {
+        Easy,
+        Medium,
+        Hard,
+        Impossible
+    }
+
     private static GameState _gameState;
 
     public static Random random = new();
+
+    public static Dictionary<BotDifficulty, BotData> Bots = new()
+    {
+        {
+            BotDifficulty.Easy,
+            new BotData
+            {
+                Name = "Limping Liam", CustomIntroMessage = "He can't jump far", CustomLoseMessage = "Oh no",
+                CustomWinMessage = "Easy", QuickestResponseTimeMs = 3000,
+                SlowestResponseTimeMs = 5000
+            }
+        },
+        {
+            BotDifficulty.Medium,
+            new BotData
+            {
+                Name = "Harrowing Hayden", CustomIntroMessage = "He's a bit of a trickster so watch out",
+                CustomLoseMessage = "Damn, he's tricky", CustomWinMessage = "Down goes the trickster",
+                QuickestResponseTimeMs = 2000, SlowestResponseTimeMs = 4000
+            }
+        },
+        {
+            BotDifficulty.Hard,
+            new BotData
+            {
+                Name = "Masterful Mikaela", CustomIntroMessage = "She can't be trusted",
+                CustomLoseMessage = "Oof, rough one", CustomWinMessage = "Down falls Mikaela and her wicked ways",
+                QuickestResponseTimeMs = 1000,
+                SlowestResponseTimeMs = 3000
+            }
+        },
+        {
+            BotDifficulty.Impossible,
+            new BotData
+            {
+                Name = "Chaotic Kate", CustomIntroMessage = "rip lol", CustomLoseMessage = "No chance",
+                CustomWinMessage = "No one will ever see this message so it doesn't matter",
+                QuickestResponseTimeMs = 500,
+                SlowestResponseTimeMs = 2000
+            }
+        }
+    };
+
+    public static BotData Bot;
 
     public static GameState gameState
     {
@@ -24,11 +76,11 @@ public static class Program
     public static void Main(string[] args)
     {
         // Difficulty
-        (int min, int max) botSpeedMs = (1000, 5000);
+        BotDifficulty botDifficulty = CliGameUtils.GameIntro();
+        Bot = Bots[botDifficulty];
+        (int min, int max) botSpeedMs = (Bot.QuickestResponseTimeMs, Bot.SlowestResponseTimeMs);
 
-        CliGameUtils.GameIntro();
-
-        gameState = GameEngine.NewGame(new List<string> {"Botty the quick", "You"});
+        gameState = GameEngine.NewGame(new List<string> {Bot.Name, "You"});
 
         // Main game loop
         while (GameEngine.TryGetWinner(gameState).Failure)
@@ -38,8 +90,18 @@ public static class Program
 
         // End game
         Player winner = GameEngine.TryGetWinner(gameState).Data;
+        bool winnerIsPlayer = gameState.Players.IndexOf(winner) == 1;
+
         Console.WriteLine("------ Game over ----");
-        UpdateMessage($"Winner is {winner!.Name}");
+        Console.WriteLine();
+        Console.WriteLine(winnerIsPlayer ? Bot.CustomWinMessage : Bot.CustomLoseMessage);
+        Console.WriteLine();
+        Console.WriteLine();
+        Console.ForegroundColor = winnerIsPlayer ? ConsoleColor.DarkBlue : ConsoleColor.DarkRed;
+        UpdateMessage($"Winner is {winner.Name}");
+        Console.ForegroundColor = ConsoleColor.Black;
+        Console.WriteLine();
+        Console.WriteLine();
 
 
         void HandleUserInput(string? input)
@@ -89,7 +151,7 @@ public static class Program
             if (inputCardValue == null)
             {
                 UpdateMessage(
-                    "Enter a card followed by the pile to play it on e.g '6 1'. To pickup from the kitty enter 'k' ");
+                    "Enter a card followed by the card to play it on e.g '6 5'. To pickup from the kitty enter 'k' ");
                 return;
             }
 
@@ -101,18 +163,25 @@ public static class Program
                 return;
             }
 
-            // Which center pile?
-            // Try and get it as a second param
-            int? pile = splitInput.Length > 1 ? splitInput[1].ExtractInt() : null;
-            if (pile == null || (int) pile != 1 && (int) pile != 2)
+            // Teh second param should be the center card
+            int? centerCard = splitInput.Length > 1 ? splitInput[1].ExtractInt() : null;
+            if (centerCard == null)
             {
-                UpdateMessage("Invalid pile, specify it after the card like: '7, 2'");
+                UpdateMessage("Invalid center card, specify it after the card like: '7, 6'");
+                return;
+            }
+
+            // See if the center card is valid
+            Result<int> centerPileResult = GameEngine.CardWithValueIsInCenterPile(gameState, (int) centerCard);
+            if (centerPileResult is IErrorResult centerPileResultError)
+            {
+                UpdateMessage(centerPileResultError.Message);
                 return;
             }
 
             // Try to play the card onto the pile
             Result<GameState> playCardResult =
-                GameEngine.TryPlayCard(gameState, gameState.Players[1], card, (int) pile - 1);
+                GameEngine.TryPlayCard(gameState, gameState.Players[1], card, centerPileResult.Data);
             if (playCardResult is IErrorResult playCardResultError)
             {
                 UpdateMessage(playCardResultError.Message);
@@ -121,7 +190,7 @@ public static class Program
 
             // Update the state with the move
             gameState = playCardResult.Data;
-            UpdateMessage($"Moved card {CliGameUtils.CardToString(card)} to pile {pile}");
+            UpdateMessage($"Played card {CliGameUtils.CardToString(card)} on center pile {centerPileResult.Data + 1}");
         }
 
         void UpdateMessage(string message)
@@ -138,9 +207,9 @@ public static class Program
             }
             catch (TimeoutException)
             {
-                // Bot tries to play
+                // BotRunner tries to play
                 Result<(GameState updatedGameState, string moveMade)> botMoveResult =
-                    Bot.MakeMove(gameState, gameState.Players[0]);
+                    BotRunner.MakeMove(gameState, gameState.Players[0]);
                 if (botMoveResult is IErrorResult botMoveResultError)
                 {
                     UpdateMessage($"{botMoveResultError.Message}");
@@ -149,8 +218,19 @@ public static class Program
 
                 gameState = botMoveResult.Data.updatedGameState;
                 UpdateMessage($"{gameState.Players[0].Name} {botMoveResult.Data.moveMade}");
+
                 return null;
             }
         }
+    }
+
+    public struct BotData
+    {
+        public string Name;
+        public string? CustomIntroMessage;
+        public string? CustomWinMessage;
+        public string? CustomLoseMessage;
+        public int QuickestResponseTimeMs;
+        public int SlowestResponseTimeMs;
     }
 }

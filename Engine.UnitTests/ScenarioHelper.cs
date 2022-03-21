@@ -115,7 +115,7 @@ public class ScenarioHelper
         return cards;
     }
 
-    private static Card CreateBasicCard(int value)
+    public static Card CreateBasicCard(int value)
     {
         if (value == null) return new Card();
         return new Card {Id = GetRandomId(), Value = value, Suit = Suit.Clubs};
