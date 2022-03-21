@@ -19,7 +19,8 @@ public abstract class Result<T> : Result
     {
         get => Success
             ? _data
-            : throw new Exception($"You can't access .{nameof(Data)} when .{nameof(Success)} is false");
+            // : throw new Exception($"You can't access .{nameof(Data)} when .{nameof(Success)} is false");
+            : default;
         set => _data = value;
     }
 }

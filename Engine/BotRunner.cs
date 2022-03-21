@@ -24,7 +24,7 @@ public class BotRunner
             if (playResult.Success)
             {
                 return new SuccessResult<(GameState updatedGameState, string moveMade)>((playResult.Data,
-                    $"played card {CliGameUtils.CardToString(playCardResult.Data.card)}"));
+                    $"played card {CliGameUtils.CardToString(playCardResult.Data.card)} onto pile {playCardResult.Data.centerPile + 1}"));
             }
         }
 
