@@ -8,11 +8,11 @@ public class BotRunner
     public static Result<(GameState updatedGameState, string moveMade)> MakeMove(
         GameState gameState, int playerIndex)
     {
-        Result<Player> winnerResult = GameEngine.TryGetWinner(gameState);
+        var winnerResult = GameEngine.TryGetWinner(gameState);
         if (winnerResult.Success)
         {
-            return new ErrorResult<(GameState updatedGameState, string moveMade)>(
-                $"can't move when {winnerResult.Data.Name} has won already!");
+            return Result.Error<(GameState updatedGameState, string moveMade)>(
+                $"can't move when {gameState.Players[winnerResult.Data].Name} has won already!");
         }
 
         // See if we can play any cards
@@ -23,7 +23,7 @@ public class BotRunner
                 GameEngine.TryPlayCard(gameState, playerIndex, playCardResult.Data.card, playCardResult.Data.centerPile);
             if (playResult.Success)
             {
-                return new SuccessResult<(GameState updatedGameState, string moveMade)>((playResult.Data,
+                return Result.Successful((playResult.Data,
                     $"played card {CliGameUtils.CardToString(playCardResult.Data.card)} onto pile {playCardResult.Data.centerPile + 1}"));
             }
         }
@@ -33,7 +33,7 @@ public class BotRunner
             GameEngine.TryPickupFromKitty(gameState, playerIndex);
         if (pickupFromKittyResult.Success)
         {
-            return new SuccessResult<(GameState updatedGameState, string moveMade)>((
+            return Result.Successful((
                 pickupFromKittyResult.Data.updatedGameState,
                 $"picked up card {CliGameUtils.CardToString(pickupFromKittyResult.Data.pickedUpCard)}"));
         }
@@ -45,12 +45,12 @@ public class BotRunner
                 GameEngine.TryRequestTopUp(gameState, playerIndex);
             if (topUpResult.Success)
             {
-                return new SuccessResult<(GameState updatedGameState, string moveMade)>((
+                return Result.Successful((
                     topUpResult.Data.updatedGameState,
                     topUpResult.Data.couldTopUp ? "topped up the center piles" : "is ready to top up"));
             }
         }
 
-        return new SuccessResult<(GameState updatedGameState, string moveMade)>((gameState, null)!);
+        return Result.Successful((gameState, ""));
     }
 }

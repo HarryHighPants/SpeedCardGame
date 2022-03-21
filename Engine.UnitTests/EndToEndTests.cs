@@ -20,12 +20,17 @@ public class EndToEndTests
         GameState gameState = GameEngine.NewGame();
 
         var movesMade = 0;
-        while (GameEngine.TryGetWinner(gameState).Failure)
+        while (GameEngine.TryGetWinner(gameState).Failure && movesMade < 1000)
         {
-            Result<(GameState updatedGameState, string moveMade)> move1 =
-                BotRunner.MakeMove(gameState, gameState.Players[0]);
-            Result<(GameState updatedGameState, string moveMade)> move2 =
-                BotRunner.MakeMove(gameState, gameState.Players[1]);
+            var move1 =
+                BotRunner.MakeMove(gameState, 0);
+            
+            gameState = move1.Success ? move1.Data.updatedGameState : gameState;
+            
+            var move2 =
+                BotRunner.MakeMove(gameState, 1);
+            gameState = move2.Success ? move2.Data.updatedGameState : gameState;
+
 
             // Debugging
             if (move1 is not IErrorResult move1Error && !string.IsNullOrEmpty(move2.Data.moveMade))
@@ -41,8 +46,8 @@ public class EndToEndTests
             movesMade++;
         }
 
-        Result<Player> winnerResult = GameEngine.TryGetWinner(gameState);
-        _testOutputHelper.WriteLine($"Bot game complete with {winnerResult.Data.Name} winning in {movesMade} moves");
+        var winnerResult = GameEngine.TryGetWinner(gameState);
+        _testOutputHelper.WriteLine($"Bot game complete with {gameState.Players[winnerResult.Data].Name} winning in {movesMade} moves");
         Assert.True(GameEngine.TryGetWinner(gameState).Success);
     }
 
@@ -65,16 +70,16 @@ public class EndToEndTests
         Player player2 = gameState.Players[1];
 
         // Act
-        gameState = Assert.True(GameEngine.TryRequestTopUp(gameState, player2).Success);
-        Assert.True(GameEngine.TryPlayCard(gameState, player1, player1.HandCards[0], 0).Success);
-        Assert.True(GameEngine.TryPickupFromKitty(gameState, player1).Success);
-        Assert.True(GameEngine.TryRequestTopUp(gameState, player1).Success);
-        Assert.True(GameEngine.TryPlayCard(gameState, player2, player2.HandCards[0], 0).Success);
-        Assert.True(GameEngine.TryPlayCard(gameState, player1, player1.HandCards[0], 0).Success);
-        Result<Player> winnerResult = GameEngine.TryGetWinner(gameState);
+        gameState = GameEngine.TryRequestTopUp(gameState, 1).Data.updatedGameState;
+        gameState = GameEngine.TryPlayCard(gameState, 0, player1.HandCards[0], 0).Data;
+        gameState = GameEngine.TryPickupFromKitty(gameState, 0).Data.updatedGameState;
+        gameState = GameEngine.TryRequestTopUp(gameState, 0).Data.updatedGameState;
+        gameState = GameEngine.TryPlayCard(gameState, 1, player2.HandCards[0], 0).Data;
+        gameState = GameEngine.TryPlayCard(gameState, 0, player1.HandCards[0], 0).Data;
+        var winnerResult = GameEngine.TryGetWinner(gameState);
 
         // Assertion
-        Assert.Equal(player1, winnerResult.Data);
+        Assert.Equal(0, winnerResult.Data);
     }
 
     [Fact]
@@ -93,16 +98,16 @@ public class EndToEndTests
         Player player2 = gameState.Players[1];
 
         // Act
-        Assert.True(GameEngine.TryRequestTopUp(gameState, player2).Success);
-        Assert.True(GameEngine.TryRequestTopUp(gameState, player1).Success);
+        gameState = GameEngine.TryRequestTopUp(gameState, 1).Data.updatedGameState;
+        gameState = GameEngine.TryRequestTopUp(gameState, 0).Data.updatedGameState;
         Assert.Single(gameState.CenterPiles[0]);
 
         // Manually add a 6 to ensure the 6 "was" shuffled in first
         gameState.CenterPiles[0].Add(ModelGenerator.CreateBasicCard(6));
-        Assert.True(GameEngine.TryPlayCard(gameState, player1, player1.HandCards[0], 0).Success);
-        Result<Player> winnerResult = GameEngine.TryGetWinner(gameState);
+        gameState = GameEngine.TryPlayCard(gameState, 0, player1.HandCards[0], 0).Data;
+        var winnerResult = GameEngine.TryGetWinner(gameState);
 
         // Assertion
-        Assert.Equal(player1, winnerResult.Data);
+        Assert.Equal(0, winnerResult.Data);
     }
 }

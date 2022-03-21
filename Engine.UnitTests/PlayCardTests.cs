@@ -27,11 +27,11 @@ public class PlayCardTests
 
         // Act
         // See if we have a play
-        Result<(Card card, int centerPile)> hasPlayResult = GameEngine.PlayerHasPlay(gameState, gameState.Players[0]);
+        Result<(Card card, int centerPile)> hasPlayResult = GameEngine.PlayerHasPlay(gameState, 0);
 
         // Try to play it
         Result<GameState> tryPlayResult =
-            GameEngine.TryPlayCard(gameState, gameState.Players[0], gameState.Players[0].HandCards[0], 0);
+            GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0], 0);
 
         // Assertion
         Assert.Equal(expectedCanPlay, hasPlayResult.Success);
@@ -54,7 +54,7 @@ public class PlayCardTests
 
         // Try to play it
         Result<GameState> tryPlayResult =
-            GameEngine.TryPlayCard(gameState, gameState.Players[0], gameState.Players[1].HandCards[0], 0);
+            GameEngine.TryPlayCard(gameState, 0, gameState.Players[1].HandCards[0], 0);
 
         // Assertion
         Assert.True(tryPlayResult.Failure);
@@ -70,7 +70,7 @@ public class PlayCardTests
 
         // Try to play it
         Result<GameState> tryPlayResult =
-            GameEngine.TryPlayCard(gameState, gameState.Players[0], randomCard, 0);
+            GameEngine.TryPlayCard(gameState, 0, randomCard, 0);
 
         // Assertion
         Assert.True(tryPlayResult.Failure);

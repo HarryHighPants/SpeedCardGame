@@ -18,7 +18,7 @@ public class TopUpTests
         // Act
         // See if we can request top up
         Result<(GameState updatedGameState, bool couldTopUp)> canRequestTopUpResult =
-            GameEngine.TryRequestTopUp(gameState, gameState.Players[0], false);
+            GameEngine.TryRequestTopUp(gameState, 0, false);
 
         // Assertion
         Assert.Equal(expectedCanRequestTopUp, canRequestTopUpResult.Success);
@@ -122,7 +122,7 @@ public class TopUpTests
         // Act
         // Player 1 moves
         Result<GameState> playResult = GameEngine.TryPlayCard(gameState,
-            gameState.Players[0], gameState.Players[0].HandCards[0], 0);
+            0, gameState.Players[0].HandCards[0], 0);
 
         // Assertion
         Assert.Equal(expectedPlayer2Requesting, playResult.Data.Players[1].RequestingTopUp);

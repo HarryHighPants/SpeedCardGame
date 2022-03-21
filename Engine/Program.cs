@@ -84,7 +84,7 @@ public static class Program
             }
 
             // End game
-            Player winner = GameEngine.TryGetWinner(gameState).Data;
+            var winner = gameState.Players[GameEngine.TryGetWinner(gameState).Data];
             bool winnerIsPlayer = gameState.Players.IndexOf(winner) == 1;
 
             Console.WriteLine("------ Game over ----");
@@ -113,7 +113,7 @@ public static class Program
                 case "k":
                     // Try and pickup from kitty
                     Result<(GameState updatedGameState, Card pickedUpCard)> pickupKittyResult
-                        = GameEngine.TryPickupFromKitty(gameState, gameState.Players[1]);
+                        = GameEngine.TryPickupFromKitty(gameState, 1);
                     if (pickupKittyResult is IErrorResult
                         pickupKittyResultError)
                     {
@@ -126,7 +126,7 @@ public static class Program
                     break;
                 case "t":
                     Result<(GameState updatedGameState, bool couldTopUp)> requestTopUpResult =
-                        GameEngine.TryRequestTopUp(gameState, gameState.Players[1]);
+                        GameEngine.TryRequestTopUp(gameState, 1);
                     if (requestTopUpResult is IErrorResult requestTopUpResultError)
                     {
                         UpdateMessage(requestTopUpResultError.Message);
@@ -181,7 +181,7 @@ public static class Program
 
             // Try to play the card onto the pile
             Result<GameState> playCardResult =
-                GameEngine.TryPlayCard(gameState, gameState.Players[1], card, centerPileResult.Data);
+                GameEngine.TryPlayCard(gameState, 1, card, centerPileResult.Data);
             if (playCardResult is IErrorResult playCardResultError)
             {
                 UpdateMessage(playCardResultError.Message);

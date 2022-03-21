@@ -6,6 +6,26 @@ public abstract class Result
 {
     public bool Success { get; protected set; }
     public bool Failure => !Success;
+
+    public static Result<T> Successful<T>(T data)
+    {
+        return new SuccessResult<T>(data);
+    }
+    
+    public static Result Successful()
+    {
+        return new SuccessResult();
+    }
+    
+    public static Result<T> Error<T>(string message)
+    {
+        return new ErrorResult<T>(message);
+    }
+    
+    public static Result Error(string message)
+    {
+        return new ErrorResult(message);
+    }
 }
 
 public abstract class Result<T> : Result, IEnumerable<T>

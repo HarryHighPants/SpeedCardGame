@@ -23,11 +23,11 @@ public class PickupCardTests
 
         // Act
         // See if we can pickup
-        Result canPickupResult = GameEngine.CanPickupFromKitty(gameState, gameState.Players[0]);
+        Result canPickupResult = GameEngine.CanPickupFromKitty(gameState, 0);
 
         // Try to pickup
         Result<(GameState updatedGameState, Card pickedUpCard)> tryPickupResult =
-            GameEngine.TryPickupFromKitty(gameState, gameState.Players[0]);
+            GameEngine.TryPickupFromKitty(gameState, 0);
 
         // Assertion
         Assert.Equal(expectedCanPickup, canPickupResult.Success);
