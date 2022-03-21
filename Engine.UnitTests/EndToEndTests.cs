@@ -33,12 +33,12 @@ public class EndToEndTests
 
 
             // Debugging
-            if (move1 is not IErrorResult move1Error && !string.IsNullOrEmpty(move2.Data.moveMade))
+            if (move1 is not IErrorResult && !string.IsNullOrEmpty(move1.Data.moveMade))
             {
                 _testOutputHelper.WriteLine($"{gameState.Players[0].Name} {move1.Data.moveMade}");
             }
 
-            if (move1 is not IErrorResult move2Error && !string.IsNullOrEmpty(move2.Data.moveMade))
+            if (move2 is not IErrorResult && !string.IsNullOrEmpty(move2.Data.moveMade))
             {
                 _testOutputHelper.WriteLine($"{gameState.Players[1].Name} {move2.Data.moveMade}");
             }
@@ -66,16 +66,13 @@ public class EndToEndTests
                 player2TopUps: new List<int?> {4}
             );
 
-        Player player1 = gameState.Players[0];
-        Player player2 = gameState.Players[1];
-
         // Act
         gameState = GameEngine.TryRequestTopUp(gameState, 1).Data.updatedGameState;
-        gameState = GameEngine.TryPlayCard(gameState, 0, player1.HandCards[0], 0).Data;
+        gameState = GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0], 0).Data;
         gameState = GameEngine.TryPickupFromKitty(gameState, 0).Data.updatedGameState;
         gameState = GameEngine.TryRequestTopUp(gameState, 0).Data.updatedGameState;
-        gameState = GameEngine.TryPlayCard(gameState, 1, player2.HandCards[0], 0).Data;
-        gameState = GameEngine.TryPlayCard(gameState, 0, player1.HandCards[0], 0).Data;
+        gameState = GameEngine.TryPlayCard(gameState, 1, gameState.Players[1].HandCards[0], 0).Data;
+        gameState = GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0], 0).Data;
         var winnerResult = GameEngine.TryGetWinner(gameState);
 
         // Assertion

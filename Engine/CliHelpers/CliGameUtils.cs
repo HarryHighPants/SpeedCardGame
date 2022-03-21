@@ -31,29 +31,20 @@ public static class CliGameUtils
         Console.WriteLine();
     }
 
-    public static Card? GetCardWithValue(List<Card> cards, int? value)
+    public static Card? GetCardWithValue(IEnumerable<Card> cards, int? value)
     {
         return cards.FirstOrDefault(card => card.Value == value);
     }
 
-    public static string CardsToString(List<Card> cards)
+    public static string CardsToString(IReadOnlyList<Card> cards)
     {
-        var line = "";
-        for (var index = 0; index < cards.Count; index++)
-        {
-            Card card = cards[index];
-            line += CardToString(card);
-            if (index < cards.Count) line += "  ";
-        }
-
-        return line;
+        return string.Join(" ", cards.Select(CardToString));
     }
 
     public static string CardToString(Card card)
     {
         return $"{card.Value}{card.Suit.ToString().ToLower()[0]}";
     }
-
 
     public static BotDifficulty GameIntro(bool skipIntro = false)
     {

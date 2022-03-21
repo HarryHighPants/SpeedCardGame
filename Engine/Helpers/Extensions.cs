@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
 using static System.Int32;
@@ -28,6 +29,18 @@ public static class Extensions
         }
 
         return result;
+    }
+    
+    public static (ImmutableList<T> poppedList, ImmutableList<T> poppedItems) PopRange<T>(this ImmutableList<T> poppedList, int amount)
+    {
+        var poppedItems = new List<T>(amount);
+        while (amount-- > 0 && poppedList.Count > 0)
+        {
+            poppedItems.Add(poppedList[^1]);
+            poppedList = poppedList.RemoveAt(poppedList.Count - 1);
+        }
+
+        return (poppedList, poppedItems.ToImmutableList());
     }
 
     public static T Pop<T>(this List<T> stack)
@@ -81,5 +94,10 @@ public static class Extensions
 
             i++;
         }
+    }
+
+    public static IEnumerable<(T item, int index)> IndexTuples<T>(this IEnumerable<T> source)
+    {
+        return source.Select((x, i) => (x, i));
     }
 }

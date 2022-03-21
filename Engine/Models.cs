@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace Engine;
 
 public record Settings
@@ -9,17 +11,17 @@ public record Settings
 public record GameState
 {
     public Settings? Settings { get; init; }
-    public List<Player> Players { get; init; } = new(0);
-    public List<List<Card>> CenterPiles { get; init; } = new(0);
+    public ImmutableList<Player> Players { get; init; }
+    public ImmutableList<ImmutableList<Card>> CenterPiles { get; init; } 
 }
 
 public record Player
 {
     public int Id { get; init; }
     public string Name { get; init; } = "";
-    public List<Card> HandCards { get; init; } = new(0);
-    public List<Card> KittyCards { get; init; } = new(0);
-    public List<Card> TopUpCards { get; init; } = new(0);
+    public ImmutableList<Card> HandCards { get; init; } 
+    public ImmutableList<Card> KittyCards { get; init; } 
+    public ImmutableList<Card> TopUpCards { get; init; } 
     public bool RequestingTopUp { get; init; }
 }
 

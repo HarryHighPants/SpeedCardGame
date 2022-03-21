@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Engine.UnitTests;
 
@@ -37,12 +38,12 @@ public class ModelGenerator
             {
                 CreateBasicPlayer("Player 1", player1Cards, player1Kittys, player1TopUps, player1RequestingTopup),
                 CreateBasicPlayer("Player 2", player2Cards, player2Kittys, player2TopUps, player2RequestingTopup)
-            },
-            CenterPiles = new List<List<Card>>
+            }.ToImmutableList(),
+            CenterPiles = new List<ImmutableList<Card>>
             {
                 CreateBasicCards(centerPile1),
                 CreateBasicCards(centerPile2)
-            }
+            }.ToImmutableList()
         };
     }
 
@@ -56,14 +57,14 @@ public class ModelGenerator
         };
     }
 
-    private static List<Card> CreateBasicCards(List<int?>? values)
+    private static ImmutableList<Card> CreateBasicCards(List<int?>? values)
     {
         var cards = new List<Card>();
         values?.ForEach(v =>
         {
             if (v != null) cards.Add(CreateBasicCard((int) v));
         });
-        return cards;
+        return cards.ToImmutableList();
     }
 
     public static Card CreateBasicCard(int value)

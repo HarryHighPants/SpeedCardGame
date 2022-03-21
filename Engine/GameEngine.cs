@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Engine.Helpers;
 
 namespace Engine;
@@ -50,16 +51,16 @@ public static class GameEngine
             {
                 Id = i + 1,
                 Name = playerNames?[i] ?? $"Player {i + 1}",
-                HandCards = deck.PopRange(MaxHandCardsBase),
-                KittyCards = deck.PopRange(CardsInKitty),
-                TopUpCards = deck.PopRange(CardsInTopUp)
+                HandCards = deck.PopRange(MaxHandCardsBase).ToImmutableList(),
+                KittyCards = deck.PopRange(CardsInKitty).ToImmutableList(),
+                TopUpCards = deck.PopRange(CardsInTopUp).ToImmutableList()
             });
         }
 
         var gameState = new GameState
         {
-            Players = players,
-            CenterPiles = new List<List<Card>> {deck.PopRange(1), deck.PopRange(1)},
+            Players = players.ToImmutableList(),
+            CenterPiles = new List<ImmutableList<Card>> { deck.PopRange(1).ToImmutableList(), deck.PopRange(1).ToImmutableList()}.ToImmutableList(),
             Settings = settings
         };
         return gameState;
@@ -68,12 +69,12 @@ public static class GameEngine
     public static Result<int> TryGetWinner(GameState gameState)
     {
         // Check if a player has no cards in their hand or kitty
-        foreach (Player player in gameState.Players)
+        foreach (var (player, i) in gameState.Players.IndexTuples())
         {
             if (player.HandCards.Count <= 0 && player.KittyCards.Count <= 0)
             {
                 // Return any player that does
-                return Result.Successful(gameState.Players.IndexOf(player));
+                return Result.Successful(i);
             }
         }
 
@@ -107,10 +108,10 @@ public static class GameEngine
 
         // Move each top up card to their respective center piles
         var newCenterPiles =
-            gameState.CenterPiles.Select((pile, i) => pile.Append(gameState.Players[i].TopUpCards.Last()).ToList()).ToList();
+            gameState.CenterPiles.Select((pile, i) => pile.Append(gameState.Players[i].TopUpCards.Last()).ToImmutableList()).ToImmutableList();
 
-        List<Player> newPlayers = gameState.Players.Select(player =>
-            player with {RequestingTopUp = false, TopUpCards = player.TopUpCards.Take(..^1).ToList()}).ToList();
+        var newPlayers = gameState.Players.Select(player =>
+            player with {RequestingTopUp = false, TopUpCards = player.TopUpCards.Take(..^1).ToImmutableList()}).ToImmutableList();
 
         return Result.Successful(gameState with {Players = newPlayers, CenterPiles = newCenterPiles});
     }
@@ -143,13 +144,13 @@ public static class GameEngine
         // Split all but center piles count into top up piles
         int topUpPileSize = combinedCenterPiles.Count / gameState.Players.Count;
         var newPlayers =
-            gameState.Players.Select(player => player with {TopUpCards = combinedCenterPiles.PopRange(topUpPileSize)}).ToList();
+            gameState.Players.Select(player => player with {TopUpCards = combinedCenterPiles.PopRange(topUpPileSize).ToImmutableList()}).ToImmutableList();
 
         // Reset the center piles
-        var newCenterPiles = new List<List<Card>>();
-        for (var i = 0; i < gameState.CenterPiles.Count; i++) newCenterPiles.Add(new List<Card>());
+        var newCenterPiles = new List<ImmutableList<Card>>();
+        for (var i = 0; i < gameState.CenterPiles.Count; i++) newCenterPiles.Add( ImmutableList<Card>.Empty);
 
-        return Result.Successful(gameState with{Players = newPlayers, CenterPiles = newCenterPiles});
+        return Result.Successful(gameState with{Players = newPlayers, CenterPiles = newCenterPiles.ToImmutableList()});
     }
 
     public static Result<GameState> TryPlayCard(GameState gameState, int playerIndex, Card card,
@@ -192,32 +193,49 @@ public static class GameEngine
 
     private static Result<GameState> PlayCard(GameState gameState, Card card, int centerPileIndex)
     {
-        gameState.CenterPiles[centerPileIndex].Add(card);
-        Player? playerWithCard = gameState.Players.FirstOrDefault(p => p.HandCards.Contains(card));
-        playerWithCard?.HandCards.Remove(card);
+        var newGameState = gameState;
+        
+        // Add the card being played to the center pile
+        var newCenterPiles = newGameState.CenterPiles.ReplaceElementAt(
+            centerPileIndex, gameState.CenterPiles[centerPileIndex].Append(card).ToImmutableList()).ToImmutableList();
+        newGameState = newGameState with {CenterPiles = newCenterPiles};
+        
+        
+        var (playerWithCard, playerIndexWithCard) = gameState.Players.IndexTuples().First(p => p.item.HandCards.Contains(card));
+        var newHandCards = playerWithCard.HandCards.Where(c => c != card).ToImmutableList();
+        var newPlayer = playerWithCard with {HandCards = newHandCards};
+        var newPlayers = newGameState.Players.ReplaceElementAt(playerIndexWithCard, newPlayer).ToImmutableList();
+        newGameState = newGameState with {Players = newPlayers};
 
         // Reset any ones request to top up if they can now move
-        var newPlayers = gameState.Players.Select((player, i) =>
-            player.RequestingTopUp && PlayerHasPlay(gameState, i).Success
+        newPlayers = newPlayers.Select((player, i) =>
+            player.RequestingTopUp && PlayerHasPlay(newGameState, i).Success
                 ? player with {RequestingTopUp = false}
-                : player).ToList();
+                : player).ToImmutableList();
         
-        return Result.Successful(gameState with{Players = newPlayers});
+        return Result.Successful(newGameState with {Players = newPlayers});
     }
 
     public static Result<(GameState updatedGameState, Card pickedUpCard)> TryPickupFromKitty(
         GameState gameState, int playerIndex)
     {
         var player = gameState.Players[playerIndex];
+        
         Result canPickupResult = CanPickupFromKitty(gameState, playerIndex);
         if (canPickupResult is ErrorResult canPickupResultError)
         {
             return Result.Error<(GameState updatedGameState, Card pickedUpCard)>(canPickupResultError.Message);
         }
 
-        player.HandCards.Add(player.KittyCards.Last());
-        player.KittyCards.Remove(player.KittyCards.Last());
-        return Result.Successful((gameState, player.HandCards.Last()));
+        var newHandCard = player.HandCards.ToImmutableList();
+        newHandCard = newHandCard.Add(player.KittyCards.Last());
+
+        var newKittyCards = player.KittyCards.ToImmutableList();
+        newKittyCards = newKittyCards.Remove(player.KittyCards.Last());
+        var newPlayer = player with {HandCards = newHandCard, KittyCards = newKittyCards};
+        var newPlayers = gameState.Players.ReplaceElementAt(playerIndex, newPlayer).ToImmutableList();
+        
+        return Result.Successful((gameState with {Players = newPlayers}, newPlayer.HandCards.Last()));
     }
 
     public static Result CanPickupFromKitty(GameState gameState, int playerIndex)
@@ -271,7 +289,7 @@ public static class GameEngine
 
         for (var i = 0; i < gameState.CenterPiles.Count; i++)
         {
-            List<Card> centerPile = gameState.CenterPiles[i];
+            var centerPile = gameState.CenterPiles[i];
             int centerPileIndex = centerPile.IndexOf(card);
             if (centerPileIndex != -1)
             {
@@ -306,7 +324,7 @@ public static class GameEngine
 
         // Apply the top up request
         var newPlayer = player with {RequestingTopUp = true};
-        var newPlayers = gameState.Players.ReplaceElementAt(playerIndex, newPlayer).ToList();
+        var newPlayers = gameState.Players.ReplaceElementAt(playerIndex, newPlayer).ToImmutableList();
         newGameState = newGameState with {Players = newPlayers};
         
         // Check if we can top up now
