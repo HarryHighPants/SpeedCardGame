@@ -11,13 +11,13 @@ public static class CliGameUtils
         Player player = gameState.Players[0];
         Console.ForegroundColor = ConsoleColor.DarkRed;
         Console.WriteLine(
-            $"{player.Name}:       {GameEngine.CardsToString(player.HandCards)}     Kitty count: {player.KittyCards.Count}");
+            $"{player.Name}:       {GameEngine.CardsToString(player.HandCards, true)}     Kitty count: {player.KittyCards.Count}");
 
         // Display the middle two cards
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Black;
         Console.WriteLine(
-            $"                             {GameEngine.CardToString(gameState.CenterPiles[0].Last())} {GameEngine.CardToString(gameState.CenterPiles[1].Last())}      ");
+            $"                             {GameEngine.CardToString(gameState.CenterPiles[0].Last(), true)}, {GameEngine.CardToString(gameState.CenterPiles[1].Last(), true)}      ");
         Console.ResetColor();
         Console.WriteLine();
 
@@ -25,17 +25,17 @@ public static class CliGameUtils
         player = gameState.Players[1];
         Console.ForegroundColor = ConsoleColor.DarkBlue;
         Console.WriteLine(
-            $"{player.Name}:                   {GameEngine.CardsToString(player.HandCards)}     Kitty count: {player.KittyCards.Count}");
+            $"{player.Name}:                   {GameEngine.CardsToString(player.HandCards, true)}     Kitty count: {player.KittyCards.Count}");
         Console.ResetColor();
         Console.WriteLine();
     }
 
     public static Card? GetCardWithValue(IEnumerable<Card> cards, int? value)
     {
-        return cards.FirstOrDefault(card => card.Value == value);
+        return cards.FirstOrDefault(card => card.CardValue == (CardValue)value!);
     }
 
-    public static BotDifficulty GameIntro(bool skipIntro = false)
+    public static void GameIntro(bool skipIntro = false)
     {
         var hearRulesInput = "";
         if (!skipIntro)
@@ -87,13 +87,13 @@ public static class CliGameUtils
         string difficultyInput = Console.ReadLine();
         Console.Clear();
 
-        CliGame.BotDifficulty difficulty = difficultyInput switch
+        BotDifficulty difficulty = difficultyInput switch
         {
-            "e" => CliGame.BotDifficulty.Easy,
-            "m" => CliGame.BotDifficulty.Medium,
-            "h" => CliGame.BotDifficulty.Hard,
-            "i" => CliGame.BotDifficulty.Impossible,
-            _ => CliGame.BotDifficulty.Medium
+            "e" => BotDifficulty.Easy,
+            "m" => BotDifficulty.Medium,
+            "h" => BotDifficulty.Hard,
+            "i" => BotDifficulty.Impossible,
+            _ => BotDifficulty.Medium
         };
         // Bot Setup
         BotRunnerCli.SetDifficulty(difficulty);
@@ -106,6 +106,5 @@ public static class CliGameUtils
         Console.WriteLine();
         Console.WriteLine("Press any key to start the match!");
         Console.ReadKey(true);
-        return difficulty;
     }
 }

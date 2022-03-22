@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Engine.Helpers;
 using Xunit;
 using Xunit.Abstractions;
@@ -56,8 +58,12 @@ public class EndToEndTests
         // Act
         gameState = GameEngine.TryRequestTopUp(gameState, 1).Data;
         gameState = GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0], 0).Data;
+        Assert.Equal((CardValue) 2, gameState.CenterPiles[0].Last().CardValue);
+        
         gameState = GameEngine.TryPickupFromKitty(gameState, 0).Data.updatedGameState;
         gameState = GameEngine.TryRequestTopUp(gameState, 0).Data;
+        Assert.Equal((CardValue) 4, gameState.CenterPiles[0].Last().CardValue);
+        
         gameState = GameEngine.TryPlayCard(gameState, 1, gameState.Players[1].HandCards[0], 0).Data;
         gameState = GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0], 0).Data;
         var winnerResult = GameEngine.TryGetWinner(gameState);
@@ -87,7 +93,11 @@ public class EndToEndTests
         Assert.Single(gameState.CenterPiles[0]);
 
         // Manually add a 6 to ensure the 6 "was" shuffled in first
-        gameState.CenterPiles[0].Add(ModelGenerator.CreateBasicCard(6));
+        var newCenterPile = gameState.CenterPiles[0].Add(ModelGenerator.CreateBasicCard(6));
+        var newCenterPiles = gameState.CenterPiles.ReplaceElementAt(0, newCenterPile);
+        gameState = gameState with {CenterPiles = newCenterPiles.ToImmutableList()};
+        
+        // Try to play a card
         gameState = GameEngine.TryPlayCard(gameState, 0, player1.HandCards[0], 0).Data;
         var winnerResult = GameEngine.TryGetWinner(gameState);
 

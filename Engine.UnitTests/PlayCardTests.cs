@@ -39,10 +39,10 @@ public class PlayCardTests
         if (expectedCanPlay)
         {
             // Check the card has been added to the center pile
-            Assert.Equal(player1Card, tryPlayResult.Data.CenterPiles[0].Last().Value);
+            Assert.Equal((CardValue)player1Card, tryPlayResult.Data.CenterPiles[0].Last().CardValue);
 
             // Check the card has been removed from players hand
-            Assert.DoesNotContain(tryPlayResult.Data.Players[0].HandCards, card => card.Value == player1Card);
+            Assert.DoesNotContain(tryPlayResult.Data.Players[0].HandCards, card => card.CardValue == (CardValue)player1Card);
         }
     }
 
@@ -66,7 +66,7 @@ public class PlayCardTests
     {
         // Arrange
         GameState gameState = ModelGenerator.CreateGameBasic(5, player1Card: 4, player2Card: 6);
-        var randomCard = new Card {Id = 0, Suit = Suit.Clubs, Value = 4};
+        var randomCard = new Card {Id = 0, Suit = Suit.Clubs, CardValue = (CardValue)4};
 
         // Try to play it
         Result<GameState> tryPlayResult =

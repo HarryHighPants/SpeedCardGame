@@ -43,7 +43,8 @@ public class ModelGenerator
             {
                 CreateBasicCards(centerPile1),
                 CreateBasicCards(centerPile2)
-            }.ToImmutableList()
+            }.ToImmutableList(),
+            MoveHistory = ImmutableList<MoveData>.Empty
         };
     }
 
@@ -70,7 +71,7 @@ public class ModelGenerator
     public static Card CreateBasicCard(int value)
     {
         if (value == null) return new Card();
-        return new Card {Id = GetRandomId(), Value = value, Suit = Suit.Clubs};
+        return new Card {Id = GetRandomId(), CardValue = (CardValue)value, Suit = Suit.Clubs};
     }
 
     private static int GetRandomId()

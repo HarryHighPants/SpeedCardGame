@@ -35,7 +35,7 @@ public static class GameEngine
             {
                 Id = i,
                 Suit = suit,
-                Value = value
+                CardValue = (CardValue)value
             };
             deck.Add(newCard);
         }
@@ -56,12 +56,13 @@ public static class GameEngine
                 TopUpCards = deck.PopRange(CardsInTopUp).ToImmutableList()
             });
         }
-
+        
         var gameState = new GameState
         {
             Players = players.ToImmutableList(),
             CenterPiles = new List<ImmutableList<Card>> { deck.PopRange(1).ToImmutableList(), deck.PopRange(1).ToImmutableList()}.ToImmutableList(),
-            Settings = settings
+            Settings = settings,
+            MoveHistory = ImmutableList<MoveData>.Empty
         };
         return gameState;
     }
@@ -99,7 +100,7 @@ public static class GameEngine
         
         // Try and top up
         Result<GameState> topUpResult = TryTopUp(newGameState);
-        newGameState = topUpResult.Success ? topUpResult.Data : gameState;
+        newGameState = topUpResult.Success ? topUpResult.Data : newGameState;
 
         // Otherwise just return the gameState with the new top up request 
         return Result.Successful(newGameState);
@@ -150,8 +151,8 @@ public static class GameEngine
         newGameState = newGameState with {CenterPiles = newCenterPiles};
         
         // Remove the last top up card from each player
-        var newPlayers = gameState.Players.Select(player =>
-            player with {RequestingTopUp = false, TopUpCards = player.TopUpCards.Take(..^1).ToImmutableList()}).ToImmutableList();
+        var newPlayers = newGameState.Players.Select(player =>
+            player with {RequestingTopUp = false, TopUpCards = player.TopUpCards.SkipLast(1).ToImmutableList()}).ToImmutableList();
         newGameState = newGameState with {Players = newPlayers};
         
         // Add the history
@@ -224,7 +225,7 @@ public static class GameEngine
 
         if (cardLocationResult.Data.PlayerIndex != playerIndex)
         {
-            return Result.Error<GameState>($"Player {gameState.Players[playerIndex].Name} does not have card {card.Value} in their hand");
+            return Result.Error<GameState>($"Player {gameState.Players[playerIndex].Name} does not have card {card.CardValue} in their hand");
         }
 
         switch (cardLocationResult.Data.PileName)
@@ -234,7 +235,7 @@ public static class GameEngine
                 if (!ValidMove(card, gameState.CenterPiles[centerPileIndex].Last()))
                 {
                     return Result.Error<GameState>(
-                        $"Card with value {card.Value} can't be played onto {gameState.CenterPiles[centerPileIndex].Last().Value}");
+                        $"Card with value {card.CardValue}({(int)card.CardValue}) can't be played onto {gameState.CenterPiles[centerPileIndex].Last().CardValue}({(int)gameState.CenterPiles[centerPileIndex].Last().CardValue})");
                 }
 
                 // This is a valid play so play it
@@ -256,7 +257,7 @@ public static class GameEngine
         newGameState = newGameState with {CenterPiles = newCenterPiles};
         
         // Remove the played card from the players hand
-        var (playerWithCard, playerIndexWithCard) = gameState.Players.IndexTuples().First(p => p.item.HandCards.Contains(card));
+        var (playerWithCard, playerIndexWithCard) = newGameState.Players.IndexTuples().First(p => p.item.HandCards.Contains(card));
         var newHandCards = playerWithCard.HandCards.Where(c => c != card).ToImmutableList();
         var newPlayer = playerWithCard with {HandCards = newHandCards};
         var newPlayers = newGameState.Players.ReplaceElementAt(playerIndexWithCard, newPlayer).ToImmutableList();
@@ -320,8 +321,8 @@ public static class GameEngine
     public static bool ValidMove(Card? topCard, Card? bottomCard)
     {
         if (topCard == null || bottomCard == null) return false;
-        if (topCard.Value < 0 || bottomCard.Value < 0) return false;
-        int valueDiff = Math.Abs(topCard.Value - bottomCard.Value);
+        if (topCard.CardValue < 0 || bottomCard.CardValue < 0) return false;
+        int valueDiff = Math.Abs(topCard.CardValue - bottomCard.CardValue);
         return valueDiff is 1 or CardsPerSuit - 1;
     }
     #endregion
@@ -331,23 +332,28 @@ public static class GameEngine
     public static Result<(GameState updatedGameState, Card pickedUpCard)> TryPickupFromKitty(
         GameState gameState, int playerIndex)
     {
-        var player = gameState.Players[playerIndex];
+        var newGameState = gameState;
+        var player = newGameState.Players[playerIndex];
         
-        Result canPickupResult = CanPickupFromKitty(gameState, playerIndex);
+        Result canPickupResult = CanPickupFromKitty(newGameState, playerIndex);
         if (canPickupResult is ErrorResult canPickupResultError)
         {
             return Result.Error<(GameState updatedGameState, Card pickedUpCard)>(canPickupResultError.Message);
         }
 
-        var newHandCard = player.HandCards.ToImmutableList();
-        newHandCard = newHandCard.Add(player.KittyCards.Last());
+        var newHandCards = player.HandCards.ToImmutableList();
+        newHandCards = newHandCards.Add(player.KittyCards.Last());
 
         var newKittyCards = player.KittyCards.ToImmutableList();
         newKittyCards = newKittyCards.Remove(player.KittyCards.Last());
-        var newPlayer = player with {HandCards = newHandCard, KittyCards = newKittyCards};
-        var newPlayers = gameState.Players.ReplaceElementAt(playerIndex, newPlayer).ToImmutableList();
+        var newPlayer = player with {HandCards = newHandCards, KittyCards = newKittyCards};
+        var newPlayers = newGameState.Players.ReplaceElementAt(playerIndex, newPlayer).ToImmutableList();
+        newGameState = newGameState with {Players = newPlayers};
         
-        return Result.Successful((gameState with {Players = newPlayers}, newPlayer.HandCards.Last()));
+        // Add the move to the history
+        newGameState = UpdateLastMove(newGameState, new MoveData() {Move = MoveType.PickupCard, PlayerId = player.Id, CardId = newPlayer.HandCards.Last().Id});
+        
+        return Result.Successful((newGameState, newPlayer.HandCards.Last()));
     }
 
     public static Result CanPickupFromKitty(GameState gameState, int playerIndex)
@@ -375,7 +381,7 @@ public static class GameEngine
         {
             if (gameState.CenterPiles[i].Count < 1) continue;
             Card pileCard = gameState.CenterPiles[i].Last();
-            if (pileCard.Value == value)
+            if ((int)pileCard.CardValue == value)
             {
                 return Result.Successful(i);
             }
@@ -481,15 +487,15 @@ public static class GameEngine
         return newGameState;
     }
 
-    public static string ReadableLastMove(GameState gameState)
+    public static string ReadableLastMove(GameState gameState, bool minified = false, bool includeSuit = false)
     {
         var lastMove = gameState.MoveHistory.Last();
         return lastMove.Move switch
         {
             MoveType.PickupCard =>
-                $"{GetPlayer(gameState, lastMove.PlayerId).Data.Name} picked up card {CardToString(gameState, lastMove.CardId)}",
+                $"{GetPlayer(gameState, lastMove.PlayerId).Data.Name} picked up card {CardToString(gameState, lastMove.CardId, minified, includeSuit)}",
             MoveType.PlayCard =>
-                $"{GetPlayer(gameState, lastMove.PlayerId).Data.Name} played card {CardToString(gameState, lastMove.CardId)} onto pile {lastMove.CenterPileIndex + 1}",
+                $"{GetPlayer(gameState, lastMove.PlayerId).Data.Name} played card {CardToString(gameState, lastMove.CardId, minified, includeSuit)} onto pile {lastMove.CenterPileIndex + 1}",
             MoveType.TopUp => "Center cards were topped up",
             _ => throw new ArgumentOutOfRangeException()
         };
@@ -497,21 +503,24 @@ public static class GameEngine
 
     #endregion
   
-    public static string CardsToString(IReadOnlyList<Card> cards, bool minified = false)
+    public static string CardsToString(IReadOnlyList<Card> cards, bool minified = false, bool includeSuit = false)
     {
-        return string.Join(" ", cards.Select(c=>CardToString(c, minified)));
+        return string.Join(", ", cards.Select(c=>CardToString(c, minified, includeSuit)));
     }
 
-    public static string CardToString(Card card, bool minified = false)
+    public static string CardToString(Card card, bool minified = false, bool includeSuit = false)
     {
-        return minified 
-            ? $"{card.Value}{card.Suit.ToString().ToLower()[0]}" 
-            : $"{card.Value} of {card.Suit}";
+        string value = minified ? ((int)card.CardValue).ToString() : card.CardValue.ToString();
+        if (!includeSuit) return value;
+        
+        string joiner = minified ? "" : " of ";
+        string suit = minified ? card.Suit.ToString().ToLower()[0].ToString() : card.Suit.ToString();
+        return $"{value}{joiner}{suit}";
     }
     
-    public static string CardToString(GameState gameState, int? cardId, bool minified = false)
+    public static string CardToString(GameState gameState, int? cardId, bool minified = false, bool includeSuit = false)
     {
         var cardResult = GetCard(gameState, cardId);
-        return CardToString(cardResult.Data);
+        return CardToString(cardResult.Data, minified, includeSuit);
     }
 }

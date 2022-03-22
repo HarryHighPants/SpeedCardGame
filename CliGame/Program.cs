@@ -9,7 +9,7 @@ static class Program
     public static readonly Random Random = new();
     public static GameState GameState { get; set; } = new();
 
-    static void Main()
+    private static void Main(string[] args)
     {
         PlayGame();
 
@@ -24,13 +24,17 @@ static class Program
             // Main game loop
             while (GameEngine.TryGetWinner(GameState).Failure)
             {
-                HandleUserInput(ReadlineWithBot());
+                var userInput = ReadlineWithBot();
+                // if(GameEngine.TryGetWinner(GameState).Success) continue;
+                HandleUserInput(userInput);
             }
+            
 
             // End game
             var winner = GameState.Players[GameEngine.TryGetWinner(GameState).Data];
             bool winnerIsPlayer = GameState.Players.IndexOf(winner) == 1;
 
+            // CliGameUtils.DrawGameState(GameState);
             Console.WriteLine("------ Game over ----");
             Console.WriteLine();
             Console.WriteLine(winnerIsPlayer ? BotRunnerCli.Bot.CustomWinMessage : BotRunnerCli.Bot.CustomLoseMessage);
@@ -66,7 +70,7 @@ static class Program
                     }
 
                     GameState = pickupKittyResult.Data.updatedGameState;
-                    UpdateMessage(GameEngine.ReadableLastMove(GameState));
+                    UpdateMessage(GameEngine.ReadableLastMove(GameState, true));
                     break;
                 case "t":
                     var requestTopUpResult =
@@ -78,7 +82,7 @@ static class Program
                     }
 
                     GameState = requestTopUpResult.Data;
-                    UpdateMessage(GameEngine.ReadableLastMove(GameState));
+                    UpdateMessage(GameEngine.ReadableLastMove(GameState, true));
                     break;
                 default:
                     SelectCard(input);
@@ -122,8 +126,7 @@ static class Program
             }
 
             // Try to play the card onto the pile
-            Result<GameState> playCardResult =
-                GameEngine.TryPlayCard(GameState, 1, card, centerPileResult.Data);
+            Result<GameState> playCardResult = GameEngine.TryPlayCard(GameState, 1, card, centerPileResult.Data);
             if (playCardResult is IErrorResult playCardResultError)
             {
                 UpdateMessage(playCardResultError.Message);
@@ -132,7 +135,7 @@ static class Program
 
             // Update the state with the move
             GameState = playCardResult.Data;
-            UpdateMessage(GameEngine.ReadableLastMove(GameState));
+            UpdateMessage(GameEngine.ReadableLastMove(GameState, true));
         }
 
         void UpdateMessage(string message)
@@ -154,7 +157,7 @@ static class Program
                 GameState = botMoveResult.Success ? botMoveResult.Data : GameState;
                 
                 // Display the bots move
-                if (botMoveResult.Success)UpdateMessage(GameEngine.ReadableLastMove(GameState));
+                if (botMoveResult.Success)UpdateMessage(GameEngine.ReadableLastMove(GameState, true));
 
                 return null;
             }

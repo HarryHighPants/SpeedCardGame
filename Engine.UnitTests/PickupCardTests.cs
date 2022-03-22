@@ -34,9 +34,9 @@ public class PickupCardTests
         Assert.Equal(expectedCanPickup, tryPickupResult.Success);
         if (expectedCanPickup)
         {
-            Assert.Equal(expectedPickedUpValue, tryPickupResult.Data.pickedUpCard.Value);
+            Assert.Equal((CardValue)expectedPickedUpValue, tryPickupResult.Data.pickedUpCard.CardValue);
             Assert.Single(tryPickupResult.Data.updatedGameState.Players[0].HandCards
-                .Where(card => card.Value == expectedPickedUpValue));
+                .Where(card => card.CardValue == (CardValue)expectedPickedUpValue));
         }
     }
 }

@@ -41,7 +41,7 @@ public abstract class Result<T> : Result, IEnumerable<T>
     {
         get => Success
             ? _data
-            : throw new Exception($"You can't access .{nameof(Data)} when .{nameof(Success)} is false");
+            : throw new Exception($"You can't access .{nameof(Data)} when .{nameof(Success)} is false. Error Message:{(this as IErrorResult)?.Message}");
         set => _data = value;
     }
 
