@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Engine.Helpers;
 
 namespace Engine;
@@ -34,7 +35,7 @@ public static class GameEngine
             {
                 Id = i,
                 Suit = suit,
-                Value = value
+                CardValue = (CardValue)value
             };
             deck.Add(newCard);
         }
@@ -50,73 +51,114 @@ public static class GameEngine
             {
                 Id = i + 1,
                 Name = playerNames?[i] ?? $"Player {i + 1}",
-                HandCards = deck.PopRange(MaxHandCardsBase),
-                KittyCards = deck.PopRange(CardsInKitty),
-                TopUpCards = deck.PopRange(CardsInTopUp)
+                HandCards = deck.PopRange(MaxHandCardsBase).ToImmutableList(),
+                KittyCards = deck.PopRange(CardsInKitty).ToImmutableList(),
+                TopUpCards = deck.PopRange(CardsInTopUp).ToImmutableList()
             });
         }
-
+        
         var gameState = new GameState
         {
-            Players = players,
-            CenterPiles = new List<List<Card>> {deck.PopRange(1), deck.PopRange(1)},
-            Settings = settings
+            Players = players.ToImmutableList(),
+            CenterPiles = new List<ImmutableList<Card>> { deck.PopRange(1).ToImmutableList(), deck.PopRange(1).ToImmutableList()}.ToImmutableList(),
+            Settings = settings,
+            MoveHistory = ImmutableList<MoveData>.Empty
         };
         return gameState;
     }
 
-    public static Result<Player> TryGetWinner(GameState gameState)
+    public static Result<int> TryGetWinner(GameState gameState)
     {
         // Check if a player has no cards in their hand or kitty
-        foreach (Player player in gameState.Players)
+        foreach (var (player, i) in gameState.Players.IndexTuples())
         {
             if (player.HandCards.Count <= 0 && player.KittyCards.Count <= 0)
             {
                 // Return any player that does
-                return new SuccessResult<Player>(player);
+                return Result.Successful(i);
             }
         }
 
-        return new ErrorResult<Player>("No winner yet!");
+        return Result.Error<int>("No winner yet!");
     }
-
-    public static Result AllPlayersRequestingTopUp(GameState gameState)
+    
+    # region Top Up
+        public static Result<GameState> TryRequestTopUp(GameState gameState, int playerIndex)
     {
-        // Check all players are requesting top up
-        return !gameState.Players.All(p => p.RequestingTopUp)
-            ? new ErrorResult("Not all players are requesting top up")
-            : new SuccessResult();
+        var player = gameState.Players[playerIndex];
+        var newGameState = gameState;
+
+        // Check the player can top up
+        Result requestTopUpResult = CanRequestTopUp(gameState, playerIndex);
+        if (requestTopUpResult is ErrorResult requestTopUpResultError)
+            return Result.Error<GameState>(requestTopUpResultError.Message);
+
+        // Apply the top up request
+        var newPlayer = player with {RequestingTopUp = true};
+        var newPlayers = gameState.Players.ReplaceElementAt(playerIndex, newPlayer).ToImmutableList();
+        newGameState = newGameState with {Players = newPlayers};
+        
+        // Try and top up
+        Result<GameState> topUpResult = TryTopUp(newGameState);
+        newGameState = topUpResult.Success ? topUpResult.Data : newGameState;
+
+        // Otherwise just return the gameState with the new top up request 
+        return Result.Successful(newGameState);
     }
-
-    public static Result<GameState> TryTopUp(GameState gameState)
+    
+    private static Result CanRequestTopUp(GameState gameState, int playerIndex)
     {
-        // Check all players are requesting top up
-        Result canTopUpResult = CanTopUp(gameState);
+        // Check player isn't already topped up
+        if (gameState.Players[playerIndex].RequestingTopUp) return Result.Error("Already requesting to top up");
+
+        // Check the player can't play
+        Result<(Card card, int centerPile)> hasPlayResult = PlayerHasPlay(gameState, playerIndex);
+        if (hasPlayResult.Success) return Result.Error("Player can play a card");
+
+        // Check the player can't pickup
+        Result<(GameState updatedGameState, Card pickedUpCard)> pickupFromKittyResult =
+            TryPickupFromKitty(gameState, playerIndex);
+        if (pickupFromKittyResult.Success) return Result.Error("Player can pickup from kitty");
+
+        // We can't do anything else so top up is valid
+        return new SuccessResult();
+    }
+    
+
+    private static Result<GameState> TryTopUp(GameState gameState)
+    {
+        var newGameState = gameState;
+        
+        // Check we can top up
+        Result canTopUpResult = CanTopUp(newGameState);
         if (canTopUpResult is IErrorResult canTopUpError)
         {
-            return new ErrorResult<GameState>(canTopUpError.Message);
+            return Result.Error<GameState>(canTopUpError.Message);
         }
 
         // Make sure we have cards in our top up pile
-        if (gameState.Players[0].TopUpCards.Count <= 0)
+        if (newGameState.Players[0].TopUpCards.Count <= 0)
         {
-            Result<GameState> replenishResult = ReplenishTopUpCards(gameState);
+            Result<GameState> replenishResult = ReplenishTopUpCards(newGameState);
             if (replenishResult is ErrorResult<GameState> replenishError) return replenishError;
-            gameState = replenishResult.Data;
+            newGameState = replenishResult.Data;
         }
 
         // Move each top up card to their respective center piles
-        for (var i = 0; i < gameState.CenterPiles.Count; i++)
-        {
-            gameState.CenterPiles[i].Add(gameState.Players[i].TopUpCards.Pop());
-        }
+        GameState state = newGameState;
+        var newCenterPiles =
+            newGameState.CenterPiles.Select((pile, i) => pile.Append(state.Players[i].TopUpCards.Last()).ToImmutableList()).ToImmutableList();
+        newGameState = newGameState with {CenterPiles = newCenterPiles};
+        
+        // Remove the last top up card from each player
+        var newPlayers = newGameState.Players.Select(player =>
+            player with {RequestingTopUp = false, TopUpCards = player.TopUpCards.SkipLast(1).ToImmutableList()}).ToImmutableList();
+        newGameState = newGameState with {Players = newPlayers};
+        
+        // Add the history
+        newGameState = UpdateLastMove(newGameState, new MoveData{Move = MoveType.TopUp});
 
-        foreach (Player player in gameState.Players)
-        {
-            player.RequestingTopUp = false;
-        }
-
-        return new SuccessResult<GameState>(gameState);
+        return Result.Successful(newGameState);
     }
 
     private static Result CanTopUp(GameState gameState)
@@ -125,20 +167,20 @@ public static class GameEngine
         Result allPlayersRequestingTopUp = AllPlayersRequestingTopUp(gameState);
         if (allPlayersRequestingTopUp is ErrorResult allPlayersRequestingTopUpError)
         {
-            return new ErrorResult(allPlayersRequestingTopUpError.Message);
+            return Result.Error(allPlayersRequestingTopUpError.Message);
         }
 
         return new SuccessResult();
     }
 
-    public static Result<GameState> ReplenishTopUpCards(GameState gameState)
+    private static Result<GameState> ReplenishTopUpCards(GameState gameState)
     {
         // combine middle piles
         List<Card> combinedCenterPiles = gameState.CenterPiles.SelectMany(cp => cp, (list, card) => card).ToList();
 
         if (combinedCenterPiles.Count < 1)
         {
-            return new ErrorResult<GameState>("Can't replenish top up piles without any center cards");
+            return Result.Error<GameState>("Can't replenish top up piles without any center cards");
         }
 
         // Shuffle them
@@ -146,36 +188,44 @@ public static class GameEngine
 
         // Split all but center piles count into top up piles
         int topUpPileSize = combinedCenterPiles.Count / gameState.Players.Count;
-        foreach (Player player in gameState.Players)
-        {
-            player.TopUpCards = combinedCenterPiles.PopRange(topUpPileSize);
-        }
+        var newPlayers =
+            gameState.Players.Select(player => player with {TopUpCards = combinedCenterPiles.PopRange(topUpPileSize).ToImmutableList()}).ToImmutableList();
 
         // Reset the center piles
-        var newCenterPiles = new List<List<Card>>();
-        for (var i = 0; i < gameState.CenterPiles.Count; i++) newCenterPiles.Add(new List<Card>());
-        gameState.CenterPiles = newCenterPiles;
+        var newCenterPiles = new List<ImmutableList<Card>>();
+        for (var i = 0; i < gameState.CenterPiles.Count; i++) newCenterPiles.Add( ImmutableList<Card>.Empty);
 
-        return new SuccessResult<GameState>(gameState);
+        return Result.Successful(gameState with{Players = newPlayers, CenterPiles = newCenterPiles.ToImmutableList()});
+    }
+    
+    private static Result AllPlayersRequestingTopUp(GameState gameState)
+    {
+        // Check all players are requesting top up
+        return !gameState.Players.All(p => p.RequestingTopUp)
+            ? Result.Error("Not all players are requesting top up")
+            : new SuccessResult();
     }
 
-    public static Result<GameState> TryPlayCard(GameState gameState, Player player, Card card,
+    #endregion
+
+    #region Play Card
+    public static Result<GameState> TryPlayCard(GameState gameState, int playerIndex, Card card,
         int centerPileIndex)
     {
         if (centerPileIndex >= gameState.CenterPiles.Count)
         {
-            return new ErrorResult<GameState>($"No center pile found at index {centerPileIndex}");
+            return Result.Error<GameState>($"No center pile found at index {centerPileIndex}");
         }
 
         Result<CardLocation> cardLocationResult = FindCardLocation(gameState, card);
         if (cardLocationResult is IErrorResult cardLocationResultError)
         {
-            return new ErrorResult<GameState>(cardLocationResultError.Message);
+            return Result.Error<GameState>(cardLocationResultError.Message);
         }
 
-        if (cardLocationResult.Data.PlayerIndex != gameState.Players.IndexOf(player))
+        if (cardLocationResult.Data.PlayerIndex != playerIndex)
         {
-            return new ErrorResult<GameState>($"Player {player.Name} does not have card {card.Value} in their hand");
+            return Result.Error<GameState>($"Player {gameState.Players[playerIndex].Name} does not have card {card.CardValue} in their hand");
         }
 
         switch (cardLocationResult.Data.PileName)
@@ -184,164 +234,70 @@ public static class GameEngine
                 // Check that the card can be played onto the relevant center piles top card
                 if (!ValidMove(card, gameState.CenterPiles[centerPileIndex].Last()))
                 {
-                    return new ErrorResult<GameState>(
-                        $"Card with value {card.Value} can't be played onto {gameState.CenterPiles[centerPileIndex].Last().Value}");
+                    return Result.Error<GameState>(
+                        $"Card with value {card.CardValue}({(int)card.CardValue}) can't be played onto {gameState.CenterPiles[centerPileIndex].Last().CardValue}({(int)gameState.CenterPiles[centerPileIndex].Last().CardValue})");
                 }
 
                 // This is a valid play so play it
                 return PlayCard(gameState, card, centerPileIndex);
 
             default:
-                return new ErrorResult<GameState>(
+                return Result.Error<GameState>(
                     $"Can't play a card from the {cardLocationResult.Data.PileName} pile");
         }
     }
 
     private static Result<GameState> PlayCard(GameState gameState, Card card, int centerPileIndex)
     {
-        gameState.CenterPiles[centerPileIndex].Add(card);
-        Player? playerWithCard = gameState.Players.FirstOrDefault(p => p.HandCards.Contains(card));
-        playerWithCard?.HandCards.Remove(card);
-
+        var newGameState = gameState;
+        
+        // Add the card being played to the center pile
+        var newCenterPiles = newGameState.CenterPiles.ReplaceElementAt(
+            centerPileIndex, gameState.CenterPiles[centerPileIndex].Append(card).ToImmutableList()).ToImmutableList();
+        newGameState = newGameState with {CenterPiles = newCenterPiles};
+        
+        // Remove the played card from the players hand
+        var (playerWithCard, playerIndexWithCard) = newGameState.Players.IndexTuples().First(p => p.item.HandCards.Contains(card));
+        var newHandCards = playerWithCard.HandCards.Where(c => c != card).ToImmutableList();
+        var newPlayer = playerWithCard with {HandCards = newHandCards};
+        var newPlayers = newGameState.Players.ReplaceElementAt(playerIndexWithCard, newPlayer).ToImmutableList();
+        newGameState = newGameState with {Players = newPlayers};
+        
         // Reset any ones request to top up if they can now move
-        foreach (Player player in gameState.Players)
-        {
-            if (player.RequestingTopUp && PlayerHasPlay(gameState, player).Success)
+        GameState state = newGameState;
+        newPlayers = newPlayers.Select((player, i) =>
+            player.RequestingTopUp && PlayerHasPlay(state, i).Success
+                ? player with {RequestingTopUp = false}
+                : player).ToImmutableList();
+        newGameState = newGameState with {Players = newPlayers};
+            
+        // Add the move history
+        newGameState = UpdateLastMove(newGameState,
+            new MoveData()
             {
-                player.RequestingTopUp = false;
-            }
-        }
-
-        return new SuccessResult<GameState>(gameState);
+                Move = MoveType.PlayCard, CardId = card.Id, PlayerId = playerWithCard.Id,
+                CenterPileIndex = centerPileIndex
+            });
+        
+        return Result.Successful(newGameState);
     }
-
-    public static Result<(GameState updatedGameState, Card pickedUpCard)> TryPickupFromKitty(
-        GameState gameState, Player player)
+    
+    public static Result<(Card card, int centerPile)> PlayerHasPlay(GameState gameState, int playerIndex)
     {
-        Result canPickupResult = CanPickupFromKitty(gameState, player);
-        if (canPickupResult is ErrorResult canPickupResultError)
-        {
-            return new ErrorResult<(GameState updatedGameState, Card pickedUpCard)>(canPickupResultError.Message);
-        }
+        var player = gameState.Players[playerIndex];
 
-        player.HandCards.Add(player.KittyCards.Last());
-        player.KittyCards.Remove(player.KittyCards.Last());
-        return new SuccessResult<(GameState updatedGameState, Card pickedUpCard)>((gameState, player.HandCards.Last()));
-    }
-
-    public static Result CanPickupFromKitty(GameState gameState, Player player)
-    {
-        // Check the player has room in their hand
-        if (player.HandCards.Count >= (gameState.Settings?.MaxHandCards ?? MaxHandCardsBase))
-        {
-            return new ErrorResult($"Player {player.Name} hand is full");
-        }
-
-        // Check there is enough cards from players kitty 
-        if (player.KittyCards.Count < 1) return new ErrorResult($"No cards left in {player.Name} kitty to pickup");
-
-        return new SuccessResult();
-    }
-
-    public static bool ValidMove(Card? topCard, Card? bottomCard)
-    {
-        if (topCard == null || bottomCard == null) return false;
-        if (topCard.Value < 0 || bottomCard.Value < 0) return false;
-        int valueDiff = Math.Abs(topCard.Value - bottomCard.Value);
-        return valueDiff is 1 or CardsPerSuit - 1;
-    }
-
-    private static Result<CardLocation> FindCardLocation(
-        GameState gameState, Card card)
-    {
-        for (var i = 0; i < gameState.Players.Count; i++)
-        {
-            Player player = gameState.Players[i];
-            int handIndex = player.HandCards.IndexOf(card);
-            if (handIndex != -1)
-            {
-                return new SuccessResult<CardLocation>(new CardLocation(CardPileName.Hand, handIndex, i, null));
-            }
-
-            int kittyIndex = player.KittyCards.IndexOf(card);
-            if (kittyIndex != -1)
-            {
-                return new SuccessResult<CardLocation>(new CardLocation(CardPileName.Kitty, kittyIndex, i, null));
-            }
-
-            int topUpIndex = player.TopUpCards.IndexOf(card);
-            if (topUpIndex != -1)
-            {
-                return new SuccessResult<CardLocation>(new CardLocation(CardPileName.TopUp, topUpIndex, i, null));
-            }
-        }
-
-        for (var i = 0; i < gameState.CenterPiles.Count; i++)
-        {
-            List<Card> centerPile = gameState.CenterPiles[i];
-            int centerPileIndex = centerPile.IndexOf(card);
-            if (centerPileIndex != -1)
-            {
-                return new SuccessResult<CardLocation>(new CardLocation(CardPileName.Center, centerPileIndex, null, i));
-            }
-        }
-
-        return new ErrorResult<CardLocation>("Card not found in gameState");
-    }
-
-
-    public static Result<(GameState updatedGameState, bool couldTopUp)> TryRequestTopUp(
-        GameState gameState,
-        Player player, bool immediateTopUp = true)
-    {
-        // Check player isn't already topped up
-        if (player.RequestingTopUp)
-        {
-            return new ErrorResult<(GameState updatedGameState, bool couldTopUp)>("Already requesting to top up");
-        }
-
-        // Check the player can top up
-        Result requestTopUpResult = CanRequestTopUp(gameState, player);
-        if (requestTopUpResult is ErrorResult requestTopUpResultError)
-        {
-            return new ErrorResult<(GameState updatedGameState, bool couldTopUp)>(
-                requestTopUpResultError.Message);
-        }
-
-        // Apply the top up request
-        gameState.Players[gameState.Players.IndexOf(player)].RequestingTopUp = true;
-
-        // Check if we can top up now
-        Result canTopUpResult = CanTopUp(gameState);
-
-        // If we want to immediately top up and we can then do it
-        if (immediateTopUp && canTopUpResult.Success)
-        {
-            Result<GameState> topUpResult = TryTopUp(gameState);
-            return new SuccessResult<(GameState updatedGameState, bool couldTopUp)>(
-                (topUpResult.Data, true));
-        }
-
-        // Otherwise just return the gameState with the new top up request 
-        return new SuccessResult<(GameState updatedGameState, bool couldTopUp)>(
-            (gameState, canTopUpResult.Success));
-    }
-
-    // BotRunner Helpers
-    public static Result<(Card card, int centerPile)> PlayerHasPlay(GameState gameState, Player player)
-    {
         foreach (Card card in player.HandCards)
         {
             Result<int> cardHasPlayResult = CardHasPlay(gameState, card);
             if (cardHasPlayResult.Success)
             {
-                return new SuccessResult<(Card card, int centerPile)>((card, cardHasPlayResult.Data));
+                return Result.Successful((card, cardHasPlayResult.Data));
             }
         }
 
-        return new ErrorResult<(Card card, int centerPile)>("No valid play for player");
+        return Result.Error<(Card card, int centerPile)>("No valid play for player");
     }
-
+    
     /// <summary>
     /// </summary>
     /// <param name="gameState"></param>
@@ -355,43 +311,118 @@ public static class GameEngine
             Card pileCard = gameState.CenterPiles[i].Last();
             if (ValidMove(card, pileCard))
             {
-                return new SuccessResult<int>(i);
+                return Result.Successful(i);
             }
         }
 
-        return new ErrorResult<int>("Card can't be played onto any center pile");
+        return Result.Error<int>("Card can't be played onto any center pile");
+    }
+    
+    public static bool ValidMove(Card? topCard, Card? bottomCard)
+    {
+        if (topCard == null || bottomCard == null) return false;
+        if (topCard.CardValue < 0 || bottomCard.CardValue < 0) return false;
+        int valueDiff = Math.Abs(topCard.CardValue - bottomCard.CardValue);
+        return valueDiff is 1 or CardsPerSuit - 1;
+    }
+    #endregion
+
+    #region Pickup
+
+    public static Result<(GameState updatedGameState, Card pickedUpCard)> TryPickupFromKitty(
+        GameState gameState, int playerIndex)
+    {
+        var newGameState = gameState;
+        var player = newGameState.Players[playerIndex];
+        
+        Result canPickupResult = CanPickupFromKitty(newGameState, playerIndex);
+        if (canPickupResult is ErrorResult canPickupResultError)
+        {
+            return Result.Error<(GameState updatedGameState, Card pickedUpCard)>(canPickupResultError.Message);
+        }
+
+        var newHandCards = player.HandCards.ToImmutableList();
+        newHandCards = newHandCards.Add(player.KittyCards.Last());
+
+        var newKittyCards = player.KittyCards.ToImmutableList();
+        newKittyCards = newKittyCards.Remove(player.KittyCards.Last());
+        var newPlayer = player with {HandCards = newHandCards, KittyCards = newKittyCards};
+        var newPlayers = newGameState.Players.ReplaceElementAt(playerIndex, newPlayer).ToImmutableList();
+        newGameState = newGameState with {Players = newPlayers};
+        
+        // Add the move to the history
+        newGameState = UpdateLastMove(newGameState, new MoveData() {Move = MoveType.PickupCard, PlayerId = player.Id, CardId = newPlayer.HandCards.Last().Id});
+        
+        return Result.Successful((newGameState, newPlayer.HandCards.Last()));
     }
 
+    public static Result CanPickupFromKitty(GameState gameState, int playerIndex)
+    {
+        var player = gameState.Players[playerIndex];
+
+        // Check the player has room in their hand
+        if (player.HandCards.Count >= (gameState.Settings?.MaxHandCards ?? MaxHandCardsBase))
+        {
+            return Result.Error($"Player {player.Name} hand is full");
+        }
+
+        // Check there is enough cards from players kitty 
+        if (player.KittyCards.Count < 1) return Result.Error($"No cards left in {player.Name} kitty to pickup");
+
+        return new SuccessResult();
+    }
+    
+    #endregion
+
+    #region Helpers
     public static Result<int> CardWithValueIsInCenterPile(GameState gameState, int value)
     {
         for (var i = 0; i < gameState.CenterPiles.Count; i++)
         {
             if (gameState.CenterPiles[i].Count < 1) continue;
             Card pileCard = gameState.CenterPiles[i].Last();
-            if (pileCard.Value == value)
+            if ((int)pileCard.CardValue == value)
             {
-                return new SuccessResult<int>(i);
+                return Result.Successful(i);
             }
         }
 
-        return new ErrorResult<int>("Card with value not found in center pile");
+        return Result.Error<int>("Card with value not found in center pile");
     }
 
-    private static Result CanRequestTopUp(GameState gameState, Player player)
+    private static Result<Card> GetCard(
+        GameState gameState, int? cardId)
     {
-        // Check the player can't play
-        Result<(Card card, int centerPile)> hasPlayResult = PlayerHasPlay(gameState, player);
-        if (hasPlayResult.Success) return new ErrorResult("Player can play a card");
+        foreach (Player player in gameState.Players)
+        {
+            var handCard = player.HandCards.FirstOrDefault(c=>c.Id == cardId);
+            if (handCard != default) return Result.Successful(handCard);
 
-        // Check the player can't pickup
-        Result<(GameState updatedGameState, Card pickedUpCard)> pickupFromKittyResult =
-            TryPickupFromKitty(gameState, player);
-        if (pickupFromKittyResult.Success) return new ErrorResult("Player can pickup from kitty");
+            var kittyCard = player.KittyCards.FirstOrDefault(c=>c.Id == cardId);
+            if (kittyCard != default) return Result.Successful(kittyCard);
 
-        // We can't do anything else so top up is valid
-        return new SuccessResult();
+            var topUpCard = player.TopUpCards.FirstOrDefault(c=>c.Id == cardId);
+            if (topUpCard != default) return Result.Successful(topUpCard);
+        }
+
+        for (var i = 0; i < gameState.CenterPiles.Count; i++)
+        {
+            var centerPile = gameState.CenterPiles[i];
+            
+            var centerCard = centerPile.FirstOrDefault(c=>c.Id == cardId);
+            if (centerCard != default) return Result.Successful(centerCard);
+        }
+
+        return Result.Error<Card>("Card not found in gameState");
     }
-
+    
+    private static Result<Player> GetPlayer(GameState gameState, int? playerId)
+    {
+        var playerResult = gameState.Players.FirstOrDefault(p=>p.Id == playerId);
+        if (playerResult != default) return Result.Successful(playerResult);
+        return Result.Error<Player>("Player not found in gameState");
+    }
+    
     private struct CardLocation
     {
         public readonly CardPileName PileName;
@@ -406,5 +437,92 @@ public static class GameEngine
             PlayerIndex = playerIndex;
             CenterIndex = centerIndex;
         }
+    }
+    
+    private static Result<CardLocation> FindCardLocation(
+        GameState gameState, Card card)
+    {
+        for (var i = 0; i < gameState.Players.Count; i++)
+        {
+            Player player = gameState.Players[i];
+            int handIndex = player.HandCards.IndexOf(card);
+            if (handIndex != -1)
+            {
+                return Result.Successful(new CardLocation(CardPileName.Hand, handIndex, i, null));
+            }
+
+            int kittyIndex = player.KittyCards.IndexOf(card);
+            if (kittyIndex != -1)
+            {
+                return Result.Successful(new CardLocation(CardPileName.Kitty, kittyIndex, i, null));
+            }
+
+            int topUpIndex = player.TopUpCards.IndexOf(card);
+            if (topUpIndex != -1)
+            {
+                return Result.Successful(new CardLocation(CardPileName.TopUp, topUpIndex, i, null));
+            }
+        }
+
+        for (var i = 0; i < gameState.CenterPiles.Count; i++)
+        {
+            var centerPile = gameState.CenterPiles[i];
+            int centerPileIndex = centerPile.IndexOf(card);
+            if (centerPileIndex != -1)
+            {
+                return Result.Successful(new CardLocation(CardPileName.Center, centerPileIndex, null, i));
+            }
+        }
+
+        return Result.Error<CardLocation>("Card not found in gameState");
+    }
+    #endregion
+
+    #region Updating History
+
+    private static GameState UpdateLastMove(GameState gameState, MoveData data)
+    {
+        var newMoveHistory = gameState.MoveHistory.Add(data);
+        var newGameState = gameState with {MoveHistory = newMoveHistory};
+        return newGameState;
+    }
+
+    public static string ReadableLastMove(GameState gameState, bool minified = false, bool includeSuit = false)
+    {
+        if (gameState.MoveHistory.Count < 1) return "";
+        
+        var lastMove = gameState.MoveHistory.Last();
+        return lastMove.Move switch
+        {
+            MoveType.PickupCard =>
+                $"{GetPlayer(gameState, lastMove.PlayerId).Data.Name} picked up card {CardToString(gameState, lastMove.CardId, minified, includeSuit)}",
+            MoveType.PlayCard =>
+                $"{GetPlayer(gameState, lastMove.PlayerId).Data.Name} played card {CardToString(gameState, lastMove.CardId, minified, includeSuit)} onto pile {lastMove.CenterPileIndex + 1}",
+            MoveType.TopUp => "Center cards were topped up",
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
+    #endregion
+  
+    public static string CardsToString(IReadOnlyList<Card> cards, bool minified = false, bool includeSuit = false)
+    {
+        return string.Join(", ", cards.Select(c=>CardToString(c, minified, includeSuit)));
+    }
+
+    public static string CardToString(Card card, bool minified = false, bool includeSuit = false)
+    {
+        string value = minified ? ((int)card.CardValue).ToString() : card.CardValue.ToString();
+        if (!includeSuit) return value;
+        
+        string joiner = minified ? "" : " of ";
+        string suit = minified ? card.Suit.ToString().ToLower()[0].ToString() : card.Suit.ToString();
+        return $"{value}{joiner}{suit}";
+    }
+    
+    public static string CardToString(GameState gameState, int? cardId, bool minified = false, bool includeSuit = false)
+    {
+        var cardResult = GetCard(gameState, cardId);
+        return CardToString(cardResult.Data, minified, includeSuit);
     }
 }

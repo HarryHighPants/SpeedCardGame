@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Engine.Helpers;
 using Xunit;
 using Xunit.Abstractions;
@@ -20,29 +22,21 @@ public class EndToEndTests
         GameState gameState = GameEngine.NewGame();
 
         var movesMade = 0;
-        while (GameEngine.TryGetWinner(gameState).Failure)
+        while (GameEngine.TryGetWinner(gameState).Failure && movesMade < 1000)
         {
-            Result<(GameState updatedGameState, string moveMade)> move1 =
-                BotRunner.MakeMove(gameState, gameState.Players[0]);
-            Result<(GameState updatedGameState, string moveMade)> move2 =
-                BotRunner.MakeMove(gameState, gameState.Players[1]);
-
-            // Debugging
-            if (!string.IsNullOrEmpty(move1.Data.moveMade))
+            for (int i = 0; i < gameState.Players.Count; i++)
             {
-                _testOutputHelper.WriteLine($"{gameState.Players[0].Name} {move1.Data.moveMade}");
+                var move = BotRunner.MakeMove(gameState, i);
+                gameState = move.Success ? move.Data : gameState;
+                if (move is IErrorResult) continue;
+                
+                _testOutputHelper.WriteLine(GameEngine.ReadableLastMove(gameState));
+                movesMade++;
             }
-
-            if (!string.IsNullOrEmpty(move2.Data.moveMade))
-            {
-                _testOutputHelper.WriteLine($"{gameState.Players[1].Name} {move2.Data.moveMade}");
-            }
-
-            movesMade++;
         }
 
-        Result<Player> winnerResult = GameEngine.TryGetWinner(gameState);
-        _testOutputHelper.WriteLine($"Bot game complete with {winnerResult.Data.Name} winning in {movesMade} moves");
+        var winnerResult = GameEngine.TryGetWinner(gameState);
+        _testOutputHelper.WriteLine($"Bot game complete with {gameState.Players[winnerResult.Data].Name} winning in {movesMade} moves");
         Assert.True(GameEngine.TryGetWinner(gameState).Success);
     }
 
@@ -51,7 +45,7 @@ public class EndToEndTests
     {
         // Arrange
         GameState gameState =
-            ScenarioHelper.CreateGameCustom(
+            ModelGenerator.CreateGameCustom(
                 new List<int?> {1},
                 new List<int?> {1},
                 new List<int?> {2},
@@ -61,20 +55,21 @@ public class EndToEndTests
                 player2TopUps: new List<int?> {4}
             );
 
-        Player player1 = gameState.Players[0];
-        Player player2 = gameState.Players[1];
-
         // Act
-        Assert.True(GameEngine.TryRequestTopUp(gameState, player2).Success);
-        Assert.True(GameEngine.TryPlayCard(gameState, player1, player1.HandCards[0], 0).Success);
-        Assert.True(GameEngine.TryPickupFromKitty(gameState, player1).Success);
-        Assert.True(GameEngine.TryRequestTopUp(gameState, player1).Success);
-        Assert.True(GameEngine.TryPlayCard(gameState, player2, player2.HandCards[0], 0).Success);
-        Assert.True(GameEngine.TryPlayCard(gameState, player1, player1.HandCards[0], 0).Success);
-        Result<Player> winnerResult = GameEngine.TryGetWinner(gameState);
+        gameState = GameEngine.TryRequestTopUp(gameState, 1).Data;
+        gameState = GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0], 0).Data;
+        Assert.Equal((CardValue) 2, gameState.CenterPiles[0].Last().CardValue);
+        
+        gameState = GameEngine.TryPickupFromKitty(gameState, 0).Data.updatedGameState;
+        gameState = GameEngine.TryRequestTopUp(gameState, 0).Data;
+        Assert.Equal((CardValue) 4, gameState.CenterPiles[0].Last().CardValue);
+        
+        gameState = GameEngine.TryPlayCard(gameState, 1, gameState.Players[1].HandCards[0], 0).Data;
+        gameState = GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0], 0).Data;
+        var winnerResult = GameEngine.TryGetWinner(gameState);
 
         // Assertion
-        Assert.Equal(player1, winnerResult.Data);
+        Assert.Equal(0, winnerResult.Data);
     }
 
     [Fact]
@@ -82,7 +77,7 @@ public class EndToEndTests
     {
         // Arrange
         GameState gameState =
-            ScenarioHelper.CreateGameCustom(
+            ModelGenerator.CreateGameCustom(
                 new List<int?> {6, 6, 1},
                 new List<int?> {6, 6, 1},
                 new List<int?> {5},
@@ -93,16 +88,20 @@ public class EndToEndTests
         Player player2 = gameState.Players[1];
 
         // Act
-        Assert.True(GameEngine.TryRequestTopUp(gameState, player2).Success);
-        Assert.True(GameEngine.TryRequestTopUp(gameState, player1).Success);
+        gameState = GameEngine.TryRequestTopUp(gameState, 1).Data;
+        gameState = GameEngine.TryRequestTopUp(gameState, 0).Data;
         Assert.Single(gameState.CenterPiles[0]);
 
         // Manually add a 6 to ensure the 6 "was" shuffled in first
-        gameState.CenterPiles[0].Add(ScenarioHelper.CreateBasicCard(6));
-        Assert.True(GameEngine.TryPlayCard(gameState, player1, player1.HandCards[0], 0).Success);
-        Result<Player> winnerResult = GameEngine.TryGetWinner(gameState);
+        var newCenterPile = gameState.CenterPiles[0].Add(ModelGenerator.CreateBasicCard(6));
+        var newCenterPiles = gameState.CenterPiles.ReplaceElementAt(0, newCenterPile);
+        gameState = gameState with {CenterPiles = newCenterPiles.ToImmutableList()};
+        
+        // Try to play a card
+        gameState = GameEngine.TryPlayCard(gameState, 0, player1.HandCards[0], 0).Data;
+        var winnerResult = GameEngine.TryGetWinner(gameState);
 
         // Assertion
-        Assert.Equal(player1, winnerResult.Data);
+        Assert.Equal(0, winnerResult.Data);
     }
 }

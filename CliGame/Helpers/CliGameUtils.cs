@@ -1,7 +1,6 @@
-using static Engine.Program;
+using Engine;
 
-namespace Engine.CliHelpers;
-
+namespace CliGame.Helpers;
 public static class CliGameUtils
 {
     public static void DrawGameState(GameState gameState)
@@ -12,13 +11,13 @@ public static class CliGameUtils
         Player player = gameState.Players[0];
         Console.ForegroundColor = ConsoleColor.DarkRed;
         Console.WriteLine(
-            $"{player.Name}:       {CardsToString(player.HandCards)}     Kitty count: {player.KittyCards.Count}");
+            $"{player.Name}:       {GameEngine.CardsToString(player.HandCards, true)}     Kitty count: {player.KittyCards.Count}");
 
         // Display the middle two cards
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Black;
         Console.WriteLine(
-            $"                             {CardToString(gameState.CenterPiles[0].Last())} {CardToString(gameState.CenterPiles[1].Last())}      ");
+            $"                             {GameEngine.CardToString(gameState.CenterPiles[0].Last(), true)}, {GameEngine.CardToString(gameState.CenterPiles[1].Last(), true)}      ");
         Console.ResetColor();
         Console.WriteLine();
 
@@ -26,36 +25,17 @@ public static class CliGameUtils
         player = gameState.Players[1];
         Console.ForegroundColor = ConsoleColor.DarkBlue;
         Console.WriteLine(
-            $"{player.Name}:                   {CardsToString(player.HandCards)}     Kitty count: {player.KittyCards.Count}");
+            $"{player.Name}:                   {GameEngine.CardsToString(player.HandCards, true)}     Kitty count: {player.KittyCards.Count}");
         Console.ResetColor();
         Console.WriteLine();
     }
 
-    public static Card? GetCardWithValue(List<Card> cards, int? value)
+    public static Card? GetCardWithValue(IEnumerable<Card> cards, int? value)
     {
-        return cards.FirstOrDefault(card => card.Value == value);
+        return cards.FirstOrDefault(card => card.CardValue == (CardValue)value!);
     }
 
-    public static string CardsToString(List<Card> cards)
-    {
-        var line = "";
-        for (var index = 0; index < cards.Count; index++)
-        {
-            Card card = cards[index];
-            line += CardToString(card);
-            if (index < cards.Count) line += "  ";
-        }
-
-        return line;
-    }
-
-    public static string CardToString(Card card)
-    {
-        return $"{card.Value}{card.Suit.ToString().ToLower()[0]}";
-    }
-
-
-    public static BotDifficulty GameIntro(bool skipIntro = false)
+    public static void GameIntro(bool skipIntro = false)
     {
         var hearRulesInput = "";
         if (!skipIntro)
@@ -115,16 +95,16 @@ public static class CliGameUtils
             "i" => BotDifficulty.Impossible,
             _ => BotDifficulty.Medium
         };
-        BotData bot = Bots[difficulty];
+        // Bot Setup
+        BotRunnerCli.SetDifficulty(difficulty);
 
         Console.WriteLine("------ Game initialised ------");
         Console.ForegroundColor = ConsoleColor.DarkRed;
-        Console.WriteLine($"Your opponent is: {bot.Name}");
+        Console.WriteLine($"Your opponent is: {BotRunnerCli.Bot.Name}");
         Console.ForegroundColor = ConsoleColor.Black;
-        Console.WriteLine(bot.CustomIntroMessage);
+        Console.WriteLine(BotRunnerCli.Bot.CustomIntroMessage);
         Console.WriteLine();
         Console.WriteLine("Press any key to start the match!");
         Console.ReadKey(true);
-        return difficulty;
     }
 }

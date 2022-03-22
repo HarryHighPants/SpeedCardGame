@@ -16,17 +16,17 @@ public class WinningTests
     {
         // Arrange
         GameState gameState =
-            ScenarioHelper.CreateGameBasic(centerPile1, player1Card: player1Card, player2Card: player2Card);
+            ModelGenerator.CreateGameBasic(centerPile1, player1Card: player1Card, player2Card: player2Card);
 
         // Act
-        Result<Player> winnerResult = GameEngine.TryGetWinner(gameState);
+        var winnerResult = GameEngine.TryGetWinner(gameState);
 
         // Assertion
         Assert.Equal(expectedWinner, winnerResult.Success);
         if (expectedWinner)
         {
             // Check the winner is the expected one
-            Assert.Equal(expectedWinnerIndex, gameState.Players.IndexOf(winnerResult.Data));
+            Assert.Equal(expectedWinnerIndex, winnerResult.Data);
         }
     }
 }

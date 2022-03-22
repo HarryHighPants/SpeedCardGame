@@ -13,12 +13,11 @@ public class TopUpTests
     public void RequestTopUp_Theory(int centerCard, int player1Card, bool expectedCanRequestTopUp)
     {
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameBasic(centerCard, player1Card: player1Card);
+        GameState gameState = ModelGenerator.CreateGameBasic(centerCard, player1Card: player1Card);
 
         // Act
         // See if we can request top up
-        Result<(GameState updatedGameState, bool couldTopUp)> canRequestTopUpResult =
-            GameEngine.TryRequestTopUp(gameState, gameState.Players[0], false);
+        var canRequestTopUpResult = GameEngine.TryRequestTopUp(gameState, 0);
 
         // Assertion
         Assert.Equal(expectedCanRequestTopUp, canRequestTopUpResult.Success);
@@ -37,13 +36,13 @@ public class TopUpTests
         List<int?> nullablePlayer2TopUps = player2TopUps.Select(i => new int?(i)).ToList();
 
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameCustom(
+        GameState gameState = ModelGenerator.CreateGameCustom(
             nullableCenterPile1Cards, nullableCenterPile2Cards,
             player1TopUps: nullablePlayer1TopUps, player1RequestingTopup: true,
-            player2TopUps: nullablePlayer2TopUps, player2RequestingTopup: true);
+            player2TopUps: nullablePlayer2TopUps, player2RequestingTopup: false);
 
         // Act
-        Result<GameState> topUpResult = GameEngine.TryTopUp(gameState);
+        Result<GameState> topUpResult = GameEngine.TryRequestTopUp(gameState, 1);
 
         // Assertion
         Assert.Equal(expectedCanTopUp, topUpResult.Success);
@@ -53,50 +52,39 @@ public class TopUpTests
         if (expectedCanTopUp && player1TopUps.Length > 1)
         {
             // Check the last top up cards have been added to the center piles
-            Assert.Equal(player1TopUps.Last(), topUpResult.Data.CenterPiles[0].Last().Value);
-            Assert.Equal(player2TopUps.Last(), topUpResult.Data.CenterPiles[1].Last().Value);
+            Assert.Equal((CardValue)player1TopUps.Last(), topUpResult.Data.CenterPiles[0].Last().CardValue);
+            Assert.Equal((CardValue)player2TopUps.Last(), topUpResult.Data.CenterPiles[1].Last().CardValue);
 
             // Check they have been removed from the top up piles
-            Assert.DoesNotContain(topUpResult.Data.Players[0].TopUpCards, card => card.Value == player1TopUps.Last());
-            Assert.DoesNotContain(topUpResult.Data.Players[1].TopUpCards, card => card.Value == player2TopUps.Last());
+            Assert.DoesNotContain(topUpResult.Data.Players[0].TopUpCards, card => card.CardValue == (CardValue)player1TopUps.Last());
+            Assert.DoesNotContain(topUpResult.Data.Players[1].TopUpCards, card => card.CardValue == (CardValue)player2TopUps.Last());
         }
     }
 
-    [Theory]
-    [InlineData(new[] {1, 2, 3}, new[] {4, 5, 6}, true)]
-    [InlineData(null, null, false)]
-    public void Replenish_Theory(int[]? centerPile1, int[]? centerPile2,
-        bool expectedCanReplenish)
+    [Fact]
+    public void Replenish()
     {
-        // Convert inline data types to usable array
-        List<int?> nullableCenterPile1Cards =
-            centerPile1 == null ? new List<int?>() : centerPile1.Select(i => new int?(i)).ToList();
-        List<int?> nullableCenterPile2Cards =
-            centerPile2 == null ? new List<int?>() : centerPile2.Select(i => new int?(i)).ToList();
-
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameCustom(
-            nullableCenterPile1Cards, nullableCenterPile2Cards,
+        GameState gameState = ModelGenerator.CreateGameCustom(
+            new List<int?>{1, 2, 3}, new List<int?>{4, 5, 6},
             player1RequestingTopup: true,
-            player2RequestingTopup: true);
+            player2RequestingTopup: false);
 
         // Act
-        Result<GameState> replenishedResult = GameEngine.ReplenishTopUpCards(gameState);
+        var replenishedResult = GameEngine.TryRequestTopUp(gameState, 1);
 
         // Assertion
-        Assert.Equal(expectedCanReplenish, replenishedResult.Success);
-        if (expectedCanReplenish)
-        {
-            // Check the players have had the center piles moved into their top up decks
-            int totalCenterPileCards = centerPile1.Length + centerPile2.Length;
-            Assert.Equal(totalCenterPileCards,
+        Assert.True(replenishedResult.Success);
+            // Check the players have their top up piles replenished
+            int totalCenterPileCards = 6;
+            var numberOfCenterPiles = 2;
+            Assert.Equal(totalCenterPileCards - numberOfCenterPiles,
                 replenishedResult.Data.Players[0].TopUpCards.Count +
-                replenishedResult.Data.Players[0].TopUpCards.Count);
+                replenishedResult.Data.Players[1].TopUpCards.Count);
 
-            // Check the center piles are now empty
-            Assert.Empty(replenishedResult.Data.CenterPiles[0]);
-            Assert.Empty(replenishedResult.Data.CenterPiles[1]);
-        }
+            // Check the players have topped up the center piles
+            Assert.Single(replenishedResult.Data.CenterPiles[0]);
+            Assert.Single(replenishedResult.Data.CenterPiles[1]);
     }
 
     // Once a move takes place if a player requesting top up can now move then they should no longer be requesting top up
@@ -112,7 +100,7 @@ public class TopUpTests
         List<int?> player2Nullable = player2.Select(i => new int?(i)).ToList();
 
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameCustom(
+        GameState gameState = ModelGenerator.CreateGameCustom(
             centerPileNullable,
             player1Cards: player1Nullable,
             player2Cards: player2Nullable,
@@ -122,7 +110,7 @@ public class TopUpTests
         // Act
         // Player 1 moves
         Result<GameState> playResult = GameEngine.TryPlayCard(gameState,
-            gameState.Players[0], gameState.Players[0].HandCards[0], 0);
+            0, gameState.Players[0].HandCards[0], 0);
 
         // Assertion
         Assert.Equal(expectedPlayer2Requesting, playResult.Data.Players[1].RequestingTopUp);

@@ -1,59 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Engine.UnitTests;
 
-public class ScenarioHelper
+public class ModelGenerator
 {
-    public static GameState defaultGameState = new()
-    {
-        CenterPiles = new List<List<Card>>
-        {
-            new() {new Card {Id = 0, Suit = Suit.Hearts, Value = 0}},
-            new() {new Card {Id = 1, Suit = Suit.Hearts, Value = 1}}
-        },
-        Players = new List<Player>
-        {
-            new()
-            {
-                Id = 0, Name = "Player 1", HandCards = new List<Card>
-                {
-                    new() {Id = 2, Suit = Suit.Hearts, Value = 2},
-                    new() {Id = 3, Suit = Suit.Hearts, Value = 12}
-                },
-                KittyCards = new List<Card>
-                {
-                    new() {Id = 6, Suit = Suit.Hearts, Value = 3},
-                    new() {Id = 7, Suit = Suit.Hearts, Value = 11}
-                },
-                TopUpCards = new List<Card>
-                {
-                    new() {Id = 12, Suit = Suit.Hearts, Value = 10},
-                    new() {Id = 13, Suit = Suit.Hearts, Value = 9}
-                }
-            },
-            new()
-            {
-                Id = 0, Name = "Player 2", HandCards = new List<Card>
-                {
-                    new() {Id = 4, Suit = Suit.Clubs, Value = 2},
-                    new() {Id = 5, Suit = Suit.Clubs, Value = 12}
-                },
-                KittyCards = new List<Card>
-                {
-                    new() {Id = 8, Suit = Suit.Clubs, Value = 3},
-                    new() {Id = 9, Suit = Suit.Clubs, Value = 11}
-                },
-                TopUpCards = new List<Card>
-                {
-                    new() {Id = 10, Suit = Suit.Clubs, Value = 10},
-                    new() {Id = 11, Suit = Suit.Clubs, Value = 9}
-                }
-            }
-        },
-        Settings = new Settings {RandomSeed = 0}
-    };
-
     public static GameState CreateGameBasic(int? centerCard1, int? centerCard2 = null, int? player1Card = null,
         int? player2Card = null,
         int? player1Kitty = null,
@@ -86,12 +38,13 @@ public class ScenarioHelper
             {
                 CreateBasicPlayer("Player 1", player1Cards, player1Kittys, player1TopUps, player1RequestingTopup),
                 CreateBasicPlayer("Player 2", player2Cards, player2Kittys, player2TopUps, player2RequestingTopup)
-            },
-            CenterPiles = new List<List<Card>>
+            }.ToImmutableList(),
+            CenterPiles = new List<ImmutableList<Card>>
             {
                 CreateBasicCards(centerPile1),
                 CreateBasicCards(centerPile2)
-            }
+            }.ToImmutableList(),
+            MoveHistory = ImmutableList<MoveData>.Empty
         };
     }
 
@@ -105,20 +58,20 @@ public class ScenarioHelper
         };
     }
 
-    private static List<Card> CreateBasicCards(List<int?>? values)
+    private static ImmutableList<Card> CreateBasicCards(List<int?>? values)
     {
         var cards = new List<Card>();
         values?.ForEach(v =>
         {
             if (v != null) cards.Add(CreateBasicCard((int) v));
         });
-        return cards;
+        return cards.ToImmutableList();
     }
 
     public static Card CreateBasicCard(int value)
     {
         if (value == null) return new Card();
-        return new Card {Id = GetRandomId(), Value = value, Suit = Suit.Clubs};
+        return new Card {Id = GetRandomId(), CardValue = (CardValue)value, Suit = Suit.Clubs};
     }
 
     private static int GetRandomId()

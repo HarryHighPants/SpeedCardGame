@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine", "Engine\Engine.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine.UnitTests", "Engine.UnitTests\Engine.UnitTests.csproj", "{79154234-D314-4266-BC9B-D0858E2B4F83}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CliGame", "CliGame\CliGame.csproj", "{EAFED41C-493A-4A62-AA20-B3FA01673010}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{79154234-D314-4266-BC9B-D0858E2B4F83}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{79154234-D314-4266-BC9B-D0858E2B4F83}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79154234-D314-4266-BC9B-D0858E2B4F83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EAFED41C-493A-4A62-AA20-B3FA01673010}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EAFED41C-493A-4A62-AA20-B3FA01673010}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EAFED41C-493A-4A62-AA20-B3FA01673010}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EAFED41C-493A-4A62-AA20-B3FA01673010}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

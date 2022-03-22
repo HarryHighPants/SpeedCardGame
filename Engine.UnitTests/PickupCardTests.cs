@@ -18,25 +18,25 @@ public class PickupCardTests
         List<int?> nullablePlayer1Cards = player1Cards.Select(i => new int?(i)).ToList();
 
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameCustom(player1Cards: nullablePlayer1Cards,
+        GameState gameState = ModelGenerator.CreateGameCustom(player1Cards: nullablePlayer1Cards,
             player1Kittys: new List<int?> {kittyCard});
 
         // Act
         // See if we can pickup
-        Result canPickupResult = GameEngine.CanPickupFromKitty(gameState, gameState.Players[0]);
+        Result canPickupResult = GameEngine.CanPickupFromKitty(gameState, 0);
 
         // Try to pickup
         Result<(GameState updatedGameState, Card pickedUpCard)> tryPickupResult =
-            GameEngine.TryPickupFromKitty(gameState, gameState.Players[0]);
+            GameEngine.TryPickupFromKitty(gameState, 0);
 
         // Assertion
         Assert.Equal(expectedCanPickup, canPickupResult.Success);
         Assert.Equal(expectedCanPickup, tryPickupResult.Success);
         if (expectedCanPickup)
         {
-            Assert.Equal(expectedPickedUpValue, tryPickupResult.Data.pickedUpCard.Value);
+            Assert.Equal((CardValue)expectedPickedUpValue, tryPickupResult.Data.pickedUpCard.CardValue);
             Assert.Single(tryPickupResult.Data.updatedGameState.Players[0].HandCards
-                .Where(card => card.Value == expectedPickedUpValue));
+                .Where(card => card.CardValue == (CardValue)expectedPickedUpValue));
         }
     }
 }

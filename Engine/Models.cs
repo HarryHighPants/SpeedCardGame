@@ -1,41 +1,68 @@
+using System.Collections.Immutable;
+
 namespace Engine;
 
-[Serializable]
-public class Settings
+public record Settings
 {
-    public int MaxHandCards { get; set; } = 5;
-    public int? RandomSeed { get; set; }
+    public int MaxHandCards { get; init; } = 5;
+    public int? RandomSeed { get; init; } = null;
 }
 
-[Serializable]
-public class GameState
+public record GameState
 {
-    public Settings? Settings { get; set; }
-    public List<Player> Players { get; set; }
-    public List<List<Card>> CenterPiles { get; set; }
+    public Settings? Settings { get; init; }
+    public ImmutableList<Player> Players { get; init; }
+    public ImmutableList<ImmutableList<Card>> CenterPiles { get; init; }
+    public ImmutableList<MoveData> MoveHistory { get; init; }
 }
 
-[Serializable]
-public class Player
+public enum MoveType
 {
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public List<Card> HandCards { get; set; }
-    public List<Card> KittyCards { get; set; }
-    public List<Card> TopUpCards { get; set; }
-    public bool RequestingTopUp { get; set; }
+    PlayCard, PickupCard, TopUp
 }
 
-[Serializable]
-public class Card
+public record MoveData
 {
-    public int Id { get; set; }
-    public Suit Suit { get; set; }
-    public int Value { get; set; }
-    public Coords? UpdatedCoords { get; set; }
+    public MoveType Move;
+    public int? PlayerId;
+    public int? CardId;
+    public int? CenterPileIndex;
 }
 
-[Serializable]
+public record Player
+{
+    public int Id { get; init; }
+    public string Name { get; init; } = "";
+    public ImmutableList<Card> HandCards { get; init; } 
+    public ImmutableList<Card> KittyCards { get; init; } 
+    public ImmutableList<Card> TopUpCards { get; init; } 
+    public bool RequestingTopUp { get; init; }
+}
+
+public record Card
+{
+    public int Id { get; init; }
+    public Suit Suit { get; init; }
+    public CardValue CardValue { get; init; }
+}
+
+public enum CardValue
+{
+    Two = 0,
+    Three = 1,
+    Four = 2,
+    Five = 3, 
+    Six = 4, 
+    Seven = 5,
+    Eight = 6,
+    Nine = 7,
+    Ten = 8,
+    Jack = 9,
+    Queen = 10,
+    King = 11,
+    Ace = 12
+}
+
 public enum CardPileName
 {
     Hand,
@@ -44,14 +71,6 @@ public enum CardPileName
     Center
 }
 
-[Serializable]
-public struct Coords
-{
-    public int X;
-    public int Y;
-}
-
-[Serializable]
 public enum Suit
 {
     Hearts,

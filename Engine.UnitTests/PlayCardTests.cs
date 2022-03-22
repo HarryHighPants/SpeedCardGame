@@ -23,15 +23,15 @@ public class PlayCardTests
     public void PlayCard_Theory(int centerCard, int player1Card, bool expectedCanPlay)
     {
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameBasic(centerCard, player1Card: player1Card);
+        GameState gameState = ModelGenerator.CreateGameBasic(centerCard, player1Card: player1Card);
 
         // Act
         // See if we have a play
-        Result<(Card card, int centerPile)> hasPlayResult = GameEngine.PlayerHasPlay(gameState, gameState.Players[0]);
+        Result<(Card card, int centerPile)> hasPlayResult = GameEngine.PlayerHasPlay(gameState, 0);
 
         // Try to play it
         Result<GameState> tryPlayResult =
-            GameEngine.TryPlayCard(gameState, gameState.Players[0], gameState.Players[0].HandCards[0], 0);
+            GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0], 0);
 
         // Assertion
         Assert.Equal(expectedCanPlay, hasPlayResult.Success);
@@ -39,10 +39,10 @@ public class PlayCardTests
         if (expectedCanPlay)
         {
             // Check the card has been added to the center pile
-            Assert.Equal(player1Card, tryPlayResult.Data.CenterPiles[0].Last().Value);
+            Assert.Equal((CardValue)player1Card, tryPlayResult.Data.CenterPiles[0].Last().CardValue);
 
             // Check the card has been removed from players hand
-            Assert.DoesNotContain(tryPlayResult.Data.Players[0].HandCards, card => card.Value == player1Card);
+            Assert.DoesNotContain(tryPlayResult.Data.Players[0].HandCards, card => card.CardValue == (CardValue)player1Card);
         }
     }
 
@@ -50,11 +50,11 @@ public class PlayCardTests
     public void PlayCard_NotOwned_False()
     {
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameBasic(5, player1Card: 4, player2Card: 6);
+        GameState gameState = ModelGenerator.CreateGameBasic(5, player1Card: 4, player2Card: 6);
 
         // Try to play it
         Result<GameState> tryPlayResult =
-            GameEngine.TryPlayCard(gameState, gameState.Players[0], gameState.Players[1].HandCards[0], 0);
+            GameEngine.TryPlayCard(gameState, 0, gameState.Players[1].HandCards[0], 0);
 
         // Assertion
         Assert.True(tryPlayResult.Failure);
@@ -65,12 +65,12 @@ public class PlayCardTests
     public void PlayCard_NotExist_False()
     {
         // Arrange
-        GameState gameState = ScenarioHelper.CreateGameBasic(5, player1Card: 4, player2Card: 6);
-        var randomCard = new Card {Id = 0, Suit = Suit.Clubs, Value = 4};
+        GameState gameState = ModelGenerator.CreateGameBasic(5, player1Card: 4, player2Card: 6);
+        var randomCard = new Card {Id = 0, Suit = Suit.Clubs, CardValue = (CardValue)4};
 
         // Try to play it
         Result<GameState> tryPlayResult =
-            GameEngine.TryPlayCard(gameState, gameState.Players[0], randomCard, 0);
+            GameEngine.TryPlayCard(gameState, 0, randomCard, 0);
 
         // Assertion
         Assert.True(tryPlayResult.Failure);

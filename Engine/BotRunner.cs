@@ -1,56 +1,46 @@
-using Engine.CliHelpers;
 using Engine.Helpers;
 
 namespace Engine;
 
+public struct BotData
+{
+    public string Name;
+    public string? CustomIntroMessage;
+    public string? CustomWinMessage;
+    public string? CustomLoseMessage;
+    public int QuickestResponseTimeMs;
+    public int SlowestResponseTimeMs;
+}
+
 public class BotRunner
 {
-    public static Result<(GameState updatedGameState, string moveMade)> MakeMove(
-        GameState gameState, Player player)
+    public static Result<GameState> MakeMove(
+        GameState gameState, int playerIndex)
     {
-        Result<Player> winnerResult = GameEngine.TryGetWinner(gameState);
+        var winnerResult = GameEngine.TryGetWinner(gameState);
         if (winnerResult.Success)
         {
-            return new ErrorResult<(GameState updatedGameState, string moveMade)>(
-                $"can't move when {winnerResult.Data.Name} has won already!");
+            return Result.Error<GameState>(
+                $"can't move when {gameState.Players[winnerResult.Data].Name} has won already!");
         }
 
         // See if we can play any cards
-        Result<(Card card, int centerPile)> playCardResult = GameEngine.PlayerHasPlay(gameState, player);
+        var playCardResult = GameEngine.PlayerHasPlay(gameState, playerIndex);
         if (playCardResult.Success)
         {
             Result<GameState> playResult =
-                GameEngine.TryPlayCard(gameState, player, playCardResult.Data.card, playCardResult.Data.centerPile);
-            if (playResult.Success)
-            {
-                return new SuccessResult<(GameState updatedGameState, string moveMade)>((playResult.Data,
-                    $"played card {CliGameUtils.CardToString(playCardResult.Data.card)} onto pile {playCardResult.Data.centerPile + 1}"));
-            }
+                GameEngine.TryPlayCard(gameState, playerIndex, playCardResult.Data.card, playCardResult.Data.centerPile);
+            if (playResult.Success) return Result.Successful(playResult.Data);
         }
 
         // See if we can pickup
-        Result<(GameState updatedGameState, Card pickedUpCard)> pickupFromKittyResult =
-            GameEngine.TryPickupFromKitty(gameState, player);
-        if (pickupFromKittyResult.Success)
-        {
-            return new SuccessResult<(GameState updatedGameState, string moveMade)>((
-                pickupFromKittyResult.Data.updatedGameState,
-                $"picked up card {CliGameUtils.CardToString(pickupFromKittyResult.Data.pickedUpCard)}"));
-        }
+        var pickupFromKittyResult = GameEngine.TryPickupFromKitty(gameState, playerIndex);
+        if (pickupFromKittyResult.Success) return Result.Successful(pickupFromKittyResult.Data.updatedGameState);
 
-        // Request Top up
-        if (!player.RequestingTopUp)
-        {
-            Result<(GameState updatedGameState, bool couldTopUp)> topUpResult =
-                GameEngine.TryRequestTopUp(gameState, player);
-            if (topUpResult.Success)
-            {
-                return new SuccessResult<(GameState updatedGameState, string moveMade)>((
-                    topUpResult.Data.updatedGameState,
-                    topUpResult.Data.couldTopUp ? "topped up the center piles" : "is ready to top up"));
-            }
-        }
+        // See if we can request Top up
+        var topUpResult = GameEngine.TryRequestTopUp(gameState, playerIndex);
+        if (topUpResult.Success) return Result.Successful(topUpResult.Data);
 
-        return new SuccessResult<(GameState updatedGameState, string moveMade)>((gameState, null)!);
+        return Result.Error<GameState>($"No moves for bot to make");
     }
 }
