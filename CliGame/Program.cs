@@ -24,37 +24,37 @@ static class Program
             // Main game loop
             while (GameEngine.TryGetWinner(GameState).Failure)
             {
-                var userInput = ReadlineWithBot();
-                // if(GameEngine.TryGetWinner(GameState).Success) continue;
-                HandleUserInput(userInput);
+                HandleUserInput(ReadlineWithBot());
             }
             
-
             // End game
+            Reader.StopReading();
             var winner = GameState.Players[GameEngine.TryGetWinner(GameState).Data];
             bool winnerIsPlayer = GameState.Players.IndexOf(winner) == 1;
 
-            // CliGameUtils.DrawGameState(GameState);
+            Console.WriteLine();
             Console.WriteLine("------ Game over ----");
-            Console.WriteLine();
-            Console.WriteLine(winnerIsPlayer ? BotRunnerCli.Bot.CustomWinMessage : BotRunnerCli.Bot.CustomLoseMessage);
-            Console.WriteLine();
-            Console.WriteLine();
+            
             Console.ForegroundColor = winnerIsPlayer ? ConsoleColor.DarkBlue : ConsoleColor.DarkRed;
-            UpdateMessage($"Winner is {winner.Name}");
+            Console.WriteLine($"Winner is {winner.Name}");
             Console.ForegroundColor = ConsoleColor.Black;
+            Console.WriteLine(winnerIsPlayer ? BotRunnerCli.Bot.CustomWinMessage : BotRunnerCli.Bot.CustomLoseMessage);
+
             Console.WriteLine();
             Console.WriteLine("Replay? (y/n)");
-            if (Console.ReadLine()?.Trim() == "y")
+            var replayInput = "";
+            while (replayInput is not "y" or "n")
             {
-                PlayGame(true);
+                replayInput = Console.ReadLine()?.Trim();
             }
+            
+            if (replayInput == "y") PlayGame(true);
         }
 
 
         void HandleUserInput(string? input)
         {
-            switch (input)
+            switch (input?.Trim())
             {
                 case null:
                     return;

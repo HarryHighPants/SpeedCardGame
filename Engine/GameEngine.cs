@@ -489,6 +489,8 @@ public static class GameEngine
 
     public static string ReadableLastMove(GameState gameState, bool minified = false, bool includeSuit = false)
     {
+        if (gameState.MoveHistory.Count < 1) return "";
+        
         var lastMove = gameState.MoveHistory.Last();
         return lastMove.Move switch
         {
