@@ -12,7 +12,21 @@ public record GameState
 {
     public Settings? Settings { get; init; }
     public ImmutableList<Player> Players { get; init; }
-    public ImmutableList<ImmutableList<Card>> CenterPiles { get; init; } 
+    public ImmutableList<ImmutableList<Card>> CenterPiles { get; init; }
+    public ImmutableList<MoveData> MoveHistory { get; init; }
+}
+
+public enum MoveType
+{
+    PlayCard, PickupCard, TopUp
+}
+
+public record MoveData
+{
+    public MoveType Move;
+    public int? PlayerId;
+    public int? CardId;
+    public int? CenterPileIndex;
 }
 
 public record Player
@@ -31,7 +45,6 @@ public record Card
     public Suit Suit { get; init; }
 
     public int Value { get; init; }
-    // public Coords? UpdatedCoords { get; init; }
 }
 
 public enum CardPileName
@@ -41,12 +54,6 @@ public enum CardPileName
     TopUp,
     Center
 }
-
-// public struct Coords
-// {
-//     public int X;
-//     public int Y;
-// }
 
 public enum Suit
 {

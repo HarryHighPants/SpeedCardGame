@@ -17,8 +17,7 @@ public class TopUpTests
 
         // Act
         // See if we can request top up
-        Result<(GameState updatedGameState, bool couldTopUp)> canRequestTopUpResult =
-            GameEngine.TryRequestTopUp(gameState, 0, false);
+        var canRequestTopUpResult = GameEngine.TryRequestTopUp(gameState, 0);
 
         // Assertion
         Assert.Equal(expectedCanRequestTopUp, canRequestTopUpResult.Success);
@@ -40,10 +39,10 @@ public class TopUpTests
         GameState gameState = ModelGenerator.CreateGameCustom(
             nullableCenterPile1Cards, nullableCenterPile2Cards,
             player1TopUps: nullablePlayer1TopUps, player1RequestingTopup: true,
-            player2TopUps: nullablePlayer2TopUps, player2RequestingTopup: true);
+            player2TopUps: nullablePlayer2TopUps, player2RequestingTopup: false);
 
         // Act
-        Result<GameState> topUpResult = GameEngine.TryTopUp(gameState);
+        Result<GameState> topUpResult = GameEngine.TryRequestTopUp(gameState, 1);
 
         // Assertion
         Assert.Equal(expectedCanTopUp, topUpResult.Success);
@@ -78,10 +77,10 @@ public class TopUpTests
         GameState gameState = ModelGenerator.CreateGameCustom(
             nullableCenterPile1Cards, nullableCenterPile2Cards,
             player1RequestingTopup: true,
-            player2RequestingTopup: true);
+            player2RequestingTopup: false);
 
         // Act
-        Result<GameState> replenishedResult = GameEngine.ReplenishTopUpCards(gameState);
+        var replenishedResult = GameEngine.TryRequestTopUp(gameState, 1);
 
         // Assertion
         Assert.Equal(expectedCanReplenish, replenishedResult.Success);

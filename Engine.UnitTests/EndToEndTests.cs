@@ -22,28 +22,15 @@ public class EndToEndTests
         var movesMade = 0;
         while (GameEngine.TryGetWinner(gameState).Failure && movesMade < 1000)
         {
-            var move1 =
-                BotRunner.MakeMove(gameState, 0);
-            
-            gameState = move1.Success ? move1.Data.updatedGameState : gameState;
-            
-            var move2 =
-                BotRunner.MakeMove(gameState, 1);
-            gameState = move2.Success ? move2.Data.updatedGameState : gameState;
-
-
-            // Debugging
-            if (move1 is not IErrorResult && !string.IsNullOrEmpty(move1.Data.moveMade))
+            for (int i = 0; i < gameState.Players.Count; i++)
             {
-                _testOutputHelper.WriteLine($"{gameState.Players[0].Name} {move1.Data.moveMade}");
+                var move = BotRunner.MakeMove(gameState, i);
+                gameState = move.Success ? move.Data : gameState;
+                if (move is IErrorResult) continue;
+                
+                _testOutputHelper.WriteLine(GameEngine.ReadableLastMove(gameState));
+                movesMade++;
             }
-
-            if (move2 is not IErrorResult && !string.IsNullOrEmpty(move2.Data.moveMade))
-            {
-                _testOutputHelper.WriteLine($"{gameState.Players[1].Name} {move2.Data.moveMade}");
-            }
-
-            movesMade++;
         }
 
         var winnerResult = GameEngine.TryGetWinner(gameState);
@@ -67,10 +54,10 @@ public class EndToEndTests
             );
 
         // Act
-        gameState = GameEngine.TryRequestTopUp(gameState, 1).Data.updatedGameState;
+        gameState = GameEngine.TryRequestTopUp(gameState, 1).Data;
         gameState = GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0], 0).Data;
         gameState = GameEngine.TryPickupFromKitty(gameState, 0).Data.updatedGameState;
-        gameState = GameEngine.TryRequestTopUp(gameState, 0).Data.updatedGameState;
+        gameState = GameEngine.TryRequestTopUp(gameState, 0).Data;
         gameState = GameEngine.TryPlayCard(gameState, 1, gameState.Players[1].HandCards[0], 0).Data;
         gameState = GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0], 0).Data;
         var winnerResult = GameEngine.TryGetWinner(gameState);
@@ -95,8 +82,8 @@ public class EndToEndTests
         Player player2 = gameState.Players[1];
 
         // Act
-        gameState = GameEngine.TryRequestTopUp(gameState, 1).Data.updatedGameState;
-        gameState = GameEngine.TryRequestTopUp(gameState, 0).Data.updatedGameState;
+        gameState = GameEngine.TryRequestTopUp(gameState, 1).Data;
+        gameState = GameEngine.TryRequestTopUp(gameState, 0).Data;
         Assert.Single(gameState.CenterPiles[0]);
 
         // Manually add a 6 to ensure the 6 "was" shuffled in first
