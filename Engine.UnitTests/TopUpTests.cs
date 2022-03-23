@@ -51,8 +51,8 @@ public class TopUpTests
         if (expectedCanTopUp && player1TopUps.Length > 1)
         {
             // Check the last top up cards have been added to the center piles
-            Assert.Equal((CardValue)player1TopUps.Last(), topUpResult.Data.CenterPiles[0].Last().CardValue);
-            Assert.Equal((CardValue)player2TopUps.Last(), topUpResult.Data.CenterPiles[1].Last().CardValue);
+            Assert.Equal((CardValue)player1TopUps.Last(), topUpResult.Data.CenterPiles[0].Cards.Last().CardValue);
+            Assert.Equal((CardValue)player2TopUps.Last(), topUpResult.Data.CenterPiles[1].Cards.Last().CardValue);
 
             // Check they have been removed from the top up piles
             Assert.DoesNotContain(topUpResult.Data.Players[0].TopUpCards,
@@ -84,8 +84,8 @@ public class TopUpTests
             replenishedResult.Data.Players[1].TopUpCards.Count);
 
         // Check the players have topped up the center piles
-        Assert.Single(replenishedResult.Data.CenterPiles[0]);
-        Assert.Single(replenishedResult.Data.CenterPiles[1]);
+        Assert.Single(replenishedResult.Data.CenterPiles[0].Cards);
+        Assert.Single(replenishedResult.Data.CenterPiles[1].Cards);
     }
 
     // Once a move takes place if a player requesting top up can now move then they should no longer be requesting top up

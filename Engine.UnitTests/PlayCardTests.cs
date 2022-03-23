@@ -39,7 +39,11 @@ public class PlayCardTests
         if (expectedCanPlay)
         {
             // Check the card has been added to the center pile
-            Assert.Equal((CardValue)player1Card, tryPlayResult.Data.CenterPiles[0].Last().CardValue);
+            var immutableList = tryPlayResult.Data.CenterPiles[0].Cards;
+            if (immutableList != null)
+            {
+                Assert.Equal((CardValue)player1Card, immutableList.Last().CardValue);
+            }
 
             // Check the card has been removed from players hand
             Assert.DoesNotContain(tryPlayResult.Data.Players[0].HandCards,

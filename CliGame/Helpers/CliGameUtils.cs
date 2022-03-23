@@ -18,7 +18,7 @@ public static class CliGameUtils
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Black;
         Console.WriteLine(
-            $"                             {GameEngine.CardToString(gameState.CenterPiles[0].Last(), true)}, {GameEngine.CardToString(gameState.CenterPiles[1].Last(), true)}      ");
+            $"                             {GameEngine.CardToString(gameState.CenterPiles[0].Cards.Last(), true)}, {GameEngine.CardToString(gameState.CenterPiles[1].Cards.Last(), true)}      ");
         Console.ResetColor();
         Console.WriteLine();
 

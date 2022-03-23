@@ -29,7 +29,7 @@ public class ModelGenerator
         List<int?>? player2Kittys = null,
         List<int?>? player2TopUps = null,
         bool player2RequestingTopup = false) =>
-        new GameState
+        new()
         {
             Players = new List<Player>
             {
@@ -39,14 +39,17 @@ public class ModelGenerator
                     player2RequestingTopup)
             }.ToImmutableList(),
             CenterPiles =
-                new List<ImmutableList<Card>> {CreateBasicCards(centerPile1), CreateBasicCards(centerPile2)}
+                new List<CenterPile>
+                    {
+                        new() {Cards = CreateBasicCards(centerPile1)}, new() {Cards = CreateBasicCards(centerPile2)}
+                    }
                     .ToImmutableList(),
             MoveHistory = ImmutableList<MoveData>.Empty
         };
 
     private static Player CreateBasicPlayer(string? name = null, List<int?>? hand = null, List<int?>? kitty = null,
         List<int?>? topUp = null, bool requestingTopUp = false) =>
-        new Player
+        new()
         {
             Id = GetRandomId(),
             Name = name,

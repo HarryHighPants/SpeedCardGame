@@ -12,8 +12,13 @@ public record GameState
 {
     public Settings? Settings { get; init; }
     public ImmutableList<Player> Players { get; init; }
-    public ImmutableList<ImmutableList<Card>> CenterPiles { get; init; }
+    public ImmutableList<CenterPile> CenterPiles { get; init; }
     public ImmutableList<MoveData> MoveHistory { get; init; }
+}
+
+public record CenterPile
+{
+    public ImmutableList<Card> Cards = ImmutableList<Card>.Empty;
 }
 
 public enum MoveType

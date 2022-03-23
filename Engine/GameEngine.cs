@@ -59,9 +59,10 @@ public static class GameEngine
         {
             Players = players.ToImmutableList(),
             CenterPiles =
-                new List<ImmutableList<Card>>
+                new List<CenterPile>
                 {
-                    deck.PopRange(1).ToImmutableList(), deck.PopRange(1).ToImmutableList()
+                    new() {Cards = deck.PopRange(1).ToImmutableList()},
+                    new() {Cards = deck.PopRange(1).ToImmutableList()}
                 }.ToImmutableList(),
             Settings = settings,
             MoveHistory = ImmutableList<MoveData>.Empty
@@ -188,7 +189,10 @@ public static class GameEngine
         var state = newGameState;
         var newCenterPiles =
             newGameState.CenterPiles
-                .Select((pile, i) => pile.Append(state.Players[i].TopUpCards.Last()).ToImmutableList())
+                .Select((pile, i) => new CenterPile
+                {
+                    Cards = pile.Cards.Append(state.Players[i].TopUpCards.Last()).ToImmutableList()
+                })
                 .ToImmutableList();
         newGameState = newGameState with {CenterPiles = newCenterPiles};
 
@@ -218,8 +222,8 @@ public static class GameEngine
 
     private static Result<GameState> ReplenishTopUpCards(GameState gameState)
     {
-        // combine middle piles
-        var combinedCenterPiles = gameState.CenterPiles.SelectMany(cp => cp, (_, card) => card).ToList();
+        // combine center piles
+        var combinedCenterPiles = gameState.CenterPiles.SelectMany(cp => cp.Cards.ToList()).ToList();
 
         if (combinedCenterPiles.Count < 1)
         {
@@ -237,10 +241,10 @@ public static class GameEngine
                 .ToImmutableList();
 
         // Reset the center piles
-        var newCenterPiles = new List<ImmutableList<Card>>();
+        var newCenterPiles = new List<CenterPile>();
         for (var i = 0; i < gameState.CenterPiles.Count; i++)
         {
-            newCenterPiles.Add(ImmutableList<Card>.Empty);
+            newCenterPiles.Add(new CenterPile());
         }
 
         return Result.Successful(gameState with {Players = newPlayers, CenterPiles = newCenterPiles.ToImmutableList()});
@@ -280,10 +284,10 @@ public static class GameEngine
         {
             case CardPileName.Hand:
                 // Check that the card can be played onto the relevant center piles top card
-                if (!ValidMove(card, gameState.CenterPiles[centerPileIndex].Last()))
+                if (!ValidMove(card, gameState.CenterPiles[centerPileIndex].Cards.Last()))
                 {
                     return Result.Error<GameState>(
-                        $"Card with value {card.CardValue}({(int)card.CardValue}) can't be played onto {gameState.CenterPiles[centerPileIndex].Last().CardValue}({(int)gameState.CenterPiles[centerPileIndex].Last().CardValue})");
+                        $"Card with value {card.CardValue}({(int)card.CardValue}) can't be played onto {gameState.CenterPiles[centerPileIndex].Cards.Last().CardValue}({(int)gameState.CenterPiles[centerPileIndex].Cards.Last().CardValue})");
                 }
 
                 // This is a valid play so play it
@@ -301,7 +305,9 @@ public static class GameEngine
 
         // Add the card being played to the center pile
         var newCenterPiles = newGameState.CenterPiles.ReplaceElementAt(
-            centerPileIndex, gameState.CenterPiles[centerPileIndex].Append(card).ToImmutableList()).ToImmutableList();
+                centerPileIndex,
+                new CenterPile {Cards = gameState.CenterPiles[centerPileIndex].Cards.Append(card).ToImmutableList()})
+            .ToImmutableList();
         newGameState = newGameState with {CenterPiles = newCenterPiles};
 
         // Remove the played card from the players hand
@@ -358,12 +364,12 @@ public static class GameEngine
     {
         for (var i = 0; i < gameState.CenterPiles.Count; i++)
         {
-            if (gameState.CenterPiles[i].Count < 1)
+            if (gameState.CenterPiles[i].Cards.Count < 1)
             {
                 continue;
             }
 
-            var pileCard = gameState.CenterPiles[i].Last();
+            var pileCard = gameState.CenterPiles[i].Cards.Last();
             if (ValidMove(card, pileCard))
             {
                 return Result.Successful(i);
@@ -448,12 +454,12 @@ public static class GameEngine
     {
         for (var i = 0; i < gameState.CenterPiles.Count; i++)
         {
-            if (gameState.CenterPiles[i].Count < 1)
+            if (gameState.CenterPiles[i].Cards.Count < 1)
             {
                 continue;
             }
 
-            var pileCard = gameState.CenterPiles[i].Last();
+            var pileCard = gameState.CenterPiles[i].Cards.Last();
             if ((int)pileCard.CardValue == value)
             {
                 return Result.Successful(i);
@@ -491,7 +497,7 @@ public static class GameEngine
         {
             var centerPile = gameState.CenterPiles[i];
 
-            var centerCard = centerPile.FirstOrDefault(c => c.Id == cardId);
+            var centerCard = centerPile.Cards.FirstOrDefault(c => c.Id == cardId);
             if (centerCard != default)
             {
                 return Result.Successful(centerCard);
@@ -556,7 +562,7 @@ public static class GameEngine
         for (var i = 0; i < gameState.CenterPiles.Count; i++)
         {
             var centerPile = gameState.CenterPiles[i];
-            var centerPileIndex = centerPile.IndexOf(card);
+            var centerPileIndex = centerPile.Cards.IndexOf(card);
             if (centerPileIndex != -1)
             {
                 return Result.Successful(new CardLocation(CardPileName.Center, centerPileIndex, null, i));
