@@ -5,7 +5,6 @@ using Engine.Helpers;
 namespace CliGame;
 public class CliGame
 {
-
     public readonly Random Random = new();
     public GameState GameState { get; set; } = new();
     public readonly CliGameUtils CliGameUtils = new();
@@ -26,26 +25,11 @@ public class CliGame
             
             // End game
             Reader.StopReading();
-            var winner = GameState.Players[GameEngine.TryGetWinner(GameState).Data];
-            bool winnerIsPlayer = GameState.Players.IndexOf(winner) == 1;
-
-            Console.WriteLine();
-            Console.WriteLine("------ Game over ----");
-            
-            Console.ForegroundColor = winnerIsPlayer ? ConsoleColor.DarkBlue : ConsoleColor.DarkRed;
-            Console.WriteLine($"Winner is {winner.Name}");
-            Console.ForegroundColor = ConsoleColor.Black;
-            Console.WriteLine(winnerIsPlayer ? BotRunnerCli.Bot.CustomWinMessage : BotRunnerCli.Bot.CustomLoseMessage);
-
-            Console.WriteLine();
-            Console.WriteLine("Replay? (y/n)");
-            var replayInput = "";
-            while (replayInput is not "y" or "n")
+            CliGameUtils.GameOver(GameState);
+            if (CliGameUtils.Replay())
             {
-                replayInput = Console.ReadLine()?.Trim();
+                PlayGame(true);
             }
-            
-            if (replayInput == "y") PlayGame(true);
         }
     
     string? ReadlineWithBot()

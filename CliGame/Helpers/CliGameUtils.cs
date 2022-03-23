@@ -102,6 +102,33 @@ public class CliGameUtils
         Console.WriteLine("Press any key to start the match!");
         Console.ReadKey(true);
     }
+
+    public void GameOver(GameState gameState)
+    {
+        var winner = gameState.Players[GameEngine.TryGetWinner(gameState).Data];
+        bool winnerIsPlayer = gameState.Players.IndexOf(winner) == 1;
+
+        Console.WriteLine();
+        Console.WriteLine("------ Game over ----");
+            
+        Console.ForegroundColor = winnerIsPlayer ? ConsoleColor.DarkBlue : ConsoleColor.DarkRed;
+        Console.WriteLine($"Winner is {winner.Name}");
+        Console.ForegroundColor = ConsoleColor.Black;
+        Console.WriteLine(winnerIsPlayer ? BotRunnerCli.Bot.CustomWinMessage : BotRunnerCli.Bot.CustomLoseMessage);
+    }
+
+    public bool Replay()
+    {
+        Console.WriteLine();
+        Console.WriteLine("Replay? (y/n)");
+        var replayInput = "";
+        while (replayInput is not "y" or "n")
+        {
+            replayInput = Console.ReadLine()?.Trim();
+        }
+            
+        return replayInput == "y";
+    }
     
     public void UpdateMessage(GameState gameState, string message)
     {
