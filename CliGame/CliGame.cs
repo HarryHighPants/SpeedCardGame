@@ -6,8 +6,8 @@ using Helpers;
 
 public class CliGame
 {
-    public readonly Random Random = new();
-    public GameState GameState { get; set; } = new();
+    private readonly Random random = new();
+    private GameState GameState { get; set; } = new();
 
     public void PlayGame(bool skipIntro = false)
     {
@@ -36,7 +36,7 @@ public class CliGame
     {
         try
         {
-            return Reader.ReadLine(this.Random.Next(BotRunnerCli.Bot.QuickestResponseTimeMs,
+            return Reader.ReadLine(this.random.Next(BotRunnerCli.Bot.QuickestResponseTimeMs,
                 BotRunnerCli.Bot.SlowestResponseTimeMs));
         }
         catch (TimeoutException)

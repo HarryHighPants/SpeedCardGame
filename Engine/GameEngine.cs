@@ -219,7 +219,7 @@ public static class GameEngine
     private static Result<GameState> ReplenishTopUpCards(GameState gameState)
     {
         // combine middle piles
-        var combinedCenterPiles = gameState.CenterPiles.SelectMany(cp => cp, (list, card) => card).ToList();
+        var combinedCenterPiles = gameState.CenterPiles.SelectMany(cp => cp, (_, card) => card).ToList();
 
         if (combinedCenterPiles.Count < 1)
         {
@@ -405,10 +405,10 @@ public static class GameEngine
             return Result.Error<(GameState updatedGameState, Card pickedUpCard)>(canPickupResultError.Message);
         }
 
-        var newHandCards = player.HandCards.ToImmutableList();
+        var newHandCards = player.HandCards;
         newHandCards = newHandCards.Add(player.KittyCards.Last());
 
-        var newKittyCards = player.KittyCards.ToImmutableList();
+        var newKittyCards = player.KittyCards;
         newKittyCards = newKittyCards.Remove(player.KittyCards.Last());
         var newPlayer = player with {HandCards = newHandCards, KittyCards = newKittyCards};
         var newPlayers = newGameState.Players.ReplaceElementAt(playerIndex, newPlayer).ToImmutableList();
