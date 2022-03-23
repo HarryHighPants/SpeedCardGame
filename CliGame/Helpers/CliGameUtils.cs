@@ -1,7 +1,7 @@
 using Engine;
 
 namespace CliGame.Helpers;
-public static class CliGameUtils
+public class CliGameUtils
 {
     public static void DrawGameState(GameState gameState)
     {
@@ -28,11 +28,6 @@ public static class CliGameUtils
             $"{player.Name}:                   {GameEngine.CardsToString(player.HandCards, true)}     Kitty count: {player.KittyCards.Count}");
         Console.ResetColor();
         Console.WriteLine();
-    }
-
-    public static Card? GetCardWithValue(IEnumerable<Card> cards, int? value)
-    {
-        return cards.FirstOrDefault(card => card.CardValue == (CardValue)value!);
     }
 
     public static void GameIntro(bool skipIntro = false)
@@ -106,5 +101,11 @@ public static class CliGameUtils
         Console.WriteLine();
         Console.WriteLine("Press any key to start the match!");
         Console.ReadKey(true);
+    }
+    
+    public void UpdateMessage(GameState gameState, string message)
+    {
+        DrawGameState(gameState);
+        Console.WriteLine(message);
     }
 }
