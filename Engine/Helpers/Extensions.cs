@@ -1,20 +1,21 @@
-using System.Collections.Immutable;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text.RegularExpressions;
 using static System.Int32;
 
 namespace Engine.Helpers;
+
+using System.Collections.Immutable;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.RegularExpressions;
 
 public static class Extensions
 {
     public static void Shuffle<T>(this IList<T> list, int? randomSeed = null)
     {
         var random = new Random(randomSeed ?? Guid.NewGuid().GetHashCode());
-        int n = list.Count;
+        var n = list.Count;
         while (n > 1)
         {
             n--;
-            int k = random.Next(n + 1);
+            var k = random.Next(n + 1);
             (list[k], list[n]) = (list[n], list[k]);
         }
     }
@@ -30,8 +31,9 @@ public static class Extensions
 
         return result;
     }
-    
-    public static (ImmutableList<T> poppedList, ImmutableList<T> poppedItems) PopRange<T>(this ImmutableList<T> poppedList, int amount)
+
+    public static (ImmutableList<T> poppedList, ImmutableList<T> poppedItems) PopRange<T>(
+        this ImmutableList<T> poppedList, int amount)
     {
         var poppedItems = new List<T>(amount);
         while (amount-- > 0 && poppedList.Count > 0)
@@ -45,27 +47,30 @@ public static class Extensions
 
     public static T Pop<T>(this List<T> stack)
     {
-        T poppedItem = stack[stack.Count - 1];
+        var poppedItem = stack[stack.Count - 1];
         stack.RemoveAt(stack.Count - 1);
         return poppedItem;
     }
 
     public static int? ExtractInt(this string input)
     {
-        if (string.IsNullOrEmpty(input)) return null;
+        if (string.IsNullOrEmpty(input))
+        {
+            return null;
+        }
 
-        string stripped = Regex.Replace(
+        var stripped = Regex.Replace(
             input, // Our input
             "[^0-9]", // Select everything that is not in the range of 0-9
             ""); // Replace that with an empty string.
-        if (TryParse(stripped, out int number))
+        if (TryParse(stripped, out var number))
         {
             return number;
         }
 
         return null;
     }
-    
+
     public static T DeepClone<T>(this T obj)
     {
         using (var ms = new MemoryStream())
@@ -74,7 +79,7 @@ public static class Extensions
             formatter.Serialize(ms, obj);
             ms.Position = 0;
 
-            return (T) formatter.Deserialize(ms);
+            return (T)formatter.Deserialize(ms);
         }
     }
 
@@ -96,8 +101,6 @@ public static class Extensions
         }
     }
 
-    public static IEnumerable<(T item, int index)> IndexTuples<T>(this IEnumerable<T> source)
-    {
-        return source.Select((x, i) => (x, i));
-    }
+    public static IEnumerable<(T item, int index)> IndexTuples<T>(this IEnumerable<T> source) =>
+        source.Select((x, i) => (x, i));
 }

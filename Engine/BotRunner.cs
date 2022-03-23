@@ -1,6 +1,6 @@
-using Engine.Helpers;
-
 namespace Engine;
+
+using Helpers;
 
 public struct BotData
 {
@@ -28,19 +28,29 @@ public class BotRunner
         var playCardResult = GameEngine.PlayerHasPlay(gameState, playerIndex);
         if (playCardResult.Success)
         {
-            Result<GameState> playResult =
-                GameEngine.TryPlayCard(gameState, playerIndex, playCardResult.Data.card, playCardResult.Data.centerPile);
-            if (playResult.Success) return Result.Successful(playResult.Data);
+            var playResult =
+                GameEngine.TryPlayCard(gameState, playerIndex, playCardResult.Data.card,
+                    playCardResult.Data.centerPile);
+            if (playResult.Success)
+            {
+                return Result.Successful(playResult.Data);
+            }
         }
 
         // See if we can pickup
         var pickupFromKittyResult = GameEngine.TryPickupFromKitty(gameState, playerIndex);
-        if (pickupFromKittyResult.Success) return Result.Successful(pickupFromKittyResult.Data.updatedGameState);
+        if (pickupFromKittyResult.Success)
+        {
+            return Result.Successful(pickupFromKittyResult.Data.updatedGameState);
+        }
 
         // See if we can request Top up
         var topUpResult = GameEngine.TryRequestTopUp(gameState, playerIndex);
-        if (topUpResult.Success) return Result.Successful(topUpResult.Data);
+        if (topUpResult.Success)
+        {
+            return Result.Successful(topUpResult.Data);
+        }
 
-        return Result.Error<GameState>($"No moves for bot to make");
+        return Result.Error<GameState>("No moves for bot to make");
     }
 }

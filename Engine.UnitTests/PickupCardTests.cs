@@ -1,9 +1,8 @@
+namespace Engine.UnitTests;
+
 using System.Collections.Generic;
 using System.Linq;
-using Engine.Helpers;
 using Xunit;
-
-namespace Engine.UnitTests;
 
 public class PickupCardTests
 {
@@ -15,18 +14,18 @@ public class PickupCardTests
         int? expectedPickedUpValue)
     {
         // Convert inline data types to usable array
-        List<int?> nullablePlayer1Cards = player1Cards.Select(i => new int?(i)).ToList();
+        var nullablePlayer1Cards = player1Cards.Select(i => new int?(i)).ToList();
 
         // Arrange
-        GameState gameState = ModelGenerator.CreateGameCustom(player1Cards: nullablePlayer1Cards,
+        var gameState = ModelGenerator.CreateGameCustom(player1Cards: nullablePlayer1Cards,
             player1Kittys: new List<int?> {kittyCard});
 
         // Act
         // See if we can pickup
-        Result canPickupResult = GameEngine.CanPickupFromKitty(gameState, 0);
+        var canPickupResult = GameEngine.CanPickupFromKitty(gameState, 0);
 
         // Try to pickup
-        Result<(GameState updatedGameState, Card pickedUpCard)> tryPickupResult =
+        var tryPickupResult =
             GameEngine.TryPickupFromKitty(gameState, 0);
 
         // Assertion

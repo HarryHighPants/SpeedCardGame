@@ -1,8 +1,8 @@
+namespace Engine.UnitTests;
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-
-namespace Engine.UnitTests;
 
 public class ModelGenerator
 {
@@ -11,14 +11,12 @@ public class ModelGenerator
         int? player1Kitty = null,
         int? player2Kitty = null, int? player1TopUp = null, int? player2TopUp = null,
         bool player1RequestingTopUp = false,
-        bool player2RequestingTopUp = false)
-    {
-        return CreateGameCustom(new List<int?> {centerCard1}, new List<int?> {centerCard2},
+        bool player2RequestingTopUp = false) =>
+        CreateGameCustom(new List<int?> {centerCard1}, new List<int?> {centerCard2},
             new List<int?> {player1Card}, new List<int?> {player1Kitty}, new List<int?> {player1TopUp},
             player1RequestingTopUp,
             new List<int?> {player2Card}, new List<int?> {player2Kitty}, new List<int?> {player2TopUp},
             player2RequestingTopUp);
-    }
 
     public static GameState CreateGameCustom(
         List<int?>? centerPile1 = null,
@@ -30,52 +28,56 @@ public class ModelGenerator
         List<int?>? player2Cards = null,
         List<int?>? player2Kittys = null,
         List<int?>? player2TopUps = null,
-        bool player2RequestingTopup = false)
-    {
-        return new GameState
+        bool player2RequestingTopup = false) =>
+        new GameState
         {
             Players = new List<Player>
             {
-                CreateBasicPlayer("Player 1", player1Cards, player1Kittys, player1TopUps, player1RequestingTopup),
-                CreateBasicPlayer("Player 2", player2Cards, player2Kittys, player2TopUps, player2RequestingTopup)
+                CreateBasicPlayer("Player 1", player1Cards, player1Kittys, player1TopUps,
+                    player1RequestingTopup),
+                CreateBasicPlayer("Player 2", player2Cards, player2Kittys, player2TopUps,
+                    player2RequestingTopup)
             }.ToImmutableList(),
-            CenterPiles = new List<ImmutableList<Card>>
-            {
-                CreateBasicCards(centerPile1),
-                CreateBasicCards(centerPile2)
-            }.ToImmutableList(),
+            CenterPiles =
+                new List<ImmutableList<Card>> {CreateBasicCards(centerPile1), CreateBasicCards(centerPile2)}
+                    .ToImmutableList(),
             MoveHistory = ImmutableList<MoveData>.Empty
         };
-    }
 
     private static Player CreateBasicPlayer(string? name = null, List<int?>? hand = null, List<int?>? kitty = null,
-        List<int?>? topUp = null, bool requestingTopUp = false)
-    {
-        return new Player
+        List<int?>? topUp = null, bool requestingTopUp = false) =>
+        new Player
         {
-            Id = GetRandomId(), Name = name, HandCards = CreateBasicCards(hand), KittyCards = CreateBasicCards(kitty),
-            TopUpCards = CreateBasicCards(topUp), RequestingTopUp = requestingTopUp
+            Id = GetRandomId(),
+            Name = name,
+            HandCards = CreateBasicCards(hand),
+            KittyCards = CreateBasicCards(kitty),
+            TopUpCards = CreateBasicCards(topUp),
+            RequestingTopUp = requestingTopUp
         };
-    }
 
     private static ImmutableList<Card> CreateBasicCards(List<int?>? values)
     {
         var cards = new List<Card>();
         values?.ForEach(v =>
         {
-            if (v != null) cards.Add(CreateBasicCard((int) v));
+            if (v != null)
+            {
+                cards.Add(CreateBasicCard((int)v));
+            }
         });
         return cards.ToImmutableList();
     }
 
     public static Card CreateBasicCard(int value)
     {
-        if (value == null) return new Card();
+        if (value == null)
+        {
+            return new Card();
+        }
+
         return new Card {Id = GetRandomId(), CardValue = (CardValue)value, Suit = Suit.Clubs};
     }
 
-    private static int GetRandomId()
-    {
-        return Guid.NewGuid().GetHashCode();
-    }
+    private static int GetRandomId() => Guid.NewGuid().GetHashCode();
 }

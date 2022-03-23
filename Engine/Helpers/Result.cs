@@ -1,80 +1,58 @@
-using System.Collections;
-
 namespace Engine.Helpers;
+
+using System.Collections;
 
 public abstract class Result
 {
     public bool Success { get; protected set; }
-    public bool Failure => !Success;
+    public bool Failure => !this.Success;
 
-    public static Result<T> Successful<T>(T data)
-    {
-        return new SuccessResult<T>(data);
-    }
-    
-    public static Result Successful()
-    {
-        return new SuccessResult();
-    }
-    
-    public static Result<T> Error<T>(string message)
-    {
-        return new ErrorResult<T>(message);
-    }
-    
-    public static Result Error(string message)
-    {
-        return new ErrorResult(message);
-    }
+    public static Result<T> Successful<T>(T data) => new SuccessResult<T>(data);
+
+    public static Result Successful() => new SuccessResult();
+
+    public static Result<T> Error<T>(string message) => new ErrorResult<T>(message);
+
+    public static Result Error(string message) => new ErrorResult(message);
 }
 
 public abstract class Result<T> : Result, IEnumerable<T>
 {
     private T _data;
 
-    protected Result(T data)
-    {
-        Data = data;
-    }
+    protected Result(T data) => this.Data = data;
 
     public T Data
     {
-        get => Success
-            ? _data
-            : throw new Exception($"You can't access .{nameof(Data)} when .{nameof(Success)} is false. Error Message:{(this as IErrorResult)?.Message}");
-        set => _data = value;
+        get =>
+            this.Success
+                ? this._data
+                : throw new Exception(
+                    $"You can't access .{nameof(this.Data)} when .{nameof(this.Success)} is false. Error Message:{(this as IErrorResult)?.Message}");
+        set => this._data = value;
     }
 
     public IEnumerator<T> GetEnumerator()
     {
-        if (Success)
+        if (this.Success)
         {
-            return new List<T> {_data}.GetEnumerator();
+            return new List<T> {this._data}.GetEnumerator();
         }
 
         return new List<T>().GetEnumerator();
     }
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
+    IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
 }
 
 public class SuccessResult : Result
 {
-    public SuccessResult()
-    {
-        Success = true;
-    }
+    public SuccessResult() => this.Success = true;
 }
 
 public class SuccessResult<T> : Result<T>
 {
-    public SuccessResult(T data) : base(data)
-    {
-        Success = true;
-    }
+    public SuccessResult(T data) : base(data) => this.Success = true;
 }
 
 public class ErrorResult : Result, IErrorResult
@@ -85,9 +63,9 @@ public class ErrorResult : Result, IErrorResult
 
     public ErrorResult(string message, IReadOnlyCollection<Error> errors)
     {
-        Message = message;
-        Success = false;
-        Errors = errors ?? Array.Empty<Error>();
+        this.Message = message;
+        this.Success = false;
+        this.Errors = errors ?? Array.Empty<Error>();
     }
 
     public string Message { get; }
@@ -102,9 +80,9 @@ public class ErrorResult<T> : Result<T>, IErrorResult
 
     public ErrorResult(string message, IReadOnlyCollection<Error> errors) : base(default)
     {
-        Message = message;
-        Success = false;
-        Errors = errors ?? Array.Empty<Error>();
+        this.Message = message;
+        this.Success = false;
+        this.Errors = errors ?? Array.Empty<Error>();
     }
 
     public string Message { get; set; }
@@ -119,8 +97,8 @@ public class Error
 
     public Error(string code, string details)
     {
-        Code = code;
-        Details = details;
+        this.Code = code;
+        this.Details = details;
     }
 
     public string Code { get; }

@@ -1,14 +1,15 @@
+namespace CliGame.Helpers;
+
 using Engine;
 
-namespace CliGame.Helpers;
-public class CliGameUtils
+public static class CliGameUtils
 {
     public static void DrawGameState(GameState gameState)
     {
         Console.Clear();
 
         // Display the bots cards
-        Player player = gameState.Players[0];
+        var player = gameState.Players[0];
         Console.ForegroundColor = ConsoleColor.DarkRed;
         Console.WriteLine(
             $"{player.Name}:       {GameEngine.CardsToString(player.HandCards, true)}     Kitty count: {player.KittyCards.Count}");
@@ -79,10 +80,10 @@ public class CliGameUtils
         Console.WriteLine("------ Difficulty ------");
         Console.WriteLine("What difficulty opponent will you face?");
         Console.WriteLine("(e)asy, (m)edium, (h)ard, (i)mpossible");
-        string difficultyInput = Console.ReadLine();
+        var difficultyInput = Console.ReadLine();
         Console.Clear();
 
-        BotDifficulty difficulty = difficultyInput switch
+        var difficulty = difficultyInput switch
         {
             "e" => BotDifficulty.Easy,
             "m" => BotDifficulty.Medium,
@@ -103,21 +104,21 @@ public class CliGameUtils
         Console.ReadKey(true);
     }
 
-    public void GameOver(GameState gameState)
+    public static void GameOver(GameState gameState)
     {
         var winner = gameState.Players[GameEngine.TryGetWinner(gameState).Data];
-        bool winnerIsPlayer = gameState.Players.IndexOf(winner) == 1;
+        var winnerIsPlayer = gameState.Players.IndexOf(winner) == 1;
 
         Console.WriteLine();
         Console.WriteLine("------ Game over ----");
-            
+
         Console.ForegroundColor = winnerIsPlayer ? ConsoleColor.DarkBlue : ConsoleColor.DarkRed;
         Console.WriteLine($"Winner is {winner.Name}");
         Console.ForegroundColor = ConsoleColor.Black;
         Console.WriteLine(winnerIsPlayer ? BotRunnerCli.Bot.CustomWinMessage : BotRunnerCli.Bot.CustomLoseMessage);
     }
 
-    public bool Replay()
+    public static bool Replay()
     {
         Console.WriteLine();
         Console.WriteLine("Replay? (y/n)");
@@ -126,11 +127,11 @@ public class CliGameUtils
         {
             replayInput = Console.ReadLine()?.Trim();
         }
-            
+
         return replayInput == "y";
     }
-    
-    public void UpdateMessage(GameState gameState, string message)
+
+    public static void UpdateMessage(GameState gameState, string message)
     {
         DrawGameState(gameState);
         Console.WriteLine(message);

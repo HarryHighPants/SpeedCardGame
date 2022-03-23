@@ -1,4 +1,3 @@
-using System.Collections;
 using Server.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);

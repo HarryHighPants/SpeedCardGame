@@ -1,7 +1,6 @@
-using Engine.Helpers;
-using Xunit;
-
 namespace Engine.UnitTests;
+
+using Xunit;
 
 public class WinningTests
 {
@@ -15,7 +14,7 @@ public class WinningTests
         bool expectedWinner, int expectedWinnerIndex)
     {
         // Arrange
-        GameState gameState =
+        var gameState =
             ModelGenerator.CreateGameBasic(centerPile1, player1Card: player1Card, player2Card: player2Card);
 
         // Act

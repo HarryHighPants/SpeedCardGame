@@ -1,21 +1,10 @@
-using Microsoft.AspNetCore.SignalR;
-
 namespace Server.Hubs;
+
+using Microsoft.AspNetCore.SignalR;
 
 public class GameHub : Hub
 {
-    public GameHub()
-    {
-        
-    }
+    public override Task OnConnectedAsync() => base.OnConnectedAsync();
 
-    public override Task OnConnectedAsync()
-    {
-        return base.OnConnectedAsync();
-    }
-
-    public override Task OnDisconnectedAsync(Exception? exception)
-    {
-        return base.OnDisconnectedAsync(exception);
-    }
+    public override Task OnDisconnectedAsync(Exception? exception) => base.OnDisconnectedAsync(exception);
 }

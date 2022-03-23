@@ -1,6 +1,6 @@
-using System.Collections.Immutable;
-
 namespace Engine;
+
+using System.Collections.Immutable;
 
 public record Settings
 {
@@ -23,19 +23,19 @@ public enum MoveType
 
 public record MoveData
 {
-    public MoveType Move;
-    public int? PlayerId;
     public int? CardId;
     public int? CenterPileIndex;
+    public MoveType Move;
+    public int? PlayerId;
 }
 
 public record Player
 {
     public int Id { get; init; }
     public string Name { get; init; } = "";
-    public ImmutableList<Card> HandCards { get; init; } 
-    public ImmutableList<Card> KittyCards { get; init; } 
-    public ImmutableList<Card> TopUpCards { get; init; } 
+    public ImmutableList<Card> HandCards { get; init; }
+    public ImmutableList<Card> KittyCards { get; init; }
+    public ImmutableList<Card> TopUpCards { get; init; }
     public bool RequestingTopUp { get; init; }
 }
 
@@ -51,8 +51,8 @@ public enum CardValue
     Two = 0,
     Three = 1,
     Four = 2,
-    Five = 3, 
-    Six = 4, 
+    Five = 3,
+    Six = 4,
     Seven = 5,
     Eight = 6,
     Nine = 7,
