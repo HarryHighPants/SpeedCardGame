@@ -6,7 +6,7 @@ internal static class Program
 {
     private static void Main(string[] args)
     {
-        var cliGame = new CliGame();
+        var cliGame = new CliGameRunner();
         cliGame.PlayGame();
     }
 }

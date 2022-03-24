@@ -17,7 +17,8 @@ public class TopUpTests
 
         // Act
         // See if we can request top up
-        var canRequestTopUpResult = GameEngine.TryRequestTopUp(gameState, 0);
+        var gameEngine = new GameEngine();
+        var canRequestTopUpResult = gameEngine.TryRequestTopUp(gameState, 0);
 
         // Assertion
         Assert.Equal(expectedCanRequestTopUp, canRequestTopUpResult.Success);
@@ -42,7 +43,8 @@ public class TopUpTests
             player2TopUps: nullablePlayer2TopUps, player2RequestingTopup: false);
 
         // Act
-        var topUpResult = GameEngine.TryRequestTopUp(gameState, 1);
+        var gameEngine = new GameEngine();
+        var topUpResult = gameEngine.TryRequestTopUp(gameState, 1);
 
         // Assertion
         Assert.Equal(expectedCanTopUp, topUpResult.Success);
@@ -73,7 +75,8 @@ public class TopUpTests
             player2RequestingTopup: false);
 
         // Act
-        var replenishedResult = GameEngine.TryRequestTopUp(gameState, 1);
+        var gameEngine = new GameEngine();
+        var replenishedResult = gameEngine.TryRequestTopUp(gameState, 1);
 
         // Assertion
         Assert.True(replenishedResult.Success);
@@ -111,7 +114,8 @@ public class TopUpTests
 
         // Act
         // Player 1 moves
-        var playResult = GameEngine.TryPlayCard(gameState,
+        var gameEngine = new GameEngine();
+        var playResult = gameEngine.TryPlayCard(gameState,
             0, gameState.Players[0].HandCards[0].Id, 0);
 
         // Assertion

@@ -71,10 +71,15 @@ public record Card
         return $"{value}{joiner}{suit}";
     }
 
-    public static string ToString(GameState gameState, int? cardId, bool minified = false, bool includeSuit = false)
+    public string ToString(Settings settings) =>
+        this.ToString(settings.MinifiedCardStrings,
+            settings.IncludeSuitInCardStrings);
+
+    public static string ToString(GameState gameState, int? cardId, bool? minified = null, bool? includeSuit = null)
     {
         var cardResult = gameState.GetCard(cardId);
-        return cardResult?.ToString(minified, includeSuit) ?? "";
+        return cardResult?.ToString(minified ?? gameState.Settings.MinifiedCardStrings,
+            includeSuit ?? gameState.Settings.IncludeSuitInCardStrings) ?? "";
     }
 }
 

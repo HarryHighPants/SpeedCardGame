@@ -26,7 +26,7 @@ public class BotRunner
         }
 
         // See if we can play any cards
-        var playCardResult = GameEngine.PlayerHasPlay(game.State, playerId);
+        var playCardResult = game.gameEngine.Checks.PlayerHasPlay(game.State, playerId);
         if (playCardResult.Success)
         {
             var playResult = game.TryPlayCard(playerId, playCardResult.Data.card.Id, playCardResult.Data.centerPile);

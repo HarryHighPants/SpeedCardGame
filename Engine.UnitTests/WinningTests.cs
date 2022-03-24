@@ -18,7 +18,8 @@ public class WinningTests
             ModelGenerator.CreateGameBasic(centerPile1, player1Card: player1Card, player2Card: player2Card);
 
         // Act
-        var winnerResult = GameEngine.TryGetWinner(gameState);
+        var gameEngine = new GameEngine();
+        var winnerResult = gameEngine.TryGetWinner(gameState);
 
         // Assertion
         Assert.Equal(expectedWinner, winnerResult.Success);

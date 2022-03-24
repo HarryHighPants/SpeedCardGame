@@ -29,11 +29,12 @@ public class PlayCardTests
 
         // Act
         // See if we have a play
-        var hasPlayResult = GameEngine.PlayerHasPlay(gameState, 0);
+        var gameEngine = new GameEngine();
+        var hasPlayResult = gameEngine.Checks.PlayerHasPlay(gameState, 0);
 
         // Try to play it
         var tryPlayResult =
-            GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0);
+            gameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0);
 
         // Assertion
         Assert.Equal(expectedCanPlay, hasPlayResult.Success);
@@ -59,9 +60,9 @@ public class PlayCardTests
         // Arrange
         var gameState = ModelGenerator.CreateGameBasic(5, player1Card: 4, player2Card: 6);
 
-        // Try to play it
-        var tryPlayResult =
-            GameEngine.TryPlayCard(gameState, 0, gameState.Players[1].HandCards[0].Id, 0);
+        // Act
+        var gameEngine = new GameEngine();
+        var tryPlayResult = gameEngine.TryPlayCard(gameState, 0, gameState.Players[1].HandCards[0].Id, 0);
 
         // Assertion
         Assert.True(tryPlayResult.Failure);
@@ -77,6 +78,7 @@ public class PlayCardTests
         var randomCard = new Card {Id = 0, Suit = Suit.Clubs, CardValue = (CardValue)4};
 
         // Try to play it
-        Assert.Throws<NullReferenceException>(() => GameEngine.TryPlayCard(gameState, 0, randomCard.Id, 0));
+        var gameEngine = new GameEngine();
+        Assert.Throws<NullReferenceException>(() => gameEngine.TryPlayCard(gameState, 0, randomCard.Id, 0));
     }
 }

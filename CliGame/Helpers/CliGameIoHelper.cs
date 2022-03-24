@@ -3,7 +3,7 @@ namespace CliGame.Helpers;
 using Engine;
 using Engine.Models;
 
-public static class CliGameUtils
+public static class CliGameIoHelper
 {
     public static void DrawGameState(GameState gameState)
     {
@@ -105,10 +105,10 @@ public static class CliGameUtils
         Console.ReadKey(true);
     }
 
-    public static void GameOver(GameState gameState)
+    public static void GameOver(Game game)
     {
-        var winner = gameState.Players[GameEngine.TryGetWinner(gameState).Data];
-        var winnerIsPlayer = gameState.Players.IndexOf(winner) == 1;
+        var winner = game.TryGetWinner().Data;
+        var winnerIsPlayer = game.State.Players.IndexOf(winner) == 1;
 
         Console.WriteLine();
         Console.WriteLine("------ Game over ----");

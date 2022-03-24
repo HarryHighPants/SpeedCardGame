@@ -56,18 +56,19 @@ public class EndToEndTests
                 player2TopUps: new List<int?> {4}
             );
 
+        var gameEngine = new GameEngine();
         // Act
-        gameState = GameEngine.TryRequestTopUp(gameState, 1).Data;
-        gameState = GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0).Data;
+        gameState = gameEngine.TryRequestTopUp(gameState, 1).Data;
+        gameState = gameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0).Data;
         Assert.Equal((CardValue)2, gameState.CenterPiles[0].Cards.Last().CardValue);
 
-        gameState = GameEngine.TryPickupFromKitty(gameState, 0).Data;
-        gameState = GameEngine.TryRequestTopUp(gameState, 0).Data;
+        gameState = gameEngine.TryPickupFromKitty(gameState, 0).Data;
+        gameState = gameEngine.TryRequestTopUp(gameState, 0).Data;
         Assert.Equal((CardValue)4, gameState.CenterPiles[0].Cards.Last().CardValue);
 
-        gameState = GameEngine.TryPlayCard(gameState, 1, gameState.Players[1].HandCards[0].Id, 0).Data;
-        gameState = GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0).Data;
-        var winnerResult = GameEngine.TryGetWinner(gameState);
+        gameState = gameEngine.TryPlayCard(gameState, 1, gameState.Players[1].HandCards[0].Id, 0).Data;
+        gameState = gameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0).Data;
+        var winnerResult = gameEngine.TryGetWinner(gameState);
 
         // Assertion
         Assert.Equal(0, winnerResult.Data);
@@ -89,8 +90,9 @@ public class EndToEndTests
         var player2 = gameState.Players[1];
 
         // Act
-        gameState = GameEngine.TryRequestTopUp(gameState, 1).Data;
-        gameState = GameEngine.TryRequestTopUp(gameState, 0).Data;
+        var gameEngine = new GameEngine();
+        gameState = gameEngine.TryRequestTopUp(gameState, 1).Data;
+        gameState = gameEngine.TryRequestTopUp(gameState, 0).Data;
         Assert.Single(gameState.CenterPiles[0].Cards);
 
         // Manually add a 6 to ensure the 6 "was" shuffled in first
@@ -100,8 +102,8 @@ public class EndToEndTests
         gameState = gameState with {CenterPiles = newCenterPiles.ToImmutableList()};
 
         // Try to play a card
-        gameState = GameEngine.TryPlayCard(gameState, 0, player1.HandCards[0].Id, 0).Data;
-        var winnerResult = GameEngine.TryGetWinner(gameState);
+        gameState = gameEngine.TryPlayCard(gameState, 0, player1.HandCards[0].Id, 0).Data;
+        var winnerResult = gameEngine.TryGetWinner(gameState);
 
         // Assertion
         Assert.Equal(0, winnerResult.Data);

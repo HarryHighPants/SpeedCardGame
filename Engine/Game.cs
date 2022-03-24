@@ -5,14 +5,19 @@ using Models;
 
 public class Game
 {
-    public Game(List<string>? playerNames = null, Settings? settings = null) =>
-        this.State = GameEngine.NewGame(playerNames, settings);
+    public readonly GameEngine gameEngine;
+
+    public Game(List<string>? playerNames = null, Settings? settings = null, GameEngine? gameEngine = null)
+    {
+        this.gameEngine = gameEngine ?? new GameEngine();
+        this.State = this.gameEngine.NewGame(playerNames, settings);
+    }
 
     public GameState State { get; private set; }
 
     public Result<Player> TryGetWinner()
     {
-        var result = GameEngine.TryGetWinner(this.State);
+        var result = this.gameEngine.TryGetWinner(this.State);
         if (result.Success)
         {
             return new SuccessResult<Player>(this.State.GetPlayer(result.Data) ??
@@ -24,21 +29,21 @@ public class Game
 
     public Result TryPickupFromKitty(int playerId)
     {
-        var result = GameEngine.TryPickupFromKitty(this.State, playerId);
+        var result = this.gameEngine.TryPickupFromKitty(this.State, playerId);
         this.State = result.Success ? result.Data : this.State;
         return result as Result;
     }
 
     public Result TryPlayCard(int playerId, int cardId, int centerPileIndex)
     {
-        var result = GameEngine.TryPlayCard(this.State, playerId, cardId, centerPileIndex);
+        var result = this.gameEngine.TryPlayCard(this.State, playerId, cardId, centerPileIndex);
         this.State = result.Success ? result.Data : this.State;
         return result as Result;
     }
 
     public Result TryRequestTopUp(int playerId)
     {
-        var result = GameEngine.TryRequestTopUp(this.State, playerId);
+        var result = this.gameEngine.TryRequestTopUp(this.State, playerId);
         this.State = result.Success ? result.Data : this.State;
         return result as Result;
     }
