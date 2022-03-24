@@ -222,7 +222,7 @@ public static class GameEngine
 
     private static Result<GameState> ReplenishTopUpCards(GameState gameState)
     {
-        // combine center piles
+        // Combine center piles
         var combinedCenterPiles = gameState.CenterPiles.SelectMany(cp => cp.Cards.ToList()).ToList();
 
         if (combinedCenterPiles.Count < 1)
