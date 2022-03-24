@@ -112,7 +112,7 @@ public class TopUpTests
         // Act
         // Player 1 moves
         var playResult = GameEngine.TryPlayCard(gameState,
-            0, gameState.Players[0].HandCards[0], 0);
+            0, gameState.Players[0].HandCards[0].Id, 0);
 
         // Assertion
         Assert.Equal(expectedPlayer2Requesting, playResult.Data.Players[1].RequestingTopUp);

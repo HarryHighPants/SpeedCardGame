@@ -1,5 +1,6 @@
 namespace Engine.UnitTests;
 
+using System;
 using System.Linq;
 using Helpers;
 using Models;
@@ -32,7 +33,7 @@ public class PlayCardTests
 
         // Try to play it
         var tryPlayResult =
-            GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0], 0);
+            GameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0);
 
         // Assertion
         Assert.Equal(expectedCanPlay, hasPlayResult.Success);
@@ -60,11 +61,11 @@ public class PlayCardTests
 
         // Try to play it
         var tryPlayResult =
-            GameEngine.TryPlayCard(gameState, 0, gameState.Players[1].HandCards[0], 0);
+            GameEngine.TryPlayCard(gameState, 0, gameState.Players[1].HandCards[0].Id, 0);
 
         // Assertion
         Assert.True(tryPlayResult.Failure);
-        Assert.Equal("Player Player 1 does not have card Eight in their hand",
+        Assert.Equal("Player Player 1 does not have card 6 in their hand",
             (tryPlayResult as IErrorResult)?.Message);
     }
 
@@ -76,11 +77,6 @@ public class PlayCardTests
         var randomCard = new Card {Id = 0, Suit = Suit.Clubs, CardValue = (CardValue)4};
 
         // Try to play it
-        var tryPlayResult =
-            GameEngine.TryPlayCard(gameState, 0, randomCard, 0);
-
-        // Assertion
-        Assert.True(tryPlayResult.Failure);
-        Assert.Equal("Card not found in gameState", (tryPlayResult as IErrorResult)?.Message);
+        Assert.Throws<NullReferenceException>(() => GameEngine.TryPlayCard(gameState, 0, randomCard.Id, 0));
     }
 }

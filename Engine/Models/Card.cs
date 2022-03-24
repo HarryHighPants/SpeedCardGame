@@ -16,7 +16,7 @@ public record Card
             {
                 return new CardLocation
                 {
-                    PileName = CardPileName.Hand, PileIndex = handIndex, PlayerIndex = i, CenterIndex = null
+                    PileName = CardPileName.Hand, PileIndex = handIndex, PlayerId = player.Id, CenterIndex = null
                 };
             }
 
@@ -25,7 +25,7 @@ public record Card
             {
                 return new CardLocation
                 {
-                    PileName = CardPileName.Kitty, PileIndex = kittyIndex, PlayerIndex = i, CenterIndex = null
+                    PileName = CardPileName.Kitty, PileIndex = kittyIndex, PlayerId = player.Id, CenterIndex = null
                 };
             }
 
@@ -34,7 +34,7 @@ public record Card
             {
                 return new CardLocation
                 {
-                    PileName = CardPileName.TopUp, PileIndex = topUpIndex, PlayerIndex = i, CenterIndex = null
+                    PileName = CardPileName.TopUp, PileIndex = topUpIndex, PlayerId = player.Id, CenterIndex = null
                 };
             }
         }
@@ -47,7 +47,7 @@ public record Card
             {
                 return new CardLocation
                 {
-                    PileName = CardPileName.Center, PileIndex = centerPileIndex, PlayerIndex = null, CenterIndex = i
+                    PileName = CardPileName.Center, PileIndex = centerPileIndex, PlayerId = null, CenterIndex = i
                 };
             }
         }
@@ -73,46 +73,8 @@ public record Card
 
     public static string ToString(GameState gameState, int? cardId, bool minified = false, bool includeSuit = false)
     {
-        var cardResult = Get(gameState, cardId);
+        var cardResult = gameState.GetCard(cardId);
         return cardResult?.ToString(minified, includeSuit) ?? "";
-    }
-
-    private static Card? Get(
-        GameState gameState, int? cardId)
-    {
-        foreach (var player in gameState.Players)
-        {
-            var handCard = player.HandCards.FirstOrDefault(c => c.Id == cardId);
-            if (handCard != default)
-            {
-                return handCard;
-            }
-
-            var kittyCard = player.KittyCards.FirstOrDefault(c => c.Id == cardId);
-            if (kittyCard != default)
-            {
-                return kittyCard;
-            }
-
-            var topUpCard = player.TopUpCards.FirstOrDefault(c => c.Id == cardId);
-            if (topUpCard != default)
-            {
-                return topUpCard;
-            }
-        }
-
-        for (var i = 0; i < gameState.CenterPiles.Count; i++)
-        {
-            var centerPile = gameState.CenterPiles[i];
-
-            var centerCard = centerPile.Cards.FirstOrDefault(c => c.Id == cardId);
-            if (centerCard != default)
-            {
-                return centerCard;
-            }
-        }
-
-        return default;
     }
 }
 
@@ -128,7 +90,7 @@ public struct CardLocation
 {
     public CardPileName PileName;
     public int PileIndex;
-    public int? PlayerIndex;
+    public int? PlayerId;
     public int? CenterIndex;
 }
 

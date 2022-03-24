@@ -8,25 +8,26 @@ using Helpers;
 public class CliGame
 {
     private readonly Random random = new();
-    private GameState GameState { get; set; } = new();
+    private Game Game { get; set; } = new();
 
     public void PlayGame(bool skipIntro = false)
     {
         // Intro
         CliGameUtils.GameIntro(skipIntro);
 
-        this.GameState = GameEngine.NewGame(new List<string> {BotRunnerCli.Bot.Name, "You"});
-        CliGameUtils.UpdateMessage(this.GameState, "Game started!");
+        this.Game = new Game(new List<string> {BotRunnerCli.Bot.Name, "You"},
+            new Settings {MinifiedCardStrings = true, IncludeSuitInCardStrings = false});
+        CliGameUtils.UpdateMessage(this.Game.State, "Game started!");
 
         // Main game loop
-        while (GameEngine.TryGetWinner(this.GameState).Failure)
+        while (this.Game.TryGetWinner().Failure)
         {
             this.HandleUserInput(this.ReadlineWithBot());
         }
 
         // End game
         Reader.StopReading();
-        CliGameUtils.GameOver(this.GameState);
+        CliGameUtils.GameOver(this.Game.State);
         if (CliGameUtils.Replay())
         {
             this.PlayGame(true);
@@ -43,13 +44,12 @@ public class CliGame
         catch (TimeoutException)
         {
             // Let the bot move
-            var botMoveResult = BotRunner.MakeMove(this.GameState, 0);
-            this.GameState = botMoveResult.Success ? botMoveResult.Data : this.GameState;
+            var botMoveResult = BotRunner.MakeMove(this.Game, 0);
 
             // Display the bots move
             if (botMoveResult.Success)
             {
-                CliGameUtils.UpdateMessage(this.GameState, GameEngine.ReadableLastMove(this.GameState, true));
+                CliGameUtils.UpdateMessage(this.Game.State, this.Game.State.LastMove);
             }
 
             return null;
@@ -65,29 +65,26 @@ public class CliGame
                 return;
             case "k":
                 // Try and pickup from kitty
-                var pickupKittyResult
-                    = GameEngine.TryPickupFromKitty(this.GameState, 1);
+                var pickupKittyResult = this.Game.TryPickupFromKitty(1);
                 if (pickupKittyResult is IErrorResult
                     pickupKittyResultError)
                 {
-                    CliGameUtils.UpdateMessage(this.GameState, pickupKittyResultError.Message);
+                    CliGameUtils.UpdateMessage(this.Game.State, pickupKittyResultError.Message);
                     return;
                 }
 
-                this.GameState = pickupKittyResult.Data.updatedGameState;
-                CliGameUtils.UpdateMessage(this.GameState, GameEngine.ReadableLastMove(this.GameState, true));
+                CliGameUtils.UpdateMessage(this.Game.State, this.Game.State.LastMove);
                 break;
             case "t":
                 var requestTopUpResult =
-                    GameEngine.TryRequestTopUp(this.GameState, 1);
+                    this.Game.TryRequestTopUp(1);
                 if (requestTopUpResult is IErrorResult requestTopUpResultError)
                 {
-                    CliGameUtils.UpdateMessage(this.GameState, requestTopUpResultError.Message);
+                    CliGameUtils.UpdateMessage(this.Game.State, requestTopUpResultError.Message);
                     return;
                 }
 
-                this.GameState = requestTopUpResult.Data;
-                CliGameUtils.UpdateMessage(this.GameState, GameEngine.ReadableLastMove(this.GameState, true));
+                CliGameUtils.UpdateMessage(this.Game.State, this.Game.State.LastMove);
                 break;
             default:
                 this.SelectCard(input);
@@ -101,16 +98,16 @@ public class CliGame
         var inputCardValue = splitInput.Length > 0 ? splitInput[0].ExtractInt() : null;
         if (inputCardValue == null)
         {
-            CliGameUtils.UpdateMessage(this.GameState,
+            CliGameUtils.UpdateMessage(this.Game.State,
                 "Enter a card followed by the card to play it on e.g '6 5'. To pickup from the kitty enter 'k' ");
             return;
         }
 
         // Find card in hand
-        var card = GetCardWithValue(this.GameState.Players[1].HandCards, inputCardValue);
+        var card = GetCardWithValue(this.Game.State.Players[1].HandCards, inputCardValue);
         if (card == null)
         {
-            CliGameUtils.UpdateMessage(this.GameState, $"No card with value: {input} found");
+            CliGameUtils.UpdateMessage(this.Game.State, $"No card with value: {input} found");
             return;
         }
 
@@ -118,30 +115,28 @@ public class CliGame
         var centerCard = splitInput.Length > 1 ? splitInput[1].ExtractInt() : null;
         if (centerCard == null)
         {
-            CliGameUtils.UpdateMessage(this.GameState,
+            CliGameUtils.UpdateMessage(this.Game.State,
                 "Invalid center card, specify it after the card like: '7, 6'");
             return;
         }
 
         // See if the center card is valid
-        var centerPileResult = GameEngine.CardWithValueIsInCenterPile(this.GameState, (int)centerCard);
+        var centerPileResult = GameEngine.CardWithValueIsInCenterPile(this.Game.State, (int)centerCard);
         if (centerPileResult is IErrorResult centerPileResultError)
         {
-            CliGameUtils.UpdateMessage(this.GameState, centerPileResultError.Message);
+            CliGameUtils.UpdateMessage(this.Game.State, centerPileResultError.Message);
             return;
         }
 
         // Try to play the card onto the pile
-        var playCardResult = GameEngine.TryPlayCard(this.GameState, 1, card, centerPileResult.Data);
+        var playCardResult = this.Game.TryPlayCard(1, card.Id, centerPileResult.Data);
         if (playCardResult is IErrorResult playCardResultError)
         {
-            CliGameUtils.UpdateMessage(this.GameState, playCardResultError.Message);
+            CliGameUtils.UpdateMessage(this.Game.State, playCardResultError.Message);
             return;
         }
 
-        // Update the state with the move
-        this.GameState = playCardResult.Data;
-        CliGameUtils.UpdateMessage(this.GameState, GameEngine.ReadableLastMove(this.GameState, true));
+        CliGameUtils.UpdateMessage(this.Game.State, this.Game.State.LastMove);
     }
 
     public static Card? GetCardWithValue(IEnumerable<Card> cards, int? value) =>

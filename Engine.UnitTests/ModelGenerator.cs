@@ -34,9 +34,9 @@ public class ModelGenerator
         {
             Players = new List<Player>
             {
-                CreateBasicPlayer("Player 1", player1Cards, player1Kittys, player1TopUps,
+                CreateBasicPlayer(0, "Player 1", player1Cards, player1Kittys, player1TopUps,
                     player1RequestingTopup),
-                CreateBasicPlayer("Player 2", player2Cards, player2Kittys, player2TopUps,
+                CreateBasicPlayer(1, "Player 2", player2Cards, player2Kittys, player2TopUps,
                     player2RequestingTopup)
             }.ToImmutableList(),
             CenterPiles =
@@ -45,14 +45,16 @@ public class ModelGenerator
                         new() {Cards = CreateBasicCards(centerPile1)}, new() {Cards = CreateBasicCards(centerPile2)}
                     }
                     .ToImmutableList(),
-            MoveHistory = ImmutableList<Move>.Empty
+            MoveHistory = ImmutableList<Move>.Empty,
+            Settings = new Settings {MinifiedCardStrings = true, IncludeSuitInCardStrings = false}
         };
 
-    private static Player CreateBasicPlayer(string name = "Player", List<int?>? hand = null, List<int?>? kitty = null,
+    private static Player CreateBasicPlayer(int id = 0, string name = "Player", List<int?>? hand = null,
+        List<int?>? kitty = null,
         List<int?>? topUp = null, bool requestingTopUp = false) =>
         new()
         {
-            Id = GetRandomId(),
+            Id = id,
             Name = name,
             HandCards = CreateBasicCards(hand),
             KittyCards = CreateBasicCards(kitty),

@@ -15,41 +15,39 @@ public struct BotData
 
 public class BotRunner
 {
-    public static Result<GameState> MakeMove(
-        GameState gameState, int playerIndex)
+    public static Result MakeMove(
+        Game game, int playerId)
     {
-        var winnerResult = GameEngine.TryGetWinner(gameState);
+        var winnerResult = game.TryGetWinner();
         if (winnerResult.Success)
         {
             return Result.Error<GameState>(
-                $"can't move when {gameState.Players[winnerResult.Data].Name} has won already!");
+                $"can't move when {winnerResult.Data.Name} has won already!");
         }
 
         // See if we can play any cards
-        var playCardResult = GameEngine.PlayerHasPlay(gameState, playerIndex);
+        var playCardResult = GameEngine.PlayerHasPlay(game.State, playerId);
         if (playCardResult.Success)
         {
-            var playResult =
-                GameEngine.TryPlayCard(gameState, playerIndex, playCardResult.Data.card,
-                    playCardResult.Data.centerPile);
+            var playResult = game.TryPlayCard(playerId, playCardResult.Data.card.Id, playCardResult.Data.centerPile);
             if (playResult.Success)
             {
-                return Result.Successful(playResult.Data);
+                return Result.Successful();
             }
         }
 
         // See if we can pickup
-        var pickupFromKittyResult = GameEngine.TryPickupFromKitty(gameState, playerIndex);
+        var pickupFromKittyResult = game.TryPickupFromKitty(playerId);
         if (pickupFromKittyResult.Success)
         {
-            return Result.Successful(pickupFromKittyResult.Data.updatedGameState);
+            return Result.Successful();
         }
 
         // See if we can request Top up
-        var topUpResult = GameEngine.TryRequestTopUp(gameState, playerIndex);
+        var topUpResult = game.TryRequestTopUp(playerId);
         if (topUpResult.Success)
         {
-            return Result.Successful(topUpResult.Data);
+            return Result.Successful();
         }
 
         return Result.Error<GameState>("No moves for bot to make");

@@ -10,16 +10,4 @@ public record Player
     public ImmutableList<Card> KittyCards { get; init; }
     public ImmutableList<Card> TopUpCards { get; init; }
     public bool RequestingTopUp { get; init; }
-
-
-    public static Player Get(GameState gameState, int? playerId)
-    {
-        var playerResult = gameState.Players.FirstOrDefault(p => p.Id == playerId);
-        if (playerResult != default)
-        {
-            return playerResult;
-        }
-
-        return default;
-    }
 }
