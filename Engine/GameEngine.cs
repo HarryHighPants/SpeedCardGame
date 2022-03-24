@@ -1,6 +1,7 @@
 namespace Engine;
 
 using System.Collections.Immutable;
+using System.Linq.Expressions;
 using Helpers;
 
 public static class GameEngine
@@ -83,28 +84,6 @@ public static class GameEngine
         }
 
         return Result.Error<int>("No winner yet!");
-    }
-
-    public static string CardsToString(IReadOnlyList<Card> cards, bool minified = false, bool includeSuit = false) =>
-        string.Join(", ", cards.Select(c => CardToString(c, minified, includeSuit)));
-
-    public static string CardToString(Card card, bool minified = false, bool includeSuit = false)
-    {
-        var value = minified ? ((int)card.CardValue).ToString() : card.CardValue.ToString();
-        if (!includeSuit)
-        {
-            return value;
-        }
-
-        var joiner = minified ? "" : " of ";
-        var suit = minified ? card.Suit.ToString().ToLower()[0].ToString() : card.Suit.ToString();
-        return $"{value}{joiner}{suit}";
-    }
-
-    public static string CardToString(GameState gameState, int? cardId, bool minified = false, bool includeSuit = false)
-    {
-        var cardResult = GetCard(gameState, cardId);
-        return CardToString(cardResult.Data, minified, includeSuit);
     }
 
     # region Top Up
@@ -268,19 +247,19 @@ public static class GameEngine
             return Result.Error<GameState>($"No center pile found at index {centerPileIndex}");
         }
 
-        var cardLocationResult = FindCardLocation(gameState, card);
-        if (cardLocationResult is IErrorResult cardLocationResultError)
+        var cardLocationResult = card.Location(gameState);
+        if (cardLocationResult.Equals(default(CardLocation)))
         {
-            return Result.Error<GameState>(cardLocationResultError.Message);
+            return Result.Error<GameState>("Card not found in gameState");
         }
 
-        if (cardLocationResult.Data.PlayerIndex != playerIndex)
+        if (cardLocationResult.PlayerIndex != playerIndex)
         {
             return Result.Error<GameState>(
                 $"Player {gameState.Players[playerIndex].Name} does not have card {card.CardValue} in their hand");
         }
 
-        switch (cardLocationResult.Data.PileName)
+        switch (cardLocationResult.PileName)
         {
             case CardPileName.Hand:
                 // Check that the card can be played onto the relevant center piles top card
@@ -295,7 +274,7 @@ public static class GameEngine
 
             default:
                 return Result.Error<GameState>(
-                    $"Can't play a card from the {cardLocationResult.Data.PileName} pile");
+                    $"Can't play a card from the {cardLocationResult.PileName} pile");
         }
     }
 
@@ -469,44 +448,6 @@ public static class GameEngine
         return Result.Error<int>("Card with value not found in center pile");
     }
 
-    private static Result<Card> GetCard(
-        GameState gameState, int? cardId)
-    {
-        foreach (var player in gameState.Players)
-        {
-            var handCard = player.HandCards.FirstOrDefault(c => c.Id == cardId);
-            if (handCard != default)
-            {
-                return Result.Successful(handCard);
-            }
-
-            var kittyCard = player.KittyCards.FirstOrDefault(c => c.Id == cardId);
-            if (kittyCard != default)
-            {
-                return Result.Successful(kittyCard);
-            }
-
-            var topUpCard = player.TopUpCards.FirstOrDefault(c => c.Id == cardId);
-            if (topUpCard != default)
-            {
-                return Result.Successful(topUpCard);
-            }
-        }
-
-        for (var i = 0; i < gameState.CenterPiles.Count; i++)
-        {
-            var centerPile = gameState.CenterPiles[i];
-
-            var centerCard = centerPile.Cards.FirstOrDefault(c => c.Id == cardId);
-            if (centerCard != default)
-            {
-                return Result.Successful(centerCard);
-            }
-        }
-
-        return Result.Error<Card>("Card not found in gameState");
-    }
-
     private static Result<Player> GetPlayer(GameState gameState, int? playerId)
     {
         var playerResult = gameState.Players.FirstOrDefault(p => p.Id == playerId);
@@ -516,60 +457,6 @@ public static class GameEngine
         }
 
         return Result.Error<Player>("Player not found in gameState");
-    }
-
-    private struct CardLocation
-    {
-        public readonly CardPileName PileName;
-        public int PileIndex;
-        public readonly int? PlayerIndex;
-        public int? CenterIndex;
-
-        public CardLocation(CardPileName pileName, int pileIndex, int? playerIndex, int? centerIndex)
-        {
-            this.PileName = pileName;
-            this.PileIndex = pileIndex;
-            this.PlayerIndex = playerIndex;
-            this.CenterIndex = centerIndex;
-        }
-    }
-
-    private static Result<CardLocation> FindCardLocation(
-        GameState gameState, Card card)
-    {
-        for (var i = 0; i < gameState.Players.Count; i++)
-        {
-            var player = gameState.Players[i];
-            var handIndex = player.HandCards.IndexOf(card);
-            if (handIndex != -1)
-            {
-                return Result.Successful(new CardLocation(CardPileName.Hand, handIndex, i, null));
-            }
-
-            var kittyIndex = player.KittyCards.IndexOf(card);
-            if (kittyIndex != -1)
-            {
-                return Result.Successful(new CardLocation(CardPileName.Kitty, kittyIndex, i, null));
-            }
-
-            var topUpIndex = player.TopUpCards.IndexOf(card);
-            if (topUpIndex != -1)
-            {
-                return Result.Successful(new CardLocation(CardPileName.TopUp, topUpIndex, i, null));
-            }
-        }
-
-        for (var i = 0; i < gameState.CenterPiles.Count; i++)
-        {
-            var centerPile = gameState.CenterPiles[i];
-            var centerPileIndex = centerPile.Cards.IndexOf(card);
-            if (centerPileIndex != -1)
-            {
-                return Result.Successful(new CardLocation(CardPileName.Center, centerPileIndex, null, i));
-            }
-        }
-
-        return Result.Error<CardLocation>("Card not found in gameState");
     }
 
     #endregion
@@ -594,9 +481,9 @@ public static class GameEngine
         return lastMove.Move switch
         {
             MoveType.PickupCard =>
-                $"{GetPlayer(gameState, lastMove.PlayerId).Data.Name} picked up card {CardToString(gameState, lastMove.CardId, minified, includeSuit)}",
+                $"{GetPlayer(gameState, lastMove.PlayerId).Data.Name} picked up card {Card.ToString(gameState, lastMove.CardId, minified, includeSuit)}",
             MoveType.PlayCard =>
-                $"{GetPlayer(gameState, lastMove.PlayerId).Data.Name} played card {CardToString(gameState, lastMove.CardId, minified, includeSuit)} onto pile {lastMove.CenterPileIndex + 1}",
+                $"{GetPlayer(gameState, lastMove.PlayerId).Data.Name} played card {Card.ToString(gameState, lastMove.CardId, minified, includeSuit)} onto pile {lastMove.CenterPileIndex + 1}",
             MoveType.TopUp => "Center cards were topped up",
             _ => throw new ArgumentOutOfRangeException()
         };

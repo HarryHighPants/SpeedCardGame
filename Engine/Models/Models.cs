@@ -44,42 +44,10 @@ public record Player
     public bool RequestingTopUp { get; init; }
 }
 
-public record Card
-{
-    public int Id { get; init; }
-    public Suit Suit { get; init; }
-    public CardValue CardValue { get; init; }
-}
-
-public enum CardValue
-{
-    Two = 0,
-    Three = 1,
-    Four = 2,
-    Five = 3,
-    Six = 4,
-    Seven = 5,
-    Eight = 6,
-    Nine = 7,
-    Ten = 8,
-    Jack = 9,
-    Queen = 10,
-    King = 11,
-    Ace = 12
-}
-
 public enum CardPileName
 {
     Hand,
     Kitty,
     TopUp,
     Center
-}
-
-public enum Suit
-{
-    Hearts,
-    Diamonds,
-    Clubs,
-    Spades
 }

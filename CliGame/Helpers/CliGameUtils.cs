@@ -12,13 +12,13 @@ public static class CliGameUtils
         var player = gameState.Players[0];
         Console.ForegroundColor = ConsoleColor.DarkRed;
         Console.WriteLine(
-            $"{player.Name}:       {GameEngine.CardsToString(player.HandCards, true)}     Kitty count: {player.KittyCards.Count}");
+            $"{player.Name}:       {Card.CardsToString(player.HandCards, true)}     Kitty count: {player.KittyCards.Count}");
 
         // Display the middle two cards
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Black;
         Console.WriteLine(
-            $"                             {GameEngine.CardToString(gameState.CenterPiles[0].Cards.Last(), true)}, {GameEngine.CardToString(gameState.CenterPiles[1].Cards.Last(), true)}      ");
+            $"                             {Card.CardsToString(new List<Card>{gameState.CenterPiles[0].Cards.Last(), gameState.CenterPiles[1].Cards.Last()}, true, false)}              ");
         Console.ResetColor();
         Console.WriteLine();
 
@@ -26,7 +26,7 @@ public static class CliGameUtils
         player = gameState.Players[1];
         Console.ForegroundColor = ConsoleColor.DarkBlue;
         Console.WriteLine(
-            $"{player.Name}:                   {GameEngine.CardsToString(player.HandCards, true)}     Kitty count: {player.KittyCards.Count}");
+            $"{player.Name}:                   {Card.CardsToString(player.HandCards, true)}     Kitty count: {player.KittyCards.Count}");
         Console.ResetColor();
         Console.WriteLine();
     }
