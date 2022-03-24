@@ -1,6 +1,7 @@
 namespace CliGame.Helpers;
 
 using Engine;
+using Engine.Models;
 
 public static class CliGameUtils
 {
@@ -18,7 +19,7 @@ public static class CliGameUtils
         Console.WriteLine();
         Console.ForegroundColor = ConsoleColor.Black;
         Console.WriteLine(
-            $"                             {Card.CardsToString(new List<Card>{gameState.CenterPiles[0].Cards.Last(), gameState.CenterPiles[1].Cards.Last()}, true, false)}              ");
+            $"                             {Card.CardsToString(new List<Card> {gameState.CenterPiles[0].Cards.Last(), gameState.CenterPiles[1].Cards.Last()}, true)}              ");
         Console.ResetColor();
         Console.WriteLine();
 

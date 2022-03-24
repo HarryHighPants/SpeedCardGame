@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Helpers;
+using Models;
 using Xunit;
 using Xunit.Abstractions;
 

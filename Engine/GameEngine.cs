@@ -1,8 +1,8 @@
 namespace Engine;
 
 using System.Collections.Immutable;
-using System.Linq.Expressions;
 using Helpers;
+using Models;
 
 public static class GameEngine
 {
@@ -66,11 +66,15 @@ public static class GameEngine
                     new() {Cards = deck.PopRange(1).ToImmutableList()}
                 }.ToImmutableList(),
             Settings = settings,
-            MoveHistory = ImmutableList<MoveData>.Empty
+            MoveHistory = ImmutableList<Move>.Empty
         };
         return gameState;
     }
 
+    /// <summary>
+    /// </summary>
+    /// <param name="gameState"></param>
+    /// <returns>Player Index</returns>
     public static Result<int> TryGetWinner(GameState gameState)
     {
         // Check if a player has no cards in their hand or kitty
@@ -85,6 +89,29 @@ public static class GameEngine
 
         return Result.Error<int>("No winner yet!");
     }
+
+    #region Helpers
+
+    public static Result<int> CardWithValueIsInCenterPile(GameState gameState, int value)
+    {
+        for (var i = 0; i < gameState.CenterPiles.Count; i++)
+        {
+            if (gameState.CenterPiles[i].Cards.Count < 1)
+            {
+                continue;
+            }
+
+            var pileCard = gameState.CenterPiles[i].Cards.Last();
+            if ((int)pileCard.CardValue == value)
+            {
+                return Result.Successful(i);
+            }
+        }
+
+        return Result.Error<int>("Card with value not found in center pile");
+    }
+
+    #endregion
 
     # region Top Up
 
@@ -182,7 +209,7 @@ public static class GameEngine
         newGameState = newGameState with {Players = newPlayers};
 
         // Add the history
-        newGameState = UpdateLastMove(newGameState, new MoveData {Move = MoveType.TopUp});
+        newGameState = UpdateLastMove(newGameState, new Move {Type = MoveType.TopUp});
 
         return Result.Successful(newGameState);
     }
@@ -263,7 +290,7 @@ public static class GameEngine
         {
             case CardPileName.Hand:
                 // Check that the card can be played onto the relevant center piles top card
-                if (!ValidMove(card, gameState.CenterPiles[centerPileIndex].Cards.Last()))
+                if (!ValidPlay(card, gameState.CenterPiles[centerPileIndex].Cards.Last()))
                 {
                     return Result.Error<GameState>(
                         $"Card with value {card.CardValue}({(int)card.CardValue}) can't be played onto {gameState.CenterPiles[centerPileIndex].Cards.Last().CardValue}({(int)gameState.CenterPiles[centerPileIndex].Cards.Last().CardValue})");
@@ -307,9 +334,9 @@ public static class GameEngine
 
         // Add the move history
         newGameState = UpdateLastMove(newGameState,
-            new MoveData
+            new Move
             {
-                Move = MoveType.PlayCard,
+                Type = MoveType.PlayCard,
                 CardId = card.Id,
                 PlayerId = playerWithCard.Id,
                 CenterPileIndex = centerPileIndex
@@ -349,7 +376,7 @@ public static class GameEngine
             }
 
             var pileCard = gameState.CenterPiles[i].Cards.Last();
-            if (ValidMove(card, pileCard))
+            if (ValidPlay(card, pileCard))
             {
                 return Result.Successful(i);
             }
@@ -358,7 +385,7 @@ public static class GameEngine
         return Result.Error<int>("Card can't be played onto any center pile");
     }
 
-    public static bool ValidMove(Card? topCard, Card? bottomCard)
+    public static bool ValidPlay(Card? topCard, Card? bottomCard)
     {
         if (topCard == null || bottomCard == null)
         {
@@ -401,7 +428,7 @@ public static class GameEngine
 
         // Add the move to the history
         newGameState = UpdateLastMove(newGameState,
-            new MoveData {Move = MoveType.PickupCard, PlayerId = player.Id, CardId = newPlayer.HandCards.Last().Id});
+            new Move {Type = MoveType.PickupCard, PlayerId = player.Id, CardId = newPlayer.HandCards.Last().Id});
 
         return Result.Successful((newGameState, newPlayer.HandCards.Last()));
     }
@@ -427,43 +454,9 @@ public static class GameEngine
 
     #endregion
 
-    #region Helpers
-
-    public static Result<int> CardWithValueIsInCenterPile(GameState gameState, int value)
-    {
-        for (var i = 0; i < gameState.CenterPiles.Count; i++)
-        {
-            if (gameState.CenterPiles[i].Cards.Count < 1)
-            {
-                continue;
-            }
-
-            var pileCard = gameState.CenterPiles[i].Cards.Last();
-            if ((int)pileCard.CardValue == value)
-            {
-                return Result.Successful(i);
-            }
-        }
-
-        return Result.Error<int>("Card with value not found in center pile");
-    }
-
-    private static Result<Player> GetPlayer(GameState gameState, int? playerId)
-    {
-        var playerResult = gameState.Players.FirstOrDefault(p => p.Id == playerId);
-        if (playerResult != default)
-        {
-            return Result.Successful(playerResult);
-        }
-
-        return Result.Error<Player>("Player not found in gameState");
-    }
-
-    #endregion
-
     #region Updating History
 
-    private static GameState UpdateLastMove(GameState gameState, MoveData data)
+    private static GameState UpdateLastMove(GameState gameState, Move data)
     {
         var newMoveHistory = gameState.MoveHistory.Add(data);
         var newGameState = gameState with {MoveHistory = newMoveHistory};
@@ -477,16 +470,7 @@ public static class GameEngine
             return "";
         }
 
-        var lastMove = gameState.MoveHistory.Last();
-        return lastMove.Move switch
-        {
-            MoveType.PickupCard =>
-                $"{GetPlayer(gameState, lastMove.PlayerId).Data.Name} picked up card {Card.ToString(gameState, lastMove.CardId, minified, includeSuit)}",
-            MoveType.PlayCard =>
-                $"{GetPlayer(gameState, lastMove.PlayerId).Data.Name} played card {Card.ToString(gameState, lastMove.CardId, minified, includeSuit)} onto pile {lastMove.CenterPileIndex + 1}",
-            MoveType.TopUp => "Center cards were topped up",
-            _ => throw new ArgumentOutOfRangeException()
-        };
+        return gameState.MoveHistory.Last().GetDescription(gameState, minified, includeSuit);
     }
 
     #endregion

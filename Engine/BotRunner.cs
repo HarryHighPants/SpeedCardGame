@@ -1,6 +1,7 @@
 namespace Engine;
 
 using Helpers;
+using Models;
 
 public struct BotData
 {

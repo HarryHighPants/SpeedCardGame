@@ -3,6 +3,7 @@ namespace Engine.UnitTests;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using Models;
 
 public class ModelGenerator
 {
@@ -44,10 +45,10 @@ public class ModelGenerator
                         new() {Cards = CreateBasicCards(centerPile1)}, new() {Cards = CreateBasicCards(centerPile2)}
                     }
                     .ToImmutableList(),
-            MoveHistory = ImmutableList<MoveData>.Empty
+            MoveHistory = ImmutableList<Move>.Empty
         };
 
-    private static Player CreateBasicPlayer(string? name = null, List<int?>? hand = null, List<int?>? kitty = null,
+    private static Player CreateBasicPlayer(string name = "Player", List<int?>? hand = null, List<int?>? kitty = null,
         List<int?>? topUp = null, bool requestingTopUp = false) =>
         new()
         {

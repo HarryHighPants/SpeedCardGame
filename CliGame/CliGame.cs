@@ -2,6 +2,7 @@ namespace CliGame;
 
 using Engine;
 using Engine.Helpers;
+using Engine.Models;
 using Helpers;
 
 public class CliGame

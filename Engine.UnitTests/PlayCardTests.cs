@@ -2,6 +2,7 @@ namespace Engine.UnitTests;
 
 using System.Linq;
 using Helpers;
+using Models;
 using Xunit;
 
 public class PlayCardTests
@@ -63,7 +64,8 @@ public class PlayCardTests
 
         // Assertion
         Assert.True(tryPlayResult.Failure);
-        Assert.Equal("Player Player 1 does not have card Eight in their hand", (tryPlayResult as IErrorResult)?.Message);
+        Assert.Equal("Player Player 1 does not have card Eight in their hand",
+            (tryPlayResult as IErrorResult)?.Message);
     }
 
     [Fact]

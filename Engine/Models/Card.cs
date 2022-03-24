@@ -1,4 +1,4 @@
-namespace Engine;
+namespace Engine.Models;
 
 public record Card
 {
@@ -14,19 +14,28 @@ public record Card
             var handIndex = player.HandCards.IndexOf(this);
             if (handIndex != -1)
             {
-                return new CardLocation{PileName = CardPileName.Hand, PileIndex = handIndex, PlayerIndex = i, CenterIndex = null};
+                return new CardLocation
+                {
+                    PileName = CardPileName.Hand, PileIndex = handIndex, PlayerIndex = i, CenterIndex = null
+                };
             }
 
             var kittyIndex = player.KittyCards.IndexOf(this);
             if (kittyIndex != -1)
             {
-                return new CardLocation{PileName =CardPileName.Kitty, PileIndex =kittyIndex, PlayerIndex = i, CenterIndex = null};
+                return new CardLocation
+                {
+                    PileName = CardPileName.Kitty, PileIndex = kittyIndex, PlayerIndex = i, CenterIndex = null
+                };
             }
 
             var topUpIndex = player.TopUpCards.IndexOf(this);
             if (topUpIndex != -1)
             {
-                return new CardLocation{PileName =CardPileName.TopUp, PileIndex =topUpIndex, PlayerIndex = i, CenterIndex = null};
+                return new CardLocation
+                {
+                    PileName = CardPileName.TopUp, PileIndex = topUpIndex, PlayerIndex = i, CenterIndex = null
+                };
             }
         }
 
@@ -36,7 +45,10 @@ public record Card
             var centerPileIndex = centerPile.Cards.IndexOf(this);
             if (centerPileIndex != -1)
             {
-                return new CardLocation{PileName = CardPileName.Center, PileIndex = centerPileIndex, PlayerIndex =null, CenterIndex =i};
+                return new CardLocation
+                {
+                    PileName = CardPileName.Center, PileIndex = centerPileIndex, PlayerIndex = null, CenterIndex = i
+                };
             }
         }
 
@@ -61,11 +73,11 @@ public record Card
 
     public static string ToString(GameState gameState, int? cardId, bool minified = false, bool includeSuit = false)
     {
-        var cardResult = GetCard(gameState, cardId);
+        var cardResult = Get(gameState, cardId);
         return cardResult?.ToString(minified, includeSuit) ?? "";
     }
 
-    private static Card? GetCard(
+    private static Card? Get(
         GameState gameState, int? cardId)
     {
         foreach (var player in gameState.Players)
@@ -104,6 +116,14 @@ public record Card
     }
 }
 
+public enum CardPileName
+{
+    Hand,
+    Kitty,
+    TopUp,
+    Center
+}
+
 public struct CardLocation
 {
     public CardPileName PileName;
@@ -128,8 +148,6 @@ public enum CardValue
     King = 11,
     Ace = 12
 }
-
-
 
 public enum Suit
 {
