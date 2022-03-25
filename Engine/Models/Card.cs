@@ -85,6 +85,7 @@ public record Card
 
 public enum CardPileName
 {
+    Undefined,
     Hand,
     Kitty,
     TopUp,
@@ -93,8 +94,8 @@ public enum CardPileName
 
 public struct CardLocation
 {
-    public CardPileName PileName;
-    public int PileIndex;
+    public CardPileName PileName = CardPileName.Undefined;
+    public int? PileIndex;
     public int? PlayerId;
     public int? CenterIndex;
 }

@@ -84,6 +84,45 @@ public class EngineChecks
         return Result.Error<(Card card, int centerPile)>("No valid play for player");
     }
 
+    public Result PlayersMoveValid(GameState gameState, int playerId, int cardId, int centerPileIndex)
+    {
+        if (centerPileIndex >= gameState.CenterPiles.Count)
+        {
+            return Result.Error<GameState>($"No center pile found at index {centerPileIndex}");
+        }
+
+        var card = gameState.GetCard(cardId);
+        var cardLocationResult = card.Location(gameState);
+
+        if (cardLocationResult.PlayerId != playerId)
+        {
+            return Result.Error<GameState>(
+                $"Player {gameState.GetPlayer(playerId)?.Name} does not have card {card.ToString(gameState.Settings)} in their hand");
+        }
+
+        switch (cardLocationResult.PileName)
+        {
+            case CardPileName.Hand:
+                // Check that the card can be played onto the relevant center piles top card
+                if (!this.ValidPlay(card, gameState.CenterPiles[centerPileIndex].Cards.Last()))
+                {
+                    return Result.Error<GameState>(
+                        $"Card with value {card.ToString(gameState.Settings)} can't be played onto {gameState.CenterPiles[centerPileIndex].Cards.Last().ToString(gameState.Settings)})");
+                }
+
+                return Result.Successful();
+
+            case CardPileName.Kitty:
+            case CardPileName.TopUp:
+            case CardPileName.Center:
+                return Result.Error<GameState>($"Can't play a card in the {cardLocationResult.PileName} pile");
+
+            case CardPileName.Undefined:
+            default:
+                return Result.Error<GameState>("Card not found in gameState");
+        }
+    }
+
     /// <summary>
     /// </summary>
     /// <param name="gameState"></param>

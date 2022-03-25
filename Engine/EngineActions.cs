@@ -6,6 +6,62 @@ using Models;
 
 public class EngineActions
 {
+    public GameState NewGame(List<string>? playerNames = null, Settings? settings = null)
+    {
+        settings ??= new Settings();
+
+        // Initialise player names if none were supplied
+        if (playerNames == null)
+        {
+            playerNames = new List<string>();
+            for (var i = 0; i < GameEngine.PlayersPerGame; i++)
+            {
+                playerNames.Add($"Player {i + 1}");
+            }
+        }
+
+        // Create deck
+        var deck = new List<Card>();
+        for (var i = 0; i < GameEngine.CardsInDeck; i++)
+        {
+            var suit = (Suit)(i / GameEngine.CardsPerSuit);
+            var value = i % GameEngine.CardsPerSuit;
+            var newCard = new Card {Id = i, Suit = suit, CardValue = (CardValue)value};
+            deck.Add(newCard);
+        }
+
+        // Shuffle the new deck
+        deck.Shuffle(settings.RandomSeed);
+
+        // Deal cards to players
+        var players = new List<Player>();
+        for (var i = 0; i < GameEngine.PlayersPerGame; i++)
+        {
+            players.Add(new Player
+            {
+                Id = i,
+                Name = playerNames?[i] ?? $"Player {i + 1}",
+                HandCards = deck.PopRange(GameEngine.MaxHandCardsBase).ToImmutableList(),
+                KittyCards = deck.PopRange(GameEngine.CardsInKitty).ToImmutableList(),
+                TopUpCards = deck.PopRange(GameEngine.CardsInTopUp).ToImmutableList()
+            });
+        }
+
+        var gameState = new GameState
+        {
+            Players = players.ToImmutableList(),
+            CenterPiles =
+                new List<CenterPile>
+                {
+                    new() {Cards = deck.PopRange(1).ToImmutableList()},
+                    new() {Cards = deck.PopRange(1).ToImmutableList()}
+                }.ToImmutableList(),
+            Settings = settings,
+            MoveHistory = ImmutableList<Move>.Empty
+        };
+        return gameState;
+    }
+
     public GameState UpdateLastMove(GameState gameState, Move data)
     {
         var newMoveHistory = gameState.MoveHistory.Add(data);
@@ -17,6 +73,59 @@ public class EngineActions
                 gameState.Settings.IncludeSuitInCardStrings)
         };
         return newGameState;
+    }
+
+    public GameState RequestTopUp(GameState gameState, int playerId)
+    {
+        // Update the player to requesting top up
+        var player = gameState.GetPlayer(playerId);
+        var newPlayer = player with {RequestingTopUp = true};
+        var newPlayers = gameState.Players.ReplaceElementAt(gameState.Players.IndexOf(player), newPlayer)
+            .ToImmutableList();
+        var newGameState = gameState with {Players = newPlayers};
+
+        // Add the move to the history
+        newGameState = this.UpdateLastMove(newGameState, new Move {Type = MoveType.RequestTopUp, PlayerId = playerId});
+
+        return newGameState;
+    }
+
+    public Result<GameState> TopUp(GameState gameState)
+    {
+        var newGameState = gameState;
+        // Make sure we have cards in our top up pile
+        if (newGameState.Players[0].TopUpCards.Count <= 0)
+        {
+            var replenishResult = this.ReplenishTopUpCards(newGameState);
+            if (replenishResult is ErrorResult<GameState> replenishError)
+            {
+                return replenishError;
+            }
+
+            newGameState = replenishResult.Data;
+        }
+
+        // Move each top up card to their respective center piles
+        var state = newGameState;
+        var newCenterPiles =
+            newGameState.CenterPiles
+                .Select((pile, i) => new CenterPile
+                {
+                    Cards = pile.Cards.Append(state.Players[i].TopUpCards.Last()).ToImmutableList()
+                })
+                .ToImmutableList();
+        newGameState = newGameState with {CenterPiles = newCenterPiles};
+
+        // Remove the last top up card from each player
+        var newPlayers = newGameState.Players.Select(player =>
+                player with {RequestingTopUp = false, TopUpCards = player.TopUpCards.SkipLast(1).ToImmutableList()})
+            .ToImmutableList();
+        newGameState = newGameState with {Players = newPlayers};
+
+        // Add the move to the history
+        newGameState = this.UpdateLastMove(newGameState, new Move {Type = MoveType.TopUp});
+
+        return Result.Successful(newGameState);
     }
 
     public Result<GameState> ReplenishTopUpCards(GameState gameState)
@@ -49,7 +158,33 @@ public class EngineActions
         return Result.Successful(gameState with {Players = newPlayers, CenterPiles = newCenterPiles.ToImmutableList()});
     }
 
-    public Result<GameState> PlayCard(GameState gameState, Card card, int centerPileIndex)
+    public GameState PickupCard(GameState gameState, int playerId)
+    {
+        var newGameState = gameState;
+        var player = gameState.GetPlayer(playerId);
+
+        // Get the new hand cards for the Player
+        var newHandCards = player.HandCards;
+        newHandCards = newHandCards.Add(player.KittyCards.Last());
+
+        // Get the new Kitty cards for the Player
+        var newKittyCards = player.KittyCards;
+        newKittyCards = newKittyCards.Remove(player.KittyCards.Last());
+
+        // Create the new player with the updated cards
+        var newPlayer = player with {HandCards = newHandCards, KittyCards = newKittyCards};
+        var newPlayers = newGameState.Players.ReplaceElementAt(newGameState.Players.IndexOf(player), newPlayer)
+            .ToImmutableList();
+        newGameState = newGameState with {Players = newPlayers};
+
+        // Add the move to the history
+        newGameState = this.UpdateLastMove(newGameState,
+            new Move {Type = MoveType.PickupCard, PlayerId = player.Id, CardId = newPlayer.HandCards.Last().Id});
+
+        return newGameState;
+    }
+
+    public GameState PlayCard(GameState gameState, Card card, int centerPileIndex)
     {
         var newGameState = gameState;
 
@@ -68,7 +203,7 @@ public class EngineActions
         var newPlayers = newGameState.Players.ReplaceElementAt(playerIndexWithCard, newPlayer).ToImmutableList();
         newGameState = newGameState with {Players = newPlayers};
 
-        // Add the move history
+        // Add the move to the history
         newGameState = this.UpdateLastMove(newGameState,
             new Move
             {
@@ -78,6 +213,6 @@ public class EngineActions
                 CenterPileIndex = centerPileIndex
             });
 
-        return Result.Successful(newGameState);
+        return newGameState;
     }
 }
