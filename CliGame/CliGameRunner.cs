@@ -15,22 +15,22 @@ public class CliGameRunner
         // Intro
         CliGameIoHelper.GameIntro(skipIntro);
 
-        this.Game = new CliGame(new List<string> {BotRunnerCli.Bot.Name, "You"},
+        Game = new CliGame(new List<string> {BotRunnerCli.Bot.Name, "You"},
             new Settings {MinifiedCardStrings = true, IncludeSuitInCardStrings = false});
-        CliGameIoHelper.UpdateMessage(this.Game.State, "Game started!");
+        CliGameIoHelper.UpdateMessage(Game.State, "Game started!");
 
         // Main game loop
-        while (this.Game.TryGetWinner().Failure)
+        while (Game.TryGetWinner().Failure)
         {
-            this.HandleUserInput(this.ReadlineWithBot());
+            HandleUserInput(ReadlineWithBot());
         }
 
         // End game
         Reader.StopReading();
-        CliGameIoHelper.GameOver(this.Game);
+        CliGameIoHelper.GameOver(Game);
         if (CliGameIoHelper.Replay())
         {
-            this.PlayGame(true);
+            PlayGame(true);
         }
     }
 
@@ -38,18 +38,18 @@ public class CliGameRunner
     {
         try
         {
-            return Reader.ReadLine(this.random.Next(BotRunnerCli.Bot.QuickestResponseTimeMs,
+            return Reader.ReadLine(random.Next(BotRunnerCli.Bot.QuickestResponseTimeMs,
                 BotRunnerCli.Bot.SlowestResponseTimeMs));
         }
         catch (TimeoutException)
         {
             // Let the bot move
-            var botMoveResult = BotRunner.MakeMove(this.Game, 0);
+            var botMoveResult = BotRunner.MakeMove(Game, 0);
 
             // Display the bots move
             if (botMoveResult.Success)
             {
-                CliGameIoHelper.UpdateMessage(this.Game.State, this.Game.State.LastMove);
+                CliGameIoHelper.UpdateMessage(Game.State, Game.State.LastMove);
             }
 
             return null;
@@ -65,48 +65,48 @@ public class CliGameRunner
                 return;
             case "k":
                 // Try and pickup from kitty
-                var pickupKittyResult = this.Game.TryPickupFromKitty(1);
+                var pickupKittyResult = Game.TryPickupFromKitty(1);
                 if (pickupKittyResult is IErrorResult
                     pickupKittyResultError)
                 {
-                    CliGameIoHelper.UpdateMessage(this.Game.State, pickupKittyResultError.Message);
+                    CliGameIoHelper.UpdateMessage(Game.State, pickupKittyResultError.Message);
                     return;
                 }
 
-                CliGameIoHelper.UpdateMessage(this.Game.State, this.Game.State.LastMove);
+                CliGameIoHelper.UpdateMessage(Game.State, Game.State.LastMove);
                 break;
             case "t":
-                var requestTopUpResult = this.Game.TryRequestTopUp(1);
+                var requestTopUpResult = Game.TryRequestTopUp(1);
                 if (requestTopUpResult is IErrorResult requestTopUpResultError)
                 {
-                    CliGameIoHelper.UpdateMessage(this.Game.State, requestTopUpResultError.Message);
+                    CliGameIoHelper.UpdateMessage(Game.State, requestTopUpResultError.Message);
                     return;
                 }
 
-                CliGameIoHelper.UpdateMessage(this.Game.State, this.Game.State.LastMove);
+                CliGameIoHelper.UpdateMessage(Game.State, Game.State.LastMove);
                 break;
             default:
-                this.SelectCard(input);
+                PlayCard(input);
                 break;
         }
     }
 
-    private void SelectCard(string input)
+    private void PlayCard(string input)
     {
         var splitInput = input.Split(new[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries);
         var inputCardValue = splitInput.Length > 0 ? splitInput[0].ExtractInt() : null;
         if (inputCardValue == null)
         {
-            CliGameIoHelper.UpdateMessage(this.Game.State,
+            CliGameIoHelper.UpdateMessage(Game.State,
                 "Enter a card followed by the card to play it on e.g '6 5'. To pickup from the kitty enter 'k' ");
             return;
         }
 
         // Find card in hand
-        var card = this.Game.GetCardWithValue(this.Game.State.Players[1].HandCards, inputCardValue);
+        var card = Game.GetCardWithValue(Game.State.Players[1].HandCards, inputCardValue);
         if (card == null)
         {
-            CliGameIoHelper.UpdateMessage(this.Game.State, $"No card with value: {input} found");
+            CliGameIoHelper.UpdateMessage(Game.State, $"No card with value: {input} found");
             return;
         }
 
@@ -114,27 +114,27 @@ public class CliGameRunner
         var centerCard = splitInput.Length > 1 ? splitInput[1].ExtractInt() : null;
         if (centerCard == null)
         {
-            CliGameIoHelper.UpdateMessage(this.Game.State,
+            CliGameIoHelper.UpdateMessage(Game.State,
                 "Invalid center card, specify it after the card like: '7, 6'");
             return;
         }
 
         // See if the center card is valid
-        var centerPileResult = this.Game.CardWithValueIsInCenterPile(this.Game.State, (int)centerCard);
+        var centerPileResult = Game.CardWithValueIsInCenterPile(Game.State, (int)centerCard);
         if (centerPileResult is IErrorResult centerPileResultError)
         {
-            CliGameIoHelper.UpdateMessage(this.Game.State, centerPileResultError.Message);
+            CliGameIoHelper.UpdateMessage(Game.State, centerPileResultError.Message);
             return;
         }
 
         // Try to play the card onto the pile
-        var playCardResult = this.Game.TryPlayCard(1, card.Id, centerPileResult.Data);
+        var playCardResult = Game.TryPlayCard(1, card.Id, centerPileResult.Data);
         if (playCardResult is IErrorResult playCardResultError)
         {
-            CliGameIoHelper.UpdateMessage(this.Game.State, playCardResultError.Message);
+            CliGameIoHelper.UpdateMessage(Game.State, playCardResultError.Message);
             return;
         }
 
-        CliGameIoHelper.UpdateMessage(this.Game.State, this.Game.State.LastMove);
+        CliGameIoHelper.UpdateMessage(Game.State, Game.State.LastMove);
     }
 }

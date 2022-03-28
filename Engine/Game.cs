@@ -5,22 +5,22 @@ using Models;
 
 public class Game
 {
-    public readonly GameEngine gameEngine;
-
     public Game(List<string>? playerNames = null, Settings? settings = null, GameEngine? gameEngine = null)
     {
         this.gameEngine = gameEngine ?? new GameEngine();
-        this.State = this.gameEngine.NewGame(playerNames, settings);
+        State = this.gameEngine.NewGame(playerNames, settings);
     }
 
-    public GameState State { get; private set; }
+    public GameEngine gameEngine { get; protected set; }
+
+    public GameState State { get; protected set; }
 
     public Result<Player> TryGetWinner()
     {
-        var result = this.gameEngine.TryGetWinner(this.State);
+        var result = gameEngine.TryGetWinner(State);
         if (result.Success)
         {
-            return new SuccessResult<Player>(this.State.GetPlayer(result.Data) ??
+            return new SuccessResult<Player>(State.GetPlayer(result.Data) ??
                                              throw new InvalidOperationException());
         }
 
@@ -29,22 +29,22 @@ public class Game
 
     public Result TryPickupFromKitty(int playerId)
     {
-        var result = this.gameEngine.TryPickupFromKitty(this.State, playerId);
-        this.State = result.Success ? result.Data : this.State;
+        var result = gameEngine.TryPickupFromKitty(State, playerId);
+        State = result.Success ? result.Data : State;
         return result as Result;
     }
 
     public Result TryPlayCard(int playerId, int cardId, int centerPileIndex)
     {
-        var result = this.gameEngine.TryPlayCard(this.State, playerId, cardId, centerPileIndex);
-        this.State = result.Success ? result.Data : this.State;
+        var result = gameEngine.TryPlayCard(State, playerId, cardId, centerPileIndex);
+        State = result.Success ? result.Data : State;
         return result as Result;
     }
 
     public Result TryRequestTopUp(int playerId)
     {
-        var result = this.gameEngine.TryRequestTopUp(this.State, playerId);
-        this.State = result.Success ? result.Data : this.State;
+        var result = gameEngine.TryRequestTopUp(State, playerId);
+        State = result.Success ? result.Data : State;
         return result as Result;
     }
 }

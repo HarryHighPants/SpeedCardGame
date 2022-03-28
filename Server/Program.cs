@@ -16,6 +16,7 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(
     })
 );
 
+
 //configure
 var app = builder.Build();
 app.UseRouting();
