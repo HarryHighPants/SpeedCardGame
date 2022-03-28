@@ -10,7 +10,7 @@ public class InMemoryGameService : IGameService
     private readonly ConcurrentDictionary<string, Room> rooms = new();
 
 
-    public void JoinRoom(string roomId, string name, string connectionId)
+    public void JoinRoom(string roomId, string connectionId)
     {
         // Create the room if we don't have one yet
         if (!rooms.ContainsKey(roomId))
@@ -22,7 +22,7 @@ public class InMemoryGameService : IGameService
         var room = rooms[roomId];
         if (!room.connections.ContainsKey(connectionId))
         {
-            room.connections.TryAdd(connectionId, new Connection {name = name});
+            room.connections.TryAdd(connectionId, new Connection {name = "Player"});
         }
     }
 
@@ -41,6 +41,8 @@ public class InMemoryGameService : IGameService
             room.connections.Remove(connectionId, out _);
         }
     }
+
+    public void UpdateName(string updatedName, string connectionId) => GetConnectionsPlayer(connectionId).name = updatedName;
 
     public Result<List<ConnectedPlayer>> StartGame(string connectionId)
     {
@@ -82,6 +84,8 @@ public class InMemoryGameService : IGameService
         return Result.Successful(connectedPlayers);
     }
 
+    public Connection GetConnectionsPlayer(string connectionId) =>
+        rooms[GetConnectionsRoomId(connectionId)].connections[connectionId];
     public string GetConnectionsRoomId(string connectionId) =>
         rooms.FirstOrDefault(g => g.Value.connections.ContainsKey(connectionId)).Key;
 

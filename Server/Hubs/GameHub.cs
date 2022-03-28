@@ -31,17 +31,30 @@ public class GameHub : Hub
     public async Task SendConnectionId(string connectionId) => await Clients.All.SendAsync("setClientMessage",
         "A connection with ID '" + connectionId + "' has just connected");
 
-    public async Task JoinGame(string roomId, string name)
+    public async Task JoinGame(string roomId)
     {
+        // Remove the connection from any previous room
+        var previousRoom = gameService.GetConnectionsRoomId(UserConnectionId);
+        if (roomId == previousRoom)
+        {
+            return;
+        }
+        if (!string.IsNullOrEmpty(previousRoom))
+        {
+            await LeaveRoom(roomId);
+        }
+
         // Add connection to the group with roomId
         await Groups.AddToGroupAsync(UserConnectionId, roomId);
 
         // Add the player to the room
-        gameService.JoinRoom(roomId, name, UserConnectionId);
+        gameService.JoinRoom(roomId, UserConnectionId);
 
         // Send gameState for roomId
         SendGameState(roomId);
     }
+
+    public void UpdateName(string name) => gameService.UpdateName(name, UserConnectionId);
 
     public async Task LeaveRoom(string roomId)
     {
