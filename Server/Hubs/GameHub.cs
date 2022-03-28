@@ -28,6 +28,11 @@ public class GameHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
+    public async Task SendConnectionId(string connectionId)
+    {
+        await Clients.All.SendAsync("setClientMessage", "A connection with ID '" + connectionId + "' has just connected");
+    }
+
     public async Task JoinRoom(string roomId, string name)
     {
         // Add connection to the group with roomId
