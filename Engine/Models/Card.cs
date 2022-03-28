@@ -14,28 +14,22 @@ public record Card
             var handIndex = player.HandCards.IndexOf(this);
             if (handIndex != -1)
             {
-                return new CardLocation
-                {
-                    PileName = CardPileName.Hand, PileIndex = handIndex, PlayerId = player.Id, CenterIndex = null
-                };
+                return new CardLocation(CardPileName.Hand, handIndex, player.Id,
+                    null);
             }
 
             var kittyIndex = player.KittyCards.IndexOf(this);
             if (kittyIndex != -1)
             {
-                return new CardLocation
-                {
-                    PileName = CardPileName.Kitty, PileIndex = kittyIndex, PlayerId = player.Id, CenterIndex = null
-                };
+                return new CardLocation(CardPileName.Kitty, kittyIndex, player.Id,
+                    null);
             }
 
             var topUpIndex = player.TopUpCards.IndexOf(this);
             if (topUpIndex != -1)
             {
-                return new CardLocation
-                {
-                    PileName = CardPileName.TopUp, PileIndex = topUpIndex, PlayerId = player.Id, CenterIndex = null
-                };
+                return new CardLocation(CardPileName.TopUp, topUpIndex, player.Id,
+                    null);
             }
         }
 
@@ -45,10 +39,8 @@ public record Card
             var centerPileIndex = centerPile.Cards.IndexOf(this);
             if (centerPileIndex != -1)
             {
-                return new CardLocation
-                {
-                    PileName = CardPileName.Center, PileIndex = centerPileIndex, PlayerId = null, CenterIndex = i
-                };
+                return new CardLocation(CardPileName.Center, centerPileIndex, null,
+                    i);
             }
         }
 
@@ -60,19 +52,19 @@ public record Card
 
     public string ToString(bool minified = false, bool includeSuit = false)
     {
-        var value = minified ? ((int)this.CardValue).ToString() : this.CardValue.ToString();
+        var value = minified ? ((int)CardValue).ToString() : CardValue.ToString();
         if (!includeSuit)
         {
             return value;
         }
 
         var joiner = minified ? "" : " of ";
-        var suit = minified ? this.Suit.ToString().ToLower()[0].ToString() : this.Suit.ToString();
+        var suit = minified ? Suit.ToString().ToLower()[0].ToString() : Suit.ToString();
         return $"{value}{joiner}{suit}";
     }
 
     public string ToString(Settings settings) =>
-        this.ToString(settings.MinifiedCardStrings,
+        ToString(settings.MinifiedCardStrings,
             settings.IncludeSuitInCardStrings);
 
     public static string ToString(GameState gameState, int? cardId, bool? minified = null, bool? includeSuit = null)
@@ -98,6 +90,14 @@ public struct CardLocation
     public int? PileIndex;
     public int? PlayerId;
     public int? CenterIndex;
+
+    public CardLocation(CardPileName pileName, int? pileIndex, int? playerId, int? centerIndex)
+    {
+        PileName = pileName;
+        PileIndex = pileIndex;
+        PlayerId = playerId;
+        CenterIndex = centerIndex;
+    }
 }
 
 public enum CardValue
