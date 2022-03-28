@@ -21,23 +21,21 @@ public class GameEngine
 
     public GameEngine(EngineChecks? engineChecks = null, EngineActions? engineActions = null)
     {
-        this.Checks = engineChecks ?? new EngineChecks();
-        this.actions = engineActions ?? new EngineActions();
+        Checks = engineChecks ?? new EngineChecks();
+        actions = engineActions ?? new EngineActions();
     }
 
-    public GameState NewGame(List<string>? playerNames = null, Settings? settings = null)
-    {
-        return this.actions.NewGame(playerNames, settings);
-    }
+    public GameState NewGame(List<string>? playerNames = null, Settings? settings = null) =>
+        actions.NewGame(playerNames, settings);
 
 
     /// <returns>Player Index</returns>
-    public Result<int> TryGetWinner(GameState gameState) => this.Checks.TryGetWinner(gameState);
+    public Result<int> TryGetWinner(GameState gameState) => Checks.TryGetWinner(gameState);
 
     public Result<GameState> TryPlayCard(GameState gameState, int playerId, int cardId, int centerPileIndex)
     {
         // Check - Move is valid
-        var moveValid = this.Checks.PlayersMoveValid(gameState, playerId, cardId, centerPileIndex);
+        var moveValid = Checks.PlayersMoveValid(gameState, playerId, cardId, centerPileIndex);
         if (moveValid is ErrorResult moveValidError)
         {
             return Result.Error<GameState>(moveValidError.Message);
@@ -45,12 +43,12 @@ public class GameEngine
 
         // Action - Play card
         var card = gameState.GetCard(cardId);
-        var newGameState = this.actions.PlayCard(gameState, card, centerPileIndex);
+        var newGameState = actions.PlayCard(gameState, card, centerPileIndex);
 
         // Action - Reset anyone's requesting top up if they can now play
         var state = newGameState;
         var newPlayers = state.Players.Select((player, i) =>
-            player.RequestingTopUp && this.Checks.PlayerHasPlay(state, i).Success
+            player.RequestingTopUp && Checks.PlayerHasPlay(state, i).Success
                 ? player with {RequestingTopUp = false}
                 : player).ToImmutableList();
         newGameState = state with {Players = newPlayers};
@@ -61,17 +59,17 @@ public class GameEngine
     public Result<GameState> TryRequestTopUp(GameState gameState, int playerId)
     {
         // Check - Player can top up
-        var requestTopUpResult = this.Checks.CanRequestTopUp(gameState, playerId);
+        var requestTopUpResult = Checks.CanRequestTopUp(gameState, playerId);
         if (requestTopUpResult is ErrorResult requestTopUpResultError)
         {
             return Result.Error<GameState>(requestTopUpResultError.Message);
         }
 
         // Action - Request top up
-        var newGameState = this.actions.RequestTopUp(gameState, playerId);
+        var newGameState = actions.RequestTopUp(gameState, playerId);
 
         // Action - Top up if possible
-        var topUpResult = this.TryTopUp(newGameState);
+        var topUpResult = TryTopUp(newGameState);
         newGameState = topUpResult.Success ? topUpResult.Data : newGameState;
 
         return Result.Successful(newGameState);
@@ -82,27 +80,27 @@ public class GameEngine
         var newGameState = gameState;
 
         // Check - Player can pickup from kitty
-        var canPickupResult = this.Checks.CanPickupFromKitty(newGameState, playerId);
+        var canPickupResult = Checks.CanPickupFromKitty(newGameState, playerId);
         if (canPickupResult is ErrorResult canPickupResultError)
         {
             return Result.Error<GameState>(canPickupResultError.Message);
         }
 
         // Action - Pickup card
-        return Result.Successful(this.actions.PickupCard(gameState, playerId));
+        return Result.Successful(actions.PickupCard(gameState, playerId));
     }
 
     // Private
     private Result<GameState> TryTopUp(GameState gameState)
     {
         // Check - We can top up
-        var canTopUpResult = this.Checks.CanTopUp(gameState);
+        var canTopUpResult = Checks.CanTopUp(gameState);
         if (canTopUpResult is IErrorResult canTopUpError)
         {
             return Result.Error<GameState>(canTopUpError.Message);
         }
 
         // Action - Top Up
-        return this.actions.TopUp(gameState);
+        return actions.TopUp(gameState);
     }
 }

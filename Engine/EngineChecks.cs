@@ -27,7 +27,7 @@ public class EngineChecks
     public Result CanTopUp(GameState gameState)
     {
         // Check all players are requesting top up
-        var allPlayersRequestingTopUp = this.AllPlayersRequestingTopUp(gameState);
+        var allPlayersRequestingTopUp = AllPlayersRequestingTopUp(gameState);
         if (allPlayersRequestingTopUp is ErrorResult allPlayersRequestingTopUpError)
         {
             return Result.Error(allPlayersRequestingTopUpError.Message);
@@ -45,14 +45,14 @@ public class EngineChecks
         }
 
         // Check the player can't play
-        var hasPlayResult = this.PlayerHasPlay(gameState, playerIndex);
+        var hasPlayResult = PlayerHasPlay(gameState, playerIndex);
         if (hasPlayResult.Success)
         {
             return Result.Error("Player can play a card");
         }
 
         // Check the player can't pickup
-        var pickupFromKittyResult = this.CanPickupFromKitty(gameState, playerIndex);
+        var pickupFromKittyResult = CanPickupFromKitty(gameState, playerIndex);
         if (pickupFromKittyResult.Success)
         {
             return Result.Error("Player can pickup from kitty");
@@ -74,7 +74,7 @@ public class EngineChecks
 
         foreach (var card in player.HandCards)
         {
-            var cardHasPlayResult = this.CardHasPlay(gameState, card);
+            var cardHasPlayResult = CardHasPlay(gameState, card);
             if (cardHasPlayResult.Success)
             {
                 return Result.Successful((card, cardHasPlayResult.Data));
@@ -104,7 +104,7 @@ public class EngineChecks
         {
             case CardPileName.Hand:
                 // Check that the card can be played onto the relevant center piles top card
-                if (!this.ValidPlay(card, gameState.CenterPiles[centerPileIndex].Cards.Last()))
+                if (!ValidPlay(card, gameState.CenterPiles[centerPileIndex].Cards.Last()))
                 {
                     return Result.Error<GameState>(
                         $"Card with value {card.ToString(gameState.Settings)} can't be played onto {gameState.CenterPiles[centerPileIndex].Cards.Last().ToString(gameState.Settings)})");
@@ -138,7 +138,7 @@ public class EngineChecks
             }
 
             var pileCard = gameState.CenterPiles[i].Cards.Last();
-            if (this.ValidPlay(card, pileCard))
+            if (ValidPlay(card, pileCard))
             {
                 return Result.Successful(i);
             }
