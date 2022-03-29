@@ -8,25 +8,38 @@ interface Props {
 }
 
 interface LobbyData {
-    players: Player[]
+    connections: Player[]
 }
 
 interface Player {
-    id: string
-    name: string | undefined
-    currentPlayer: boolean
+    connectionId: string
+    name: string
 }
 
 const Lobby = ({ connection, gameId }: Props) => {
     const [lobbyData, setLobbyData] = useState<LobbyData>()
-    const [myPlayerId, setMyPlayerId] = useState<string>()
+    const [myPlayerName, setMyPlayerName] = useState<string>('Player')
+    const [connectionId, setConnectionId] = useState<string>('')
 
     useEffect(() => {
-        connection?.on('LobbyData', UpdateLobbyData)
-    }, [])
+        if (!connection) return
+        connection.on('UpdateLobbyState', UpdateLobbyData)
 
-    const UpdateLobbyData = (data: LobbyData) => {
-        setLobbyData(data)
+        if (connection.connectionId) {
+            setConnectionId(connection.connectionId)
+        }
+        return () => {
+            connection?.off('UpdateLobbyState', UpdateLobbyData)
+        }
+    }, [connection])
+
+    const UpdateLobbyData = (data: any) => {
+        let parsedData: LobbyData = JSON.parse(data)
+        setLobbyData(parsedData)
+      let myPlayerInfo = parsedData.connections.find((c) => c.connectionId === connectionId);
+      if(myPlayerInfo){
+        setMyPlayerName(myPlayerInfo.name)
+      }
     }
 
     const onStartGame = () => {
@@ -37,11 +50,8 @@ const Lobby = ({ connection, gameId }: Props) => {
         // Update our name on the server
         connection?.invoke('UpdateName', newName)
 
-        // Locally update our own player name
-        let myPlayer = lobbyData?.players.find((p) => p.id == myPlayerId)
-        if (myPlayer != null) {
-            myPlayer.name = newName
-        }
+        // Locally set our name
+        setMyPlayerName(newName)
     }
 
     return (
@@ -56,12 +66,14 @@ const Lobby = ({ connection, gameId }: Props) => {
                 <div>
                     <h4>Players</h4>
                     {lobbyData != null ? (
-                        <ul>{lobbyData?.players.map((p) => LobbyPlayer(p, UpdateName))}</ul>
+                        <ul>
+                            {lobbyData?.connections?.map((p) => LobbyPlayer(connectionId, myPlayerName, p, UpdateName))}
+                        </ul>
                     ) : (
                         <div>Loading</div>
                     )}
                 </div>
-                <button disabled={lobbyData == null || lobbyData.players.length < 2} onClick={onStartGame}>
+                <button disabled={lobbyData == null || lobbyData.connections?.length < 2} onClick={onStartGame}>
                     Start Game
                 </button>
             </div>
@@ -71,11 +83,16 @@ const Lobby = ({ connection, gameId }: Props) => {
 
 export default Lobby
 
-const LobbyPlayer = (player: Player, onUpdateName: (newName: string) => void) => {
+const LobbyPlayer = (
+    connectionId: string,
+    myPlayerName: string,
+    player: Player,
+    onUpdateName: (newName: string) => void
+) => {
     return (
-        <li>
-            {player.currentPlayer ? (
-                <input value={player.name} onChange={(e) => onUpdateName(e.target.value)} />
+        <li key={player.connectionId}>
+            {player.connectionId == connectionId ? (
+                <input value={myPlayerName} onChange={(e) => onUpdateName(e.target.value)} />
             ) : (
                 player.name
             )}

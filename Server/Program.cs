@@ -1,3 +1,4 @@
+using Server;
 using Server.Hubs;
 using Server.Services;
 
@@ -5,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services
 builder.Services.AddSignalR();
-builder.Services.AddScoped<InMemoryGameService, InMemoryGameService>();
+builder.Services.AddScoped<IGameService, InMemoryGameService>();
 
 //services cors
 builder.Services.AddCors(options => options.AddDefaultPolicy(

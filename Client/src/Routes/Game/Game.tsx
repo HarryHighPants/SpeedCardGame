@@ -1,5 +1,5 @@
 import * as signalR from '@microsoft/signalr'
-import { HubConnectionState } from '@microsoft/signalr'
+import { HubConnection, HubConnectionState } from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import Lobby from './Lobby'
@@ -8,30 +8,29 @@ interface Props {}
 
 const Game = (props: Props) => {
     let urlParams = useParams()
-    const [connection, setConnection] = useState<signalR.HubConnection>()
-    const [gameId, setGameId] = useState<string>()
+    const [connection, setConnection] = useState<HubConnection>()
+    const [gameId, setGameId] = useState<string | undefined>(urlParams.gameId)
 
     useEffect(() => {
         // Builds the SignalR connection, mapping it to /server
-        setConnection(
-            new signalR.HubConnectionBuilder()
-                .withUrl('https://localhost:7067/server')
-                .withAutomaticReconnect()
-                .configureLogging(signalR.LogLevel.Information)
-                .build()
-        )
+        let signalRConnection = new signalR.HubConnectionBuilder()
+            .withUrl('https://localhost:7067/server')
+            .withAutomaticReconnect()
+            .configureLogging(signalR.LogLevel.Information)
+            .build()
 
-        connection?.start().then(() => {
-            JoinGame()
+        signalRConnection?.start().then(() => {
+          setConnection(signalRConnection)
+          JoinGame()
         })
     }, [])
 
     useEffect(() => {
+        setGameId(urlParams.gameId)
         if (connection?.state == HubConnectionState.Connected) {
-            setGameId(urlParams.gameId)
             JoinGame()
         }
-    }, [urlParams.gameId])
+    }, [urlParams.gameId, connection])
 
     const JoinGame = () => {
         if (!gameId) {
