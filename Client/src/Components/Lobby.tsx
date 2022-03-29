@@ -1,4 +1,4 @@
-import copyIcon from '../../Assets/copyIcon.png'
+import copyIcon from '../Assets/copyIcon.png'
 import * as signalR from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
 

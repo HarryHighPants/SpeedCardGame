@@ -54,18 +54,18 @@ public class InMemoryGameService : IGameService
         var groupId = GetConnectionsRoomId(connectionId);
         if (string.IsNullOrEmpty(groupId))
         {
-            Result.Error("Connection not found in any room");
+            return Result.Error<List<Connection>>("Connection not found in any room");
         }
 
         var room = rooms[groupId];
         if (room.connections.Count < GameEngine.PlayersPerGame)
         {
-            Result.Error("Must have a minimum of two players to start the game");
+            return Result.Error<List<Connection>>("Must have a minimum of two players to start the game");
         }
 
         if (room.game != null)
         {
-            Result.Error("Game already exists");
+            return Result.Error<List<Connection>>("Game already exists");
         }
 
         // Get the players for the game
@@ -100,17 +100,17 @@ public class InMemoryGameService : IGameService
         // Check we have a room with that Id
         if (!rooms.ContainsKey(roomId))
         {
-            Result.Error("Connection not found in any room");
+            return Result.Error<GameStateDto>("Connection not found in any room");
         }
 
         // Check we have a game in the room
         var room = rooms[roomId];
-        if (room.game == null)
+        if (room?.game?.State == null)
         {
-            Result.Error("No game in room yet");
+            return Result.Error<GameStateDto>("No game in room yet");
         }
 
-        return Result.Successful(new GameStateDto(room.game?.State!));
+        return Result.Successful(new GameStateDto(room.game.State, room.connections));
     }
 
     public Result<LobbyStateDto> GetLobbyStateDto(string roomId)
@@ -124,6 +124,16 @@ public class InMemoryGameService : IGameService
         var room = rooms[roomId];
         var LobbyStateDto = new LobbyStateDto(room.connections.Values.ToList());
         return Result.Successful(LobbyStateDto);
+    }
+
+    public bool GameStarted(string roomId)
+    {
+        if (!rooms.ContainsKey(roomId))
+        {
+            return false;
+        }
+
+        return rooms[roomId].game != null;
     }
 }
 

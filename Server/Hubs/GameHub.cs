@@ -97,6 +97,11 @@ public class GameHub : Hub
 
     public void SendGameState(string roomId)
     {
+        if (!gameService.GameStarted(roomId))
+        {
+            return;
+        }
+
         // Get the gameState from the gameService
         var gameStateResult = gameService.GetGameStateDto(roomId);
 
@@ -107,7 +112,8 @@ public class GameHub : Hub
         }
 
         // Send the gameState to the roomId
-        Clients.Group(roomId).SendAsync("UpdateGameState", gameStateResult.Data);
+        var jsonData = JsonConvert.SerializeObject(gameStateResult.Data);
+        Clients.Group(roomId).SendAsync("UpdateGameState", jsonData);
     }
 
     public void SendLobbyState(string roomId)

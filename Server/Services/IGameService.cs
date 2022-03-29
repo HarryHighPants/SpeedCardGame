@@ -21,6 +21,7 @@ public interface IGameService
     public Result<GameStateDto> GetGameStateDto(string roomId);
 
     public Result<LobbyStateDto> GetLobbyStateDto(string roomId);
+    public bool GameStarted(string roomId);
 }
 
 public class Room
@@ -45,8 +46,38 @@ public class LobbyStateDto
 
 public class GameStateDto
 {
-    // todo
-    public GameStateDto(GameState gameState)
+    public List<PlayerDto> Players;
+    public List<CenterPile> CenterPiles;
+    public string lastMove;
+
+    public GameStateDto(GameState gameState, ConcurrentDictionary<string, Connection> connections)
     {
+        Players = gameState.Players.Select(p => new PlayerDto(p)).ToList();
+        // Replace the playerId with the players connectionId
+        foreach (var player in Players)
+        {
+            var connection = connections.FirstOrDefault(c => c.Value.playerId.ToString() == player.Id).Value;
+            player.Id = connection.connectionId;
+        }
+        CenterPiles = gameState.CenterPiles.ToList();
+        lastMove = gameState.LastMove;
+    }
+}
+
+public record PlayerDto
+{
+    public string Id { get; set; }
+    public string Name { get; init; } = "";
+    public List<Card> HandCards { get; init; }
+    public int KittyCardsCount { get; init; }
+    public bool RequestingTopUp { get; init; }
+
+    public PlayerDto(Player player)
+    {
+        Id = player.Id.ToString();
+        Name = player.Name;
+        HandCards = player.HandCards.ToList();
+        KittyCardsCount = player.KittyCards.Count;
+        RequestingTopUp = player.RequestingTopUp;
     }
 }
