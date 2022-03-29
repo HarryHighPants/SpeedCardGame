@@ -12,7 +12,7 @@ public class EndToEndTests
 {
     private readonly ITestOutputHelper _testOutputHelper;
 
-    public EndToEndTests(ITestOutputHelper testOutputHelper) => this._testOutputHelper = testOutputHelper;
+    public EndToEndTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
 
     [Fact]
     public void BotGame()
@@ -30,13 +30,13 @@ public class EndToEndTests
                     continue;
                 }
 
-                this._testOutputHelper.WriteLine(game.State.LastMove);
+                _testOutputHelper.WriteLine(game.State.LastMove);
                 movesMade++;
             }
         }
 
         var winnerResult = game.TryGetWinner();
-        this._testOutputHelper.WriteLine(
+        _testOutputHelper.WriteLine(
             $"Bot game complete with {winnerResult.Data.Name} winning in {movesMade} moves");
         Assert.True(game.TryGetWinner().Success);
     }

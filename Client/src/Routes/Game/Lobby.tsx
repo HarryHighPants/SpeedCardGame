@@ -1,0 +1,101 @@
+// import copyIcon from '../../public/Images/copyIcon.png'
+import * as signalR from '@microsoft/signalr'
+import { useEffect, useState } from 'react'
+
+interface Props {
+    connection: signalR.HubConnection | undefined
+    gameId: string | undefined
+}
+
+interface LobbyData {
+    connections: Player[]
+}
+
+interface Player {
+    connectionId: string
+    name: string
+}
+
+const Lobby = ({ connection, gameId }: Props) => {
+    const [lobbyData, setLobbyData] = useState<LobbyData>()
+    const [myPlayerName, setMyPlayerName] = useState<string>('Player')
+    const [connectionId, setConnectionId] = useState<string>('')
+
+    useEffect(() => {
+        if (!connection) return
+        connection.on('UpdateLobbyState', UpdateLobbyData)
+
+        if (connection.connectionId) {
+            setConnectionId(connection.connectionId)
+        }
+        return () => {
+            connection?.off('UpdateLobbyState', UpdateLobbyData)
+        }
+    }, [connection])
+
+    const UpdateLobbyData = (data: any) => {
+        let parsedData: LobbyData = JSON.parse(data)
+        setLobbyData(parsedData)
+      let myPlayerInfo = parsedData.connections.find((c) => c.connectionId === connectionId);
+      if(myPlayerInfo){
+        setMyPlayerName(myPlayerInfo.name)
+      }
+    }
+
+    const onStartGame = () => {
+        connection?.invoke('StartGame')
+    }
+
+    const UpdateName = (newName: string) => {
+        // Update our name on the server
+        connection?.invoke('UpdateName', newName)
+
+        // Locally set our name
+        setMyPlayerName(newName)
+    }
+
+    return (
+        <div>
+            <h2>Lobby</h2>
+            <div>
+                <button>
+                    {gameId}
+                    {/*<img src={copyIcon} alt="Logo" />*/}
+                </button>
+
+                <div>
+                    <h4>Players</h4>
+                    {lobbyData != null ? (
+                        <ul>
+                            {lobbyData?.connections?.map((p) => LobbyPlayer(connectionId, myPlayerName, p, UpdateName))}
+                        </ul>
+                    ) : (
+                        <div>Loading</div>
+                    )}
+                </div>
+                <button disabled={lobbyData == null || lobbyData.connections?.length < 2} onClick={onStartGame}>
+                    Start Game
+                </button>
+            </div>
+        </div>
+    )
+}
+
+export default Lobby
+
+const LobbyPlayer = (
+    connectionId: string,
+    myPlayerName: string,
+    player: Player,
+    onUpdateName: (newName: string) => void
+) => {
+    return (
+        <li key={player.connectionId}>
+            {player.connectionId == connectionId ? (
+                <input value={myPlayerName} onChange={(e) => onUpdateName(e.target.value)} />
+            ) : (
+                player.name
+            )}
+        </li>
+    )
+}

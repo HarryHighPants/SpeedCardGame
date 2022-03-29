@@ -12,13 +12,13 @@ public record GameState
 
     public Player? GetPlayer(int? id)
     {
-        var playerResult = this.Players.FirstOrDefault(p => p.Id == id);
+        var playerResult = Players.FirstOrDefault(p => p.Id == id);
         return playerResult;
     }
 
     public Card? GetCard(int? id)
     {
-        foreach (var player in this.Players)
+        foreach (var player in Players)
         {
             var handCard = player.HandCards.FirstOrDefault(c => c.Id == id);
             if (handCard != default)
@@ -39,9 +39,9 @@ public record GameState
             }
         }
 
-        for (var i = 0; i < this.CenterPiles.Count; i++)
+        for (var i = 0; i < CenterPiles.Count; i++)
         {
-            var centerPile = this.CenterPiles[i];
+            var centerPile = CenterPiles[i];
 
             var centerCard = centerPile.Cards.FirstOrDefault(c => c.Id == id);
             if (centerCard != default)

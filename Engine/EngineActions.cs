@@ -85,7 +85,7 @@ public class EngineActions
         var newGameState = gameState with {Players = newPlayers};
 
         // Add the move to the history
-        newGameState = this.UpdateLastMove(newGameState, new Move {Type = MoveType.RequestTopUp, PlayerId = playerId});
+        newGameState = UpdateLastMove(newGameState, new Move {Type = MoveType.RequestTopUp, PlayerId = playerId});
 
         return newGameState;
     }
@@ -96,7 +96,7 @@ public class EngineActions
         // Make sure we have cards in our top up pile
         if (newGameState.Players[0].TopUpCards.Count <= 0)
         {
-            var replenishResult = this.ReplenishTopUpCards(newGameState);
+            var replenishResult = ReplenishTopUpCards(newGameState);
             if (replenishResult is ErrorResult<GameState> replenishError)
             {
                 return replenishError;
@@ -123,7 +123,7 @@ public class EngineActions
         newGameState = newGameState with {Players = newPlayers};
 
         // Add the move to the history
-        newGameState = this.UpdateLastMove(newGameState, new Move {Type = MoveType.TopUp});
+        newGameState = UpdateLastMove(newGameState, new Move {Type = MoveType.TopUp});
 
         return Result.Successful(newGameState);
     }
@@ -178,7 +178,7 @@ public class EngineActions
         newGameState = newGameState with {Players = newPlayers};
 
         // Add the move to the history
-        newGameState = this.UpdateLastMove(newGameState,
+        newGameState = UpdateLastMove(newGameState,
             new Move {Type = MoveType.PickupCard, PlayerId = player.Id, CardId = newPlayer.HandCards.Last().Id});
 
         return newGameState;
@@ -204,7 +204,7 @@ public class EngineActions
         newGameState = newGameState with {Players = newPlayers};
 
         // Add the move to the history
-        newGameState = this.UpdateLastMove(newGameState,
+        newGameState = UpdateLastMove(newGameState,
             new Move
             {
                 Type = MoveType.PlayCard,

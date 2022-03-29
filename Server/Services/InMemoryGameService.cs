@@ -7,10 +7,14 @@ using Engine.Models;
 
 public class InMemoryGameService : IGameService
 {
-    private readonly ConcurrentDictionary<string, Room> rooms = new();
+    private static readonly ConcurrentDictionary<string, Room> rooms = new();
 
+    public InMemoryGameService()
+    {
 
-    public void JoinRoom(string roomId, string name, string connectionId)
+    }
+
+    public void JoinRoom(string roomId, string connectionId)
     {
         // Create the room if we don't have one yet
         if (!rooms.ContainsKey(roomId))
@@ -22,7 +26,7 @@ public class InMemoryGameService : IGameService
         var room = rooms[roomId];
         if (!room.connections.ContainsKey(connectionId))
         {
-            room.connections.TryAdd(connectionId, new Connection {name = name});
+            room.connections.TryAdd(connectionId, new Connection {connectionId = connectionId, name = "Player"});
         }
     }
 
@@ -42,7 +46,10 @@ public class InMemoryGameService : IGameService
         }
     }
 
-    public Result<List<ConnectedPlayer>> StartGame(string connectionId)
+    public void UpdateName(string updatedName, string connectionId) =>
+        GetConnectionsPlayer(connectionId).name = updatedName;
+
+    public Result<List<Connection>> StartGame(string connectionId)
     {
         var groupId = GetConnectionsRoomId(connectionId);
         if (string.IsNullOrEmpty(groupId))
@@ -76,11 +83,14 @@ public class InMemoryGameService : IGameService
 
         // Get the connections playerId
         var connectedPlayers = room.connections.Select(c =>
-                new ConnectedPlayer {connectionId = c.Key, playerId = c.Value.playerId})
+                new Connection {connectionId = c.Key, playerId = c.Value.playerId})
             .ToList();
 
         return Result.Successful(connectedPlayers);
     }
+
+    public Connection GetConnectionsPlayer(string connectionId) =>
+        rooms[GetConnectionsRoomId(connectionId)].connections[connectionId];
 
     public string GetConnectionsRoomId(string connectionId) =>
         rooms.FirstOrDefault(g => g.Value.connections.ContainsKey(connectionId)).Key;
@@ -103,29 +113,18 @@ public class InMemoryGameService : IGameService
         return Result.Successful(new GameStateDto(room.game?.State!));
     }
 
-    public class Room
+    public Result<LobbyStateDto> GetLobbyStateDto(string roomId)
     {
-        public ConcurrentDictionary<string, Connection> connections;
-        public WebGame? game;
-    }
+        // Check we have a room with that Id
+        if (!rooms.ContainsKey(roomId))
+        {
+            Result.Error("Connection not found in any room");
+        }
 
-    public class Connection
-    {
-        public string name;
-        public int playerId;
-    }
-
-    public struct ConnectedPlayer
-    {
-        public string connectionId;
-        public int playerId;
+        var room = rooms[roomId];
+        var LobbyStateDto = new LobbyStateDto(room.connections.Values.ToList());
+        return Result.Successful(LobbyStateDto);
     }
 }
 
-public class GameStateDto
-{
-    // todo
-    public GameStateDto(GameState gameState)
-    {
-    }
-}
+

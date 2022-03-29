@@ -2,15 +2,18 @@ namespace Server.Hubs;
 
 using Engine.Helpers;
 using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json;
 using Services;
 
 public class GameHub : Hub
 {
     // Todo: update to interface
-    private readonly InMemoryGameService gameService;
+    private readonly IGameService gameService;
 
-
-    public GameHub(InMemoryGameService gameService) => this.gameService = gameService;
+    public GameHub(IGameService gameService)
+    {
+        this.gameService = gameService;
+    }
 
     // private string UserIdentifier => Context.UserIdentifier!;
     private string UserConnectionId => Context.ConnectionId;
@@ -28,16 +31,35 @@ public class GameHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    public async Task JoinRoom(string roomId, string name)
+
+    public async Task JoinGame(string roomId)
     {
+        // Remove the connection from any previous room
+        var previousRoom = gameService.GetConnectionsRoomId(UserConnectionId);
+        if (roomId == previousRoom)
+        {
+            return;
+        }
+        if (!string.IsNullOrEmpty(previousRoom))
+        {
+            await LeaveRoom(roomId);
+        }
+
         // Add connection to the group with roomId
         await Groups.AddToGroupAsync(UserConnectionId, roomId);
 
         // Add the player to the room
-        gameService.JoinRoom(roomId, name, UserConnectionId);
+        gameService.JoinRoom(roomId, UserConnectionId);
 
         // Send gameState for roomId
         SendGameState(roomId);
+        SendLobbyState(roomId);
+    }
+
+    public void UpdateName(string name)
+    {
+        gameService.UpdateName(name, UserConnectionId);
+        SendLobbyState(gameService.GetConnectionsRoomId(UserConnectionId));
     }
 
     public async Task LeaveRoom(string roomId)
@@ -67,11 +89,6 @@ public class GameHub : Hub
         SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
     }
 
-    public async Task SetName(string playerName)
-    {
-        // todo
-    }
-
     public async Task TryPlayCard(int cardId, int centerPileId)
     {
         // todo
@@ -91,5 +108,21 @@ public class GameHub : Hub
 
         // Send the gameState to the roomId
         Clients.Group(roomId).SendAsync("UpdateGameState", gameStateResult.Data);
+    }
+
+    public void SendLobbyState(string roomId)
+    {
+        // Get the gameState from the gameService
+        var lobbyStateResult = gameService.GetLobbyStateDto(roomId);
+
+        // Check it's valid
+        if (lobbyStateResult is IErrorResult lobbyStateError)
+        {
+            throw new Exception(lobbyStateError.Message);
+        }
+
+        // Send the gameState to the roomId
+        var jsonData = JsonConvert.SerializeObject(lobbyStateResult.Data);
+        Clients.Group(roomId).SendAsync("UpdateLobbyState", jsonData);
     }
 }
