@@ -1,41 +1,33 @@
 import { useState } from 'react'
-import JoinGameMenu from './JoinGameMenu'
-import { useNavigate } from 'react-router-dom'
+import { Route, Routes, useNavigate } from 'react-router-dom'
+import { uniqueNamesGenerator } from 'unique-names-generator'
+import animals from '../../Assets/Animals.json'
+import adjectives from '../../Assets/Adjectives.json'
+import MenuHeader from "../../Components/MenuHeader";
 
 interface Props {}
 
 const MainMenu = (props: Props) => {
-    const [joiningGame, setJoiningGame] = useState(false)
     let navigate = useNavigate()
-    // const namor = require('namor')
-
-    const OnJoinGame = (gameId: string) => {
-        // Set the game url param
-        navigate('/game/' + gameId)
-    }
 
     const OnCreateGame = () => {
         // Generate a new gameId
-        // let gameId = namor.generate({ words: 2, saltLength: 0 })
-        let gameId = 'test'
+        const gameId = uniqueNamesGenerator({
+            dictionaries: [adjectives, animals],
+            length: 2,
+            separator: '-',
+        })
 
-        // Join the game
-        OnJoinGame(gameId)
+      // Set the game url param
+      navigate(`/${gameId}`)
     }
 
     return (
         <div>
-            {/* Todo: Update to header logo */}
-            <h1>Speed Card Game</h1>
+            <MenuHeader/>
             <div>
-                {joiningGame ? (
-                    <JoinGameMenu onBack={() => setJoiningGame(false)} onJoinGame={OnJoinGame} />
-                ) : (
-                    <>
-                        <button onClick={(e) => setJoiningGame(true)}>Join Game</button>
-                        <button onClick={() => OnCreateGame()}>Create Game</button>
-                    </>
-                )}
+                <button onClick={() => navigate('/join')}>Join Game</button>
+                <button onClick={() => OnCreateGame()}>Create Game</button>
             </div>
         </div>
     )
