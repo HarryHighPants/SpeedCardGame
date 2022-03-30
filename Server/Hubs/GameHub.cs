@@ -32,7 +32,7 @@ public class GameHub : Hub
     }
 
 
-    public async Task JoinGame(string roomId)
+    public async Task JoinRoom(string roomId)
     {
         // Remove the connection from any previous room
         var previousRoom = gameService.GetConnectionsRoomId(UserConnectionId);

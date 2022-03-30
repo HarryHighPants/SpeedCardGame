@@ -2,6 +2,12 @@ export interface Card {
     Id: number
     Suit: Suit
     CardValue: CardValue
+    pos: Pos
+}
+
+export interface Pos {
+    x: number
+    y: number
 }
 
 export enum CardValue {

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 
 interface Props {
     connection: signalR.HubConnection | undefined
-    gameId: string | undefined
+    roomId: string | undefined
 }
 
 interface LobbyData {
@@ -16,7 +16,7 @@ interface Player {
     name: string
 }
 
-const Lobby = ({ connection, gameId }: Props) => {
+const Lobby = ({ connection, roomId }: Props) => {
     const [lobbyData, setLobbyData] = useState<LobbyData>()
     const [myPlayerName, setMyPlayerName] = useState<string>('Player')
     const [connectionId, setConnectionId] = useState<string>('')

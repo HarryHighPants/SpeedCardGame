@@ -3,14 +3,15 @@ import { HubConnection, HubConnectionState } from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import Lobby from '../../Components/Lobby'
-import {GameState} from "../../Models/GameState";
+import { GameState } from '../../Models/GameState'
+import Game from "../../Components/Game";
 
 interface Props {}
 
-const Game = (props: Props) => {
+const Room = (props: Props) => {
     let urlParams = useParams()
     const [connection, setConnection] = useState<HubConnection>()
-    const [gameId, setGameId] = useState<string | undefined>(urlParams.gameId)
+    const [roomId, setRoomId] = useState<string | undefined>(urlParams.roomId)
     const [gameState, setGameState] = useState<GameState>()
 
     useEffect(() => {
@@ -23,7 +24,7 @@ const Game = (props: Props) => {
 
         signalRConnection?.start().then(() => {
             setConnection(signalRConnection)
-            JoinGame()
+            JoinRoom()
         })
     }, [])
 
@@ -37,25 +38,27 @@ const Game = (props: Props) => {
     }, [connection])
 
     useEffect(() => {
-        setGameId(urlParams.gameId)
+        setRoomId(urlParams.roomId)
         if (connection?.state == HubConnectionState.Connected) {
-            JoinGame()
+            JoinRoom()
         }
-    }, [urlParams.gameId, connection])
+    }, [urlParams.roomId, connection])
 
-    const JoinGame = () => {
-        if (!gameId) return
-        connection?.invoke('JoinGame', gameId)
+    const JoinRoom = () => {
+        if (!roomId) return
+        connection?.invoke('JoinRoom', roomId)
     }
 
     const UpdateGameState = (data: any) => {
         let parsedData: GameState = JSON.parse(data)
-      console.log(parsedData);
-      debugger
         setGameState(parsedData)
     }
 
-    return <Lobby gameId={gameId} connection={connection} />
+    return gameState!! ? (
+        <Game roomId={roomId} connection={connection} connectionId={connection?.connectionId} gameState={gameState}/>
+    ) : (
+        <Lobby roomId={roomId} connection={connection} />
+    )
 }
 
-export default Game
+export default Room
