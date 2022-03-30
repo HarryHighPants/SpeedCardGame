@@ -3,8 +3,8 @@ import { HubConnection, HubConnectionState } from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import Lobby from '../../Components/Lobby'
-import { GameState } from '../../Models/GameState'
-import Game from "../../Components/Game";
+import { IGameState } from '../../Interfaces/IGameState'
+import Game from '../../Components/Game'
 
 interface Props {}
 
@@ -12,7 +12,7 @@ const Room = (props: Props) => {
     let urlParams = useParams()
     const [connection, setConnection] = useState<HubConnection>()
     const [roomId, setRoomId] = useState<string | undefined>(urlParams.roomId)
-    const [gameState, setGameState] = useState<GameState>()
+    const [gameState, setGameState] = useState<IGameState>()
 
     useEffect(() => {
         // Builds the SignalR connection, mapping it to /server
@@ -50,12 +50,12 @@ const Room = (props: Props) => {
     }
 
     const UpdateGameState = (data: any) => {
-        let parsedData: GameState = JSON.parse(data)
+        let parsedData: IGameState = JSON.parse(data)
         setGameState(parsedData)
     }
 
     return gameState!! ? (
-        <Game roomId={roomId} connection={connection} connectionId={connection?.connectionId} gameState={gameState}/>
+        <Game roomId={roomId} connection={connection} connectionId={connection?.connectionId} gameState={gameState} />
     ) : (
         <Lobby roomId={roomId} connection={connection} />
     )

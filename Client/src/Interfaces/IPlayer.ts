@@ -1,9 +1,9 @@
-import { Card } from './Card'
+import { ICard } from './ICard'
 
-export interface Player {
+export interface IPlayer {
     Id: number
     Name: string
-    HandCards: Card[]
+    HandCards: ICard[]
     TopKittyCardId: number
     KittyCardsCount: number
     RequestingTopUp: boolean

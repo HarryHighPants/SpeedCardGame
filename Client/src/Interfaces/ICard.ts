@@ -1,11 +1,11 @@
-export interface Card {
+export interface ICard {
     Id: number
     Suit: Suit
     CardValue: CardValue
-    pos: Pos
+    pos: IPos
 }
 
-export interface Pos {
+export interface IPos {
     x: number
     y: number
 }
