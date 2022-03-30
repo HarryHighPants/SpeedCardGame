@@ -28,6 +28,11 @@ public class InMemoryGameService : IGameService
         {
             room.connections.TryAdd(connectionId, new Connection {connectionId = connectionId, name = "Player"});
         }
+
+        if (GameStarted(roomId))
+        {
+            UpdateConnectionsPlayerId(roomId);
+        }
     }
 
     public void LeaveRoom(string roomId, string connectionId)
@@ -105,7 +110,7 @@ public class InMemoryGameService : IGameService
 
         // Check we have a game in the room
         var room = rooms[roomId];
-        if (room?.game?.State == null)
+        if (!GameStarted(roomId))
         {
             return Result.Error<GameStateDto>("No game in room yet");
         }
@@ -134,6 +139,31 @@ public class InMemoryGameService : IGameService
         }
 
         return rooms[roomId].game != null;
+    }
+
+    private static void UpdateConnectionsPlayerId(string roomId)
+    {
+        var room = rooms[roomId];
+        var assignedPlayers = room.connections.Values.Where(c => c.playerId != null).ToList();
+        if (assignedPlayers.Count < GameEngine.PlayersPerGame && room.connections.Count >= GameEngine.PlayersPerGame)
+        {
+            // At least 1 connection can be assigned to a player
+            var assignedPlayerIds = assignedPlayers.Select(p => p.playerId!.Value).ToList();
+
+            // Get a list of assignable playerIds
+            var playerIdsToAssign = Enumerable.Range(0, GameEngine.PlayersPerGame).ToList().Except(assignedPlayerIds).ToList();
+
+            var unassignedPlayers = room.connections.Values.Where(c => c.playerId == null).ToList();
+
+            for (var i = 0; i < unassignedPlayers.Count; i++)
+            {
+                if (playerIdsToAssign.Count <= 0)
+                {
+                    break;
+                }
+                room.connections[unassignedPlayers[i].connectionId].playerId = playerIdsToAssign.Pop();
+            }
+        }
     }
 }
 

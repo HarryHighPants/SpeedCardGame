@@ -65,7 +65,7 @@ const CardImgSrc = (card: Card) => {
 }
 
 const CardImgName = (card: Card) => {
-    let valueName = card.CardValue.toString()
+    let valueName = CardValue[card.CardValue]
     if (card.CardValue < 9) {
         valueName = (card.CardValue + 2).toString()
     }

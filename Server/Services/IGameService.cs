@@ -34,7 +34,7 @@ public class Connection
 {
     public string connectionId;
     public string name;
-    public int playerId;
+    public int? playerId;
 }
 
 public class LobbyStateDto
@@ -57,7 +57,10 @@ public class GameStateDto
         foreach (var player in Players)
         {
             var connection = connections.FirstOrDefault(c => c.Value.playerId.ToString() == player.Id).Value;
-            player.Id = connection.connectionId;
+            if (connection != null)
+            {
+                player.Id = connection.connectionId;
+            }
         }
         CenterPiles = gameState.CenterPiles.ToList();
         lastMove = gameState.LastMove;

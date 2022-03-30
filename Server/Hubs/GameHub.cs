@@ -69,6 +69,10 @@ public class GameHub : Hub
 
         // Remove the player to the room
         gameService.LeaveRoom(roomId, UserConnectionId);
+
+        // Send gameState for roomId
+        SendGameState(roomId);
+        SendLobbyState(roomId);
     }
 
     public async Task StartGame()
@@ -84,7 +88,6 @@ public class GameHub : Hub
         {
             await Clients.Client(connectedPlayer.connectionId).SendAsync("UpdatePlayerId", connectedPlayer.playerId);
         }
-
 
         SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
     }
