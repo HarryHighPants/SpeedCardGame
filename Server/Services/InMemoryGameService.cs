@@ -19,7 +19,7 @@ public class InMemoryGameService : IGameService
         // Create the room if we don't have one yet
         if (!rooms.ContainsKey(roomId))
         {
-            rooms.TryAdd(roomId, new Room());
+            rooms.TryAdd(roomId, new Room(){roomId = roomId});
         }
 
         // Add the connection to the room
@@ -56,13 +56,13 @@ public class InMemoryGameService : IGameService
 
     public Result<List<Connection>> StartGame(string connectionId)
     {
-        var groupId = GetConnectionsRoomId(connectionId);
-        if (string.IsNullOrEmpty(groupId))
+        var roomResult = GetConnectionsRoom(connectionId);
+        if (roomResult is IErrorResult roomError)
         {
-            return Result.Error<List<Connection>>("Connection not found in any room");
+            return Result.Error<List<Connection>>(roomError.Message);
         }
+        var room = roomResult.Data;
 
-        var room = rooms[groupId];
         if (room.connections.Count < GameEngine.PlayersPerGame)
         {
             return Result.Error<List<Connection>>("Must have a minimum of two players to start the game");
@@ -94,6 +94,34 @@ public class InMemoryGameService : IGameService
         return Result.Successful(connectedPlayers);
     }
 
+    private Result<Room> GetConnectionsRoom(string connectionId)
+    {
+        var roomId = GetConnectionsRoomId(connectionId);
+        if (string.IsNullOrEmpty(roomId))
+        {
+            return Result.Error<Room>("Connection not found in any room");
+        }
+
+        return Result.Successful(rooms[roomId]);
+    }
+
+    private Result<WebGame> GetConnectionsGame(string connectionId)
+    {
+        var roomResult = GetConnectionsRoom(connectionId);
+        if (roomResult is IErrorResult roomError)
+        {
+            return Result.Error<WebGame>(roomError.Message);
+        }
+        var room = roomResult.Data;
+
+        if (!GameStarted(room.roomId))
+        {
+            return Result.Error<WebGame>("Game hasn't started yet");
+        }
+
+        return Result.Successful(room.game!);
+    }
+
     public Connection GetConnectionsPlayer(string connectionId) =>
         rooms[GetConnectionsRoomId(connectionId)].connections[connectionId];
 
@@ -123,7 +151,7 @@ public class InMemoryGameService : IGameService
         // Check we have a room with that Id
         if (!rooms.ContainsKey(roomId))
         {
-            Result.Error("Connection not found in any room");
+            return Result.Error<LobbyStateDto>("Connection not found in any room");
         }
 
         var room = rooms[roomId];
@@ -164,6 +192,44 @@ public class InMemoryGameService : IGameService
                 room.connections[unassignedPlayers[i].connectionId].playerId = playerIdsToAssign.Pop();
             }
         }
+    }
+
+    public Result TryMoveCard(string connectionId, UpdateMovingCardData movingCard)
+    {
+        // Check the connection owns the card
+        if (!ConnectionOwnsCard(connectionId, movingCard.CardId))
+        {
+            return Result.Error("Player doesn't own the card");
+        }
+
+        return Result.Successful();
+    }
+
+    public bool ConnectionOwnsCard(string connectionId, int cardId)
+    {
+        var gameResult = GetConnectionsGame(connectionId);
+        if (gameResult is IErrorResult gameError)
+        {
+            return false;
+        }
+        var game = gameResult.Data;
+
+        var connectionsPlayerId = GetConnectionsPlayer(connectionId).playerId;
+        if (connectionsPlayerId == null)
+        {
+            return false;
+        }
+
+        if (game.State.Players[connectionsPlayerId.Value].HandCards.Any(c => c.Id == cardId))
+        {
+            return true;
+        }
+
+        if (game.State.Players[connectionsPlayerId.Value].KittyCards.Last().Id == cardId)
+        {
+            return true;
+        }
+        return false;
     }
 }
 
