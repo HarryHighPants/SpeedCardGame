@@ -2,7 +2,6 @@ export interface ICard {
     Id: number
     Suit: Suit
     CardValue: CardValue
-    pos: IPos
 }
 
 export interface IPos {
@@ -31,4 +30,10 @@ export enum Suit {
     Diamonds,
     Clubs,
     Spades,
+}
+
+export interface IRenderableCard extends ICard {
+    pos: IPos | undefined | null
+    draggable: boolean
+    droppableTarget: boolean
 }

@@ -1,7 +1,7 @@
 import { ICard } from './ICard'
 
 export interface IPlayer {
-    Id: number
+    Id: string
     Name: string
     HandCards: ICard[]
     TopKittyCardId: number

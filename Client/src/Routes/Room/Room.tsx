@@ -5,6 +5,7 @@ import { useParams } from 'react-router-dom'
 import Lobby from '../../Components/Lobby'
 import { IGameState } from '../../Interfaces/IGameState'
 import Game from '../../Components/Game'
+import TestData from '../../Assets/TestData.js'
 
 interface Props {}
 
@@ -12,7 +13,7 @@ const Room = (props: Props) => {
     let urlParams = useParams()
     const [connection, setConnection] = useState<HubConnection>()
     const [roomId, setRoomId] = useState<string | undefined>(urlParams.roomId)
-    const [gameState, setGameState] = useState<IGameState>()
+    const [gameState, setGameState] = useState<IGameState>(JSON.parse(TestData))
 
     useEffect(() => {
         // Builds the SignalR connection, mapping it to /server
