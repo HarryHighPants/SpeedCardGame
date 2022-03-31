@@ -1,7 +1,7 @@
 export interface ICard {
     Id: number
-    Suit: Suit
-    CardValue: CardValue
+    Suit: Suit | undefined
+    CardValue: CardValue | undefined
 }
 
 export interface IPos {

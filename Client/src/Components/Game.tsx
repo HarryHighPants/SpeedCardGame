@@ -1,6 +1,6 @@
 import copyIcon from '../Assets/copyIcon.png'
 import * as signalR from '@microsoft/signalr'
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { IGameState } from '../Interfaces/IGameState'
 import { ICard, CardValue, IPos, Suit, IRenderableCard } from '../Interfaces/ICard'
 import Draggable, { DraggableData } from 'react-draggable'
@@ -9,7 +9,8 @@ import React from 'react'
 import { IPlayer } from '../Interfaces/IPlayer'
 import RenderPlayer from './Player'
 import Player from './Player'
-import BoardLayout from '../Helpers/GameBoardLayout'
+import GameBoardLayout from '../Helpers/GameBoardLayout'
+import Card from './Card'
 
 interface Props {
     connection: signalR.HubConnection | undefined
@@ -25,10 +26,6 @@ interface BoardDimensions {
     gameState: IGameState
 }
 
-const gameBoardInfo = {
-    maxWidth: 1200,
-}
-
 // Clamp number between two values with the following line:
 const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max)
 
@@ -37,9 +34,17 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
     const [renderableCards, setRenderableCards] = useState<IRenderableCard[]>([])
     const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>({ x: 600, y: 700 })
 
-    useEffect(() => {
-        setGameBoardDimensions(UpdateGameBoardDimensions())
-    }, [window.innerWidth])
+    useLayoutEffect(() => {
+        function UpdateGameBoardDimensions() {
+          setGameBoardDimensions({
+                x: clamp(window.innerWidth, 0, GameBoardLayout.maxWidth),
+                y: window.innerHeight,
+            } as IPos )
+        }
+        UpdateGameBoardDimensions();
+        window.addEventListener('resize', UpdateGameBoardDimensions)
+        return () => window.removeEventListener('resize', UpdateGameBoardDimensions)
+    }, [])
 
     useEffect(() => {
         if (!connection) return
@@ -76,9 +81,9 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
             let ourPlayer = p.Id == ourId
 
             // Add the players hand cards
-            let handCardPositions = BoardLayout.GetHandCardPositions(i)
+            let handCardPositions = GameBoardLayout.GetHandCardPositions(i)
             let handCards = p.HandCards.map((hc, cIndex) => {
-              // We only want to override the position of cards that aren't ours
+                // We only want to override the position of cards that aren't ours
                 let movedCard = ourPlayer ? null : movedCards.find((c) => c.cardId === hc.Id)
                 return {
                     ...hc,
@@ -90,7 +95,7 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
             newRenderableCards.push(...handCards)
 
             // Add the players Kitty card
-            let kittyCardPosition = BoardLayout.GetKittyCardPosition(i)
+            let kittyCardPosition = GameBoardLayout.GetKittyCardPosition(i)
             let kittyCard = {
                 Id: p.TopKittyCardId,
                 draggable: ourPlayer,
@@ -101,7 +106,7 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
         })
 
         // Add the center piles
-        let centerCardPositions = BoardLayout.GetCenterCardPositions()
+        let centerCardPositions = GameBoardLayout.GetCenterCardPositions()
         let centerPilePositions = gameState.CenterPiles.map((cp, cpIndex) => {
             return {
                 ...cp,
@@ -111,6 +116,7 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
             } as IRenderableCard
         })
         newRenderableCards.push(...centerPilePositions)
+        setRenderableCards(newRenderableCards)
     }
 
     const IdleOnly = (cards: ICard[]) => {
@@ -119,34 +125,20 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 
     return (
         <Board>
-            <Player
-                key={gameState.Players[0].Id}
-                movedCards={movedCards}
-                player={gameState.Players[0]}
-                gameBoardDimensions={gameBoardDimensions}
-            />
-            <Player
-                key={gameState.Players[1].Id}
-                movedCards={movedCards}
-                player={gameState.Players[1]}
-                gameBoardDimensions={gameBoardDimensions}
-            />
+            <Player key={gameState.Players[0].Id} player={gameState.Players[0]} />
+            {renderableCards.map((c) => (
+                <Card card={c} gameBoardDimensions={gameBoardDimensions} />
+            ))}
+            <Player key={gameState.Players[1].Id} player={gameState.Players[1]} />
         </Board>
     )
-}
-
-const UpdateGameBoardDimensions = (): IPos => {
-    return {
-        x: clamp(window.innerWidth, 0, gameBoardInfo.maxWidth),
-        y: window.innerHeight,
-    }
 }
 
 const Board = styled.div`
     background-color: #729bf5;
     width: 100%;
     height: 100%;
-    max-width: ${gameBoardInfo.maxWidth};
+    max-width: ${GameBoardLayout.maxWidth};
     //user-select: none;
 `
 

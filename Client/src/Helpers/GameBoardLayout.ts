@@ -1,14 +1,17 @@
 import { IPos } from '../Interfaces/ICard'
 
-class BoardLayout {
+class GameBoardLayout {
+  public static maxWidth = 1200
+
   private static centerPilesPadding = 0.08
   private static playerHeightPadding = 0.25
   private static playerCardSeperation = 0.1
-  private static playerHandCardsCenterX = 0.4
+  private static playerHandCardsCenterX = 0.3
   private static playerKittyCenterX = 0.8
 
+
   static GetHandCardPositions(playerIndex: number): IPos[] {
-        let cardPositions = [5].map((e, i) => {
+        let cardPositions = Array(5).fill(0).map((e, i) => {
             return {
                 x: this.playerHandCardsCenterX + this.playerCardSeperation * (i - 2),
                 y: 1 - this.playerHeightPadding,
@@ -31,7 +34,7 @@ class BoardLayout {
     }
 
   static GetCenterCardPositions(): IPos[] {
-    return [2].map((e, i) => {
+    return Array(2).fill(0).map((e, i) => {
             return { x: 0.5 + this.centerPilesPadding * (i && -1), y: 0.5 } as IPos
         })
     }
@@ -43,4 +46,4 @@ class BoardLayout {
     }
 }
 
-export default BoardLayout
+export default GameBoardLayout

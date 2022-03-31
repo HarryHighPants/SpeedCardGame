@@ -1,26 +1,38 @@
 import { useState } from 'react'
 import styled from 'styled-components'
-import {ICard, CardValue, Suit, IPos} from '../Interfaces/ICard'
+import { ICard, CardValue, Suit, IPos, IRenderableCard } from '../Interfaces/ICard'
 import { motion, PanInfo, useDragControls, useMotionValue, useTransform } from 'framer-motion'
 
-const Card = (card: ICard, gameBoardDimensions: IPos
-) => {
+export interface Props {
+    card: IRenderableCard
+    gameBoardDimensions: IPos
+}
+
+const Card = ({ card, gameBoardDimensions }: Props) => {
     const [position, setPosition] = useState({ x: 0, y: 0 })
     const trackPos = (data: any) => {
         setPosition({ x: data.x, y: data.y })
     }
 
+    const getPosPixels = (): IPos => {
+        return {
+            x: card.pos!! ? card.pos.x * gameBoardDimensions.x : 0,
+            y: card.pos!! ? card.pos.y * gameBoardDimensions.y : 0,
+        }
+    }
 
-    const logCardPos = (info: PanInfo)=>{
-      let posX = (info.point.x / gameBoardDimensions.x).toFixed(2);
-      let posY = (info.point.y / window.innerHeight).toFixed(2);
+    const logCardPos = (info: PanInfo) => {
+        let posX = (info.point.x / gameBoardDimensions.x).toFixed(2)
+        let posY = (info.point.y / window.innerHeight).toFixed(2)
 
-      console.log(`{ x: ${posX}, y: ${posY} }`)
+        console.log(`{ x: ${posX}, y: ${posY} }`)
+        console.log(card.pos)
     }
     const dragControls = useDragControls()
     return (
         <CardParent
-            dragControls={dragControls}
+            pos={getPosPixels()}
+            // dragControls={dragControls}
             drag
             onDrag={(event, info) => logCardPos(info)}
             whileHover={{
@@ -32,7 +44,7 @@ const Card = (card: ICard, gameBoardDimensions: IPos
                 boxShadow: '0px 5px 5px rgba(0,0,0,0.1)',
                 cursor: 'grabbing',
             }}
-            // dragSnapToOrigin={true} //
+            dragSnapToOrigin={true} //
             // dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
             // dragElastic={0.7}
             // dragConstraints={{ top: 0, right: 0, bottom: 0, left: 0 }}
@@ -46,12 +58,13 @@ const Card = (card: ICard, gameBoardDimensions: IPos
     )
 }
 
-const CardParent = styled(motion.div)`
+const CardParent = styled(motion.div)<{ pos: IPos }>`
     background-color: #84a8e8;
     width: 80px;
     cursor: grab;
-    //cursor: pointer;
-    //user-select: none;
+    position: absolute;
+    left: ${(p) => p.pos.x}px;
+    top: ${(p) => p.pos.y}px;
 `
 
 const CardElement = styled.div``
@@ -61,6 +74,9 @@ const CardImgSrc = (card: ICard) => {
 }
 
 const CardImgName = (card: ICard) => {
+    if (card.CardValue === undefined || card.Suit === undefined) {
+        return 'card_back'
+    }
     let valueName = CardValue[card.CardValue]
     if (card.CardValue < 9) {
         valueName = (card.CardValue + 2).toString()
