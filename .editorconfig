@@ -14,7 +14,7 @@ root = true
 # All Files
 [*]
 charset = utf-8
-indent_style = space
+indent_style = tab
 indent_size = 4
 insert_final_newline = true
 trim_trailing_whitespace = true
@@ -49,7 +49,7 @@ trim_trailing_whitespace = false
 
 # Web Files
 [*.{htm,html,js,jsm,ts,tsx,css,sass,scss,less,pcss,svg,vue}]
-indent_size = 2
+indent_size = 4
 
 # Batch Files
 [*.{cmd,bat}]
