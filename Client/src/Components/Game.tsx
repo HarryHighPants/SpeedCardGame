@@ -2,7 +2,7 @@ import copyIcon from '../Assets/copyIcon.png'
 import * as signalR from '@microsoft/signalr'
 import { useEffect, useLayoutEffect, useState } from 'react'
 import { IGameState } from '../Interfaces/IGameState'
-import { ICard, CardValue, IPos, Suit, IRenderableCard } from '../Interfaces/ICard'
+import { ICard, CardValue, IPos, Suit, IRenderableCard, IDraggedRenderableCard } from '../Interfaces/ICard'
 import Draggable, { DraggableData } from 'react-draggable'
 import styled from 'styled-components'
 import React from 'react'
@@ -35,7 +35,7 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 	const [movedCards, setMovedCards] = useState<IMovedCardPos[]>([])
 	const [renderableCards, setRenderableCards] = useState<IRenderableCard[]>([] as IRenderableCard[])
 	const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>({ x: 600, y: 700 })
-	const [draggingCard, setDraggingCard] = useState<IRenderableCard>()
+	const [draggedCard, setDraggedCard] = useState<IDraggedRenderableCard>()
 	const [dropTarget, setDropTarget] = useState<IRenderableCard>()
 
 	useLayoutEffect(() => {
@@ -50,6 +50,10 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 		window.addEventListener('resize', UpdateGameBoardDimensions)
 		return () => window.removeEventListener('resize', UpdateGameBoardDimensions)
 	}, [])
+
+	useEffect(() => {
+		UpdateRenderableCards()
+	}, [gameBoardDimensions])
 
 	useEffect(() => {
 		if (!connection) return
@@ -77,7 +81,15 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 		UpdateRenderableCards()
 	}
 
+	const getPosPixels = (pos: IPos): IPos => {
+		return {
+			x: pos.x * gameBoardDimensions.x,
+			y: pos.y * gameBoardDimensions.y,
+		}
+	}
+
 	const UpdateRenderableCards = () => {
+		console.log('UpdateRenderableCards' + gameBoardDimensions.x)
 		let ourId = connectionId ?? 'CUqUsFYm1zVoW-WcGr6sUQ'
 		let newRenderableCards = [] as IRenderableCard[]
 
@@ -98,7 +110,7 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 					...hc,
 					draggable: ourPlayer,
 					droppableTarget: false,
-					pos: movedCard?.pos ?? handCardPositions[cIndex],
+					pos: getPosPixels(movedCard?.pos ?? handCardPositions[cIndex]),
 					zIndex: zIndex,
 				} as IRenderableCard
 			})
@@ -111,7 +123,7 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 				Id: p.TopKittyCardId,
 				draggable: ourPlayer,
 				droppableTarget: false,
-				pos: movedCard?.pos ?? kittyCardPosition,
+				pos: getPosPixels(movedCard?.pos ?? kittyCardPosition),
 				zIndex: ourPlayer ? 10 : 5,
 			} as IRenderableCard
 			newRenderableCards.push(kittyCard)
@@ -120,39 +132,91 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 		// Add the center piles
 		let centerCardPositions = GameBoardLayout.GetCenterCardPositions()
 		let centerPilePositions = gameState.CenterPiles.map((cp, cpIndex) => {
-			let hoveredDropTarget = dropTarget?.Id === cp.Id
 			return {
 				...cp,
 				draggable: false,
 				droppableTarget: true,
-				pos: centerCardPositions[cpIndex],
-				hoveredDropTarget: hoveredDropTarget,
+				pos: getPosPixels(centerCardPositions[cpIndex]),
 			} as IRenderableCard
 		})
 		newRenderableCards.push(...centerPilePositions)
 		setRenderableCards(newRenderableCards)
 	}
 
-	const OnStartDrag = (panInfo: PanInfo, card: IRenderableCard) => {
-		setDraggingCard(card)
+	// const UpdateHoveredDropTarget = (card: IRenderableCard | undefined) => {
+	// 	if (card?.Id === dropTarget?.Id) return
+	//
+	// 	// If we are replacing the current dropTarget unset its property
+	// 	if (!!dropTarget) {
+	// 		dropTarget.hoveredDropTarget = false
+	// 	}
+	//
+	// 	if (!!card) {
+	// 		card.hoveredDropTarget = true
+	// 		console.log('hovering over', card)
+	// 	}
+	//
+	// 	setDropTarget(card)
+	// 	// Update our renderable cards
+	// 	setRenderableCards([...renderableCards])
+	// }
+
+	const OnStartDrag = (rect: DOMRect | undefined, card: IRenderableCard) => {
+		setDraggedCard({ ...card, domRect: rect })
 	}
 
-	const OnEndDrag = (panInfo: PanInfo, card: IRenderableCard) => {
-		if (dropTarget!!) {
-			// We just dropped this card onto our dropTargetCard
-		}
-		setDraggingCard(undefined)
+	const OnDrag = (rect: DOMRect | undefined, card: IRenderableCard) => {
+		setDraggedCard({ ...card, domRect: rect })
+		// if (!rect) return
+		//
+		// // Get how close this card is to others
+		// let distances = renderableCards
+		// 	.map((c) => {
+		// 		return {
+		// 			card: c,
+		// 			distance: !!card.ref.current
+		// 				? GetDistance(
+		// 						{
+		// 							x: card.ref.current?.getBoundingClientRect().x,
+		// 							y: card.ref.current?.getBoundingClientRect().y,
+		// 						},
+		// 						{ x: rect.x, y: rect.y }
+		// 				  )
+		// 				: Infinity,
+		// 		}
+		// 	})
+		// 	.sort((d1, d2) => d1.distance - d2.distance)
+		//
+		// // See if this card is on top of any other card
+		// if (distances[0].distance < GameBoardLayout.dropDistance) {
+		// 	UpdateHoveredDropTarget(distances[0].card)
+		// 	console.log(rect, distances[0].card.ref.current?.getBoundingClientRect())
+		// } else if (!!dropTarget) {
+		// 	UpdateHoveredDropTarget(undefined)
+		// }
 	}
 
-	const OnMouseEnter = (card: IRenderableCard) => {
-		if (!draggingCard || !card.droppableTarget) return
-		console.log("hovering over", card)
-		setDropTarget(card)
+	const OnEndDrag = (rect: DOMRect | undefined, card: IRenderableCard) => {
+		setDraggedCard(undefined)
+		// if (dropTarget!!) {
+		// 	// We just dropped this card onto our dropTargetCard
+		// }
+		// setDraggingCard(undefined)
 	}
 
-	const OnMouseExit = (card: IRenderableCard) => {
-		if (!card.droppableTarget) return
-		setDropTarget(undefined)
+	// const OnMouseEnter = (card: IRenderableCard) => {
+	// 	if (!draggingCard || !card.droppableTarget) return
+	// 	console.log('hovering over', card)
+	// 	setDropTarget(card)
+	// }
+	//
+	// const OnMouseExit = (card: IRenderableCard) => {
+	// 	if (!card.droppableTarget) return
+	// 	setDropTarget(undefined)
+	// }
+
+	const OnDroppedOn = (card: IRenderableCard) => {
+		console.log('Got dropped on!')
 	}
 
 	return (
@@ -160,12 +224,13 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 			<Player key={gameState.Players[0].Id} player={gameState.Players[0]} />
 			{renderableCards.map((c) => (
 				<Card
-					onMouseEnter={OnMouseEnter}
-					onMouseExit={OnMouseExit}
 					card={c}
 					gameBoardDimensions={gameBoardDimensions}
 					onDragStart={OnStartDrag}
+					onDrag={OnDrag}
 					onDragEnd={OnEndDrag}
+					onDroppedOn={OnDroppedOn}
+					draggedCard={draggedCard}
 				/>
 			))}
 			<Player key={gameState.Players[1].Id} player={gameState.Players[1]} />

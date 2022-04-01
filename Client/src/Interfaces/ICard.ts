@@ -33,9 +33,12 @@ export enum Suit {
 }
 
 export interface IRenderableCard extends ICard {
-	pos: IPos | undefined | null
+	pos: IPos
 	draggable: boolean
 	droppableTarget: boolean
-	hoveredDropTarget: boolean
 	zIndex: number
+}
+
+export interface IDraggedRenderableCard extends IRenderableCard {
+	domRect: DOMRect | undefined
 }
