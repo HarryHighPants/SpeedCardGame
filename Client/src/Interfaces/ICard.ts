@@ -36,4 +36,6 @@ export interface IRenderableCard extends ICard {
 	pos: IPos | undefined | null
 	draggable: boolean
 	droppableTarget: boolean
+	hoveredDropTarget: boolean
+	zIndex: number
 }

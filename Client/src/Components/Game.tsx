@@ -35,8 +35,8 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 	const [movedCards, setMovedCards] = useState<IMovedCardPos[]>([])
 	const [renderableCards, setRenderableCards] = useState<IRenderableCard[]>([] as IRenderableCard[])
 	const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>({ x: 600, y: 700 })
-	const [highestCardZIndex, setHighestCardZIndex] = useState(2)
-	const [draggedCards, setDraggedCards] = useState<IRenderableCard[]>([] as IRenderableCard[])
+	const [draggingCard, setDraggingCard] = useState<IRenderableCard>()
+	const [dropTarget, setDropTarget] = useState<IRenderableCard>()
 
 	useLayoutEffect(() => {
 		function UpdateGameBoardDimensions() {
@@ -90,11 +90,16 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 			let handCards = p.HandCards.map((hc, cIndex) => {
 				// We only want to override the position of cards that aren't ours
 				let movedCard = ourPlayer ? null : movedCards.find((c) => c.cardId === hc.Id)
+				let zIndex = cIndex + 5
+				if (!ourPlayer) {
+					zIndex = Math.abs(cIndex - 4)
+				}
 				return {
 					...hc,
 					draggable: ourPlayer,
 					droppableTarget: false,
 					pos: movedCard?.pos ?? handCardPositions[cIndex],
+					zIndex: zIndex,
 				} as IRenderableCard
 			})
 			newRenderableCards.push(...handCards)
@@ -107,6 +112,7 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 				draggable: ourPlayer,
 				droppableTarget: false,
 				pos: movedCard?.pos ?? kittyCardPosition,
+				zIndex: ourPlayer ? 10 : 5,
 			} as IRenderableCard
 			newRenderableCards.push(kittyCard)
 		})
@@ -114,11 +120,13 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 		// Add the center piles
 		let centerCardPositions = GameBoardLayout.GetCenterCardPositions()
 		let centerPilePositions = gameState.CenterPiles.map((cp, cpIndex) => {
+			let hoveredDropTarget = dropTarget?.Id === cp.Id
 			return {
 				...cp,
 				draggable: false,
 				droppableTarget: true,
 				pos: centerCardPositions[cpIndex],
+				hoveredDropTarget: hoveredDropTarget,
 			} as IRenderableCard
 		})
 		newRenderableCards.push(...centerPilePositions)
@@ -126,15 +134,25 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 	}
 
 	const OnStartDrag = (panInfo: PanInfo, card: IRenderableCard) => {
-		setHighestCardZIndex(highestCardZIndex + 1)
-		let newDraggedCards = draggedCards
-		newDraggedCards.push(card)
-		setDraggedCards([...newDraggedCards])
+		setDraggingCard(card)
 	}
 
 	const OnEndDrag = (panInfo: PanInfo, card: IRenderableCard) => {
-		let newDraggedCards = draggedCards.filter((c) => c != card)
-		setDraggedCards([...newDraggedCards])
+		if (dropTarget!!) {
+			// We just dropped this card onto our dropTargetCard
+		}
+		setDraggingCard(undefined)
+	}
+
+	const OnMouseEnter = (card: IRenderableCard) => {
+		if (!draggingCard || !card.droppableTarget) return
+		console.log("hovering over", card)
+		setDropTarget(card)
+	}
+
+	const OnMouseExit = (card: IRenderableCard) => {
+		if (!card.droppableTarget) return
+		setDropTarget(undefined)
 	}
 
 	return (
@@ -142,9 +160,10 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 			<Player key={gameState.Players[0].Id} player={gameState.Players[0]} />
 			{renderableCards.map((c) => (
 				<Card
+					onMouseEnter={OnMouseEnter}
+					onMouseExit={OnMouseExit}
 					card={c}
 					gameBoardDimensions={gameBoardDimensions}
-					highestCardZIndex={highestCardZIndex}
 					onDragStart={OnStartDrag}
 					onDragEnd={OnEndDrag}
 				/>

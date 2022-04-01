@@ -9,7 +9,7 @@ class GameBoardLayout {
 
 	private static playerKittyCenterX = 0.8
 
-	private static centerPilesPadding = 0.1
+	private static centerPilesPadding = 0.15
 
 	static GetHandCardPositions(playerIndex: number): IPos[] {
 		let cardPositions = Array(5)
