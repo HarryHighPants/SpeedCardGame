@@ -70,24 +70,16 @@ const TestData = `{
     }
   ],
   "CenterPiles": [
-    {
-      "Cards": [
         {
           "Id": 41,
           "Suit": 3,
           "CardValue": 2
-        }
-      ]
-    },
-    {
-      "Cards": [
-        {
+        },
+ 		{
           "Id": 32,
           "Suit": 2,
           "CardValue": 6
         }
-      ]
-    }
   ],
   "lastMove": ""
 }`

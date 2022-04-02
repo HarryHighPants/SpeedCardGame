@@ -33,7 +33,7 @@ export enum Suit {
 }
 
 export interface IRenderableCard extends ICard {
-	pos: IPos | undefined | null
+	pos: IPos
 	draggable: boolean
 	droppableTarget: boolean
 	hoveredDropTarget: boolean

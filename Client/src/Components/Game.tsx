@@ -137,9 +137,27 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 		setDraggingCard(card)
 	}
 
-	const OnEndDrag = (panInfo: PanInfo, card: IRenderableCard) => {
-		if (dropTarget!!) {
-			// We just dropped this card onto our dropTargetCard
+	const OnEndDrag = (panInfo: PanInfo, droppedCard: IRenderableCard) => {
+		if (!!dropTarget) {
+			let ourPlayer = gameState.Players.find(p=>p.Id === connectionId);
+			let playedCardInHand = ourPlayer?.HandCards.find(c=>c.Id === droppedCard.Id);
+			if(!!playedCardInHand){
+				// See if we dropped it onto a center pile
+				let centerPileCard = gameState.CenterPiles.find(c=>c.Id === dropTarget.Id)
+				if(!!centerPileCard){
+					// Try and play the card
+					console.log("Attempt play", droppedCard);
+				}
+			}
+
+			let playedKittyCard = ourPlayer?.TopKittyCardId === droppedCard.Id;
+			if(playedKittyCard){
+				let handCard = ourPlayer?.HandCards.find(c=>c.Id === dropTarget.Id)
+				if(!!handCard){
+					// Try and pickup from Kitty
+					console.log("Attempt pickup kitty", droppedCard);
+				}
+			}
 		}
 		setDraggingCard(undefined)
 	}
@@ -180,7 +198,7 @@ const Board = styled.div`
 	width: 100%;
 	height: 100%;
 	max-width: ${GameBoardLayout.maxWidth}px;
-	//user-select: none;
+	user-select: none;
 `
 
 export interface IMovedCardPos {

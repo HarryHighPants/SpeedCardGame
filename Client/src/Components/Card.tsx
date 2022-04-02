@@ -1,7 +1,7 @@
-import { MouseEventHandler, useState } from 'react'
+import { MouseEventHandler, useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { ICard, CardValue, Suit, IPos, IRenderableCard } from '../Interfaces/ICard'
-import { motion, PanInfo, useDragControls, useMotionValue, useTransform } from 'framer-motion'
+import { motion, PanInfo, useDragControls, useMotionValue, useTransform, Variants } from 'framer-motion'
 
 export interface Props {
 	card: IRenderableCard
@@ -13,8 +13,8 @@ export interface Props {
 }
 
 const Card = ({ card, gameBoardDimensions, onDragStart, onDragEnd, onMouseEnter, onMouseExit }: Props) => {
-	const [position, setPosition] = useState({ x: 0, y: 0 })
-	const [isDragging, setDragging] = useState(false)
+	const [disablePointerEvents, setDisablePointerEvents] = useState(false)
+	// const [isDragging, setDragging] = useState(false)
 
 	const getPosPixels = (): IPos => {
 		return {
@@ -23,18 +23,27 @@ const Card = ({ card, gameBoardDimensions, onDragStart, onDragEnd, onMouseEnter,
 		}
 	}
 
+
 	const logCardPos = (info: PanInfo) => {
-		let posX = (info.point.x / gameBoardDimensions.x).toFixed(2)
-		let posY = (info.point.y / window.innerHeight).toFixed(2)
+		let distance = GetDistance({ x: info.offset.x, y: info.offset.y }, { x: 0, y: 0 })
+		setDisablePointerEvents(distance > 150)
+	}
+
+	const GetDistance = (pos1: IPos | undefined, pos2: IPos | undefined) => {
+		if (!pos1 || !pos2) return Infinity
+		let a = pos1.x - pos2.x
+		let b = pos1.y - pos2.y
+		return Math.sqrt(a * a + b * b)
 	}
 
 	const OnStartDrag = (panInfo: PanInfo) => {
-		setDragging(true)
+		// setDragging(true)
 		onDragStart(panInfo, card)
 	}
 
 	const OnEndDrag = (panInfo: PanInfo) => {
-		setDragging(false)
+		// setDragging(false)
+		setDisablePointerEvents(false)
 		onDragEnd(panInfo, card)
 	}
 
@@ -48,44 +57,58 @@ const Card = ({ card, gameBoardDimensions, onDragStart, onDragEnd, onMouseEnter,
 		onMouseExit(card)
 	}
 
+	const cardVariants: Variants = {
+		initial: {
+			scale: 1,
+			top: getPosPixels().y,
+			boxShadow: '0',
+		},
+		hovered: card.draggable
+			? {
+					scale: 1.03,
+					top: getPosPixels().y-20,
+					boxShadow: '0px 3px 3px rgba(0,0,0,0.15)',
+					pointerEvents: 'all',
+			  }
+			: {},
+		dragging:
+			card.draggable
+				? {
+						scale: 1.12,
+						boxShadow: '0px 5px 5px rgba(0,0,0,0.1)',
+						cursor: 'grabbing',
+						zIndex: 15,
+						top: getPosPixels().y-20,
+						pointerEvents: disablePointerEvents ? 'none' : 'all',
+				  }
+				: {},
+	}
+
 	return (
 		<CardParent
 			pos={getPosPixels()}
 			card={card}
-			// dragControls={dragControls}
+			variants={cardVariants}
 			drag={card.draggable}
 			onDrag={(event, info) => logCardPos(info)}
-			whileHover={
-				card.draggable
-					? {
-							scale: 1.03,
-							top: getPosPixels().y-20,
-							boxShadow: '0px 3px 3px rgba(0,0,0,0.15)',
-					  }
-					: {}
-			}
-			whileTap={
-				card.draggable
-					? {
-							scale: 1.12,
-							boxShadow: '0px 5px 5px rgba(0,0,0,0.1)',
-							cursor: 'grabbing',
-							pointerEvents: 'none',
-					  }
-					: {}
-			}
+			initial="initial"
+			whileHover="hovered"
+			whileTap="dragging"
 			onDragStart={(e, info) => OnStartDrag(info)}
-			onDragEnd={() => setDragging(false)}
-			// dragSnapToOrigin={true} //
-			// dragTransition={{ bounceStiffness: 500, bounceDamping: 200 }}
+			onDragEnd={(e, info) => OnEndDrag(info)}
+			dragSnapToOrigin={true}
 			dragElastic={1}
 			dragConstraints={{ top: 0, right: 0, bottom: 0, left: 0 }}
 			dragMomentum={false}
 			onMouseEnter={(e) => OnMouseEnter(e)}
 		>
-			<CardElement>
-				<img draggable="false" width={80} key={card.Id} src={CardImgSrc(card)} alt={CardImgName(card)} />
-			</CardElement>
+			<img
+				draggable="false"
+				width={80}
+				key={card.Id}
+				src={CardImgSrc(card)}
+				alt={CardImgName(card)}
+			/>
 		</CardParent>
 	)
 }
@@ -96,11 +119,10 @@ const CardParent = styled(motion.div)<{ card: IRenderableCard; pos: IPos }>`
 	position: absolute;
 	left: ${(p) => p.pos.x}px;
 	top: ${(p) => p.pos.y}px;
-	z-index: ${(p) => p.card.zIndex};
 	${(p) => (p.card.hoveredDropTarget ? 'filter: brightness(-0.25)' : '')};
 `
 
-const CardElement = styled.div``
+// const CardImg = styled.img``
 
 const CardImgSrc = (card: ICard) => {
 	return `/Cards/${CardImgName(card)}.png`

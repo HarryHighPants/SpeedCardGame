@@ -1,6 +1,7 @@
 namespace Server;
 
 using System.Collections.Concurrent;
+using System.Linq;
 using Engine.Helpers;
 using Engine.Models;
 
@@ -60,7 +61,7 @@ public class LobbyStateDto
 public class GameStateDto
 {
     public List<PlayerDto> Players;
-    public List<CenterPile> CenterPiles;
+    public List<Card> CenterPiles;
     public string lastMove;
 
     public GameStateDto(GameState gameState, ConcurrentDictionary<string, Connection> connections)
@@ -75,7 +76,7 @@ public class GameStateDto
                 player.Id = connection.connectionId;
             }
         }
-        CenterPiles = gameState.CenterPiles.ToList();
+        CenterPiles = gameState.CenterPiles.Select((pile, i) => pile.Cards.Last()).ToList();
         lastMove = gameState.LastMove;
     }
 }
