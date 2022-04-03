@@ -36,7 +36,7 @@ public class GameEngine
     {
         // Check - Move is valid
         var moveValid = Checks.PlayersMoveValid(gameState, playerId, cardId, centerPileIndex);
-        if (moveValid is ErrorResult moveValidError)
+        if (moveValid is IErrorResult moveValidError)
         {
             return Result.Error<GameState>(moveValidError.Message);
         }

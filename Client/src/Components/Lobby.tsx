@@ -1,10 +1,10 @@
-// import copyIcon from '../../public/Images/copyIcon.png'
+import copyIcon from '../Assets/copyIcon.png'
 import * as signalR from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
 
 interface Props {
     connection: signalR.HubConnection | undefined
-    gameId: string | undefined
+    roomId: string | undefined
 }
 
 interface LobbyData {
@@ -16,7 +16,7 @@ interface Player {
     name: string
 }
 
-const Lobby = ({ connection, gameId }: Props) => {
+const Lobby = ({ connection, roomId }: Props) => {
     const [lobbyData, setLobbyData] = useState<LobbyData>()
     const [myPlayerName, setMyPlayerName] = useState<string>('Player')
     const [connectionId, setConnectionId] = useState<string>('')
@@ -29,17 +29,17 @@ const Lobby = ({ connection, gameId }: Props) => {
             setConnectionId(connection.connectionId)
         }
         return () => {
-            connection?.off('UpdateLobbyState', UpdateLobbyData)
+            connection.off('UpdateLobbyState', UpdateLobbyData)
         }
     }, [connection])
 
     const UpdateLobbyData = (data: any) => {
         let parsedData: LobbyData = JSON.parse(data)
         setLobbyData(parsedData)
-      let myPlayerInfo = parsedData.connections.find((c) => c.connectionId === connectionId);
-      if(myPlayerInfo){
-        setMyPlayerName(myPlayerInfo.name)
-      }
+        let myPlayerInfo = parsedData.connections.find((c) => c.connectionId === connectionId)
+        if (myPlayerInfo) {
+            setMyPlayerName(myPlayerInfo.name)
+        }
     }
 
     const onStartGame = () => {
@@ -58,11 +58,13 @@ const Lobby = ({ connection, gameId }: Props) => {
         <div>
             <h2>Lobby</h2>
             <div>
-                <button>
-                    {gameId}
-                    {/*<img src={copyIcon} alt="Logo" />*/}
-                </button>
-
+                <div>
+                    <p>Invite link:</p>
+                    <input value={window.location.href} disabled={true} />
+                    <button onClick={() => navigator.clipboard.writeText(window.location.href)}>
+                        <img width={10} alt="Copy" src={copyIcon} />
+                    </button>
+                </div>
                 <div>
                     <h4>Players</h4>
                     {lobbyData != null ? (

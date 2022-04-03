@@ -32,7 +32,7 @@ public class GameHub : Hub
     }
 
 
-    public async Task JoinGame(string roomId)
+    public async Task JoinRoom(string roomId)
     {
         // Remove the connection from any previous room
         var previousRoom = gameService.GetConnectionsRoomId(UserConnectionId);
@@ -52,14 +52,14 @@ public class GameHub : Hub
         gameService.JoinRoom(roomId, UserConnectionId);
 
         // Send gameState for roomId
-        SendGameState(roomId);
-        SendLobbyState(roomId);
+        await SendGameState(roomId);
+        await SendLobbyState(roomId);
     }
 
-    public void UpdateName(string name)
+    public async Task UpdateName(string name)
     {
         gameService.UpdateName(name, UserConnectionId);
-        SendLobbyState(gameService.GetConnectionsRoomId(UserConnectionId));
+        await SendLobbyState(gameService.GetConnectionsRoomId(UserConnectionId));
     }
 
     public async Task LeaveRoom(string roomId)
@@ -69,6 +69,10 @@ public class GameHub : Hub
 
         // Remove the player to the room
         gameService.LeaveRoom(roomId, UserConnectionId);
+
+        // Send gameState for roomId
+        await SendGameState(roomId);
+        await SendLobbyState(roomId);
     }
 
     public async Task StartGame()
@@ -76,41 +80,58 @@ public class GameHub : Hub
         var startGameResult = gameService.StartGame(UserConnectionId);
         if (startGameResult is IErrorResult startGameError)
         {
-            throw new Exception(startGameError.Message);
+            throw new HubException(startGameError.Message, new UnauthorizedAccessException(startGameError.Message));
         }
-
-        // Send the connections their playerId
-        foreach (var connectedPlayer in startGameResult.Data)
-        {
-            await Clients.Client(connectedPlayer.connectionId).SendAsync("UpdatePlayerId", connectedPlayer.playerId);
-        }
-
-
-        SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
+        await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
     }
 
     public async Task TryPlayCard(int cardId, int centerPileId)
     {
-        // todo
+        var tryPlayCardResult = gameService.TryPlayCard(UserConnectionId, cardId, centerPileId);
+        await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
+        if (tryPlayCardResult is IErrorResult tryPlayCardResultError)
+        {
+	        throw new HubException(tryPlayCardResultError.Message, new UnauthorizedAccessException(tryPlayCardResultError.Message));
+        }
+    }
+
+    public async Task UpdateMovingCard(UpdateMovingCardData updateMovingCard)
+    {
+        // Check connection owns the card
+        if (!gameService.ConnectionOwnsCard(UserConnectionId, updateMovingCard.CardId))
+        {
+            throw new HubException("Connection can't move that card", new UnauthorizedAccessException());
+        }
+
+        // Send update to the group
+        var roomId = gameService.GetConnectionsRoomId(UserConnectionId);
+        var jsonData = JsonConvert.SerializeObject(updateMovingCard);
+        await Clients.Group(roomId).SendAsync("CardMoved", jsonData);
     }
 
 
-    public void SendGameState(string roomId)
+    public async Task SendGameState(string roomId)
     {
+        if (!gameService.GameStarted(roomId))
+        {
+            return;
+        }
+
         // Get the gameState from the gameService
         var gameStateResult = gameService.GetGameStateDto(roomId);
 
         // Check it's valid
         if (gameStateResult is IErrorResult gameStateError)
         {
-            throw new Exception(gameStateError.Message);
+            throw new HubException(gameStateError.Message, new ApplicationException(gameStateError.Message));
         }
 
         // Send the gameState to the roomId
-        Clients.Group(roomId).SendAsync("UpdateGameState", gameStateResult.Data);
+        var jsonData = JsonConvert.SerializeObject(gameStateResult.Data);
+        await Clients.Group(roomId).SendAsync("UpdateGameState", jsonData);
     }
 
-    public void SendLobbyState(string roomId)
+    public async Task SendLobbyState(string roomId)
     {
         // Get the gameState from the gameService
         var lobbyStateResult = gameService.GetLobbyStateDto(roomId);
@@ -118,11 +139,11 @@ public class GameHub : Hub
         // Check it's valid
         if (lobbyStateResult is IErrorResult lobbyStateError)
         {
-            throw new Exception(lobbyStateError.Message);
+            throw new HubException(lobbyStateError.Message, new ApplicationException(lobbyStateError.Message));
         }
 
         // Send the gameState to the roomId
         var jsonData = JsonConvert.SerializeObject(lobbyStateResult.Data);
-        Clients.Group(roomId).SendAsync("UpdateLobbyState", jsonData);
+        await Clients.Group(roomId).SendAsync("UpdateLobbyState", jsonData);
     }
 }
