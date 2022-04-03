@@ -36,6 +36,6 @@ export interface IRenderableCard extends ICard {
 	pos: IPos
 	draggable: boolean
 	droppableTarget: boolean
-	hoveredDropTarget: boolean
 	zIndex: number
+	ref: React.RefObject<HTMLDivElement>
 }

@@ -2,6 +2,7 @@ import { IPos } from '../Interfaces/ICard'
 
 class GameBoardLayout {
 	public static maxWidth = 1000
+	public static dropDistance = 40
 
 	private static playerHeightPadding = 0.25
 	private static playerCardSeperation = 0.1

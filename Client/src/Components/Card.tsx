@@ -2,32 +2,39 @@ import { MouseEventHandler, useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { ICard, CardValue, Suit, IPos, IRenderableCard } from '../Interfaces/ICard'
 import { motion, PanInfo, useDragControls, useMotionValue, useTransform, Variants } from 'framer-motion'
+import GameBoardLayout from '../Helpers/GameBoardLayout'
 
 export interface Props {
 	card: IRenderableCard
 	gameBoardDimensions: IPos
 	onDragStart: (info: PanInfo, card: IRenderableCard) => void
+	onDrag: (info: PanInfo, card: IRenderableCard) => void
 	onDragEnd: (info: PanInfo, card: IRenderableCard) => void
-	onMouseEnter: (card: IRenderableCard) => void
-	onMouseExit: (card: IRenderableCard) => void
+	draggingCard: IRenderableCard | undefined
 }
 
-const Card = ({ card, gameBoardDimensions, onDragStart, onDragEnd, onMouseEnter, onMouseExit }: Props) => {
+const Card = ({ card, gameBoardDimensions, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => {
 	const [disablePointerEvents, setDisablePointerEvents] = useState(false)
-	// const [isDragging, setDragging] = useState(false)
+	const [dragPosDelta, setDragPosDelta] = useState(0)
+	const [distanceFromDraggingCard, setDistanceFromDraggingCard] = useState(Infinity)
+	const [isDropTarget, setIsDropTarget] = useState(false)
 
-	const getPosPixels = (): IPos => {
-		return {
-			x: card.pos!! ? card.pos.x * gameBoardDimensions.x : 0,
-			y: card.pos!! ? card.pos.y * gameBoardDimensions.y : 0,
+	useEffect(() => {
+		if (draggingCard?.Id === card.Id) return
+		let draggingCardRect = draggingCard?.ref.current?.getBoundingClientRect()
+		let distance = GetDistanceRect(draggingCardRect, card.ref.current?.getBoundingClientRect())
+		setDistanceFromDraggingCard(distance)
+		setIsDropTarget(distance < GameBoardLayout.dropDistance)
+		if (isDropTarget) {
+			console.log(true)
 		}
-	}
-
-
-	const logCardPos = (info: PanInfo) => {
-		let distance = GetDistance({ x: info.offset.x, y: info.offset.y }, { x: 0, y: 0 })
-		setDisablePointerEvents(distance > 150)
-	}
+		console.log(card.Id, distance)
+	}, [draggingCard?.ref.current?.getBoundingClientRect().x])
+	//
+	// const logCardPos = (info: PanInfo) => {
+	// 	let distance = GetDistance({ x: info.offset.x, y: info.offset.y }, { x: 0, y: 0 })
+	// 	setDisablePointerEvents(distance > 150)
+	// }
 
 	const GetDistance = (pos1: IPos | undefined, pos2: IPos | undefined) => {
 		if (!pos1 || !pos2) return Infinity
@@ -36,9 +43,24 @@ const Card = ({ card, gameBoardDimensions, onDragStart, onDragEnd, onMouseEnter,
 		return Math.sqrt(a * a + b * b)
 	}
 
+	const GetDistanceRect = (rect1: DOMRect | undefined, rect2: DOMRect | undefined) => {
+		if (!rect1 || !rect2) return Infinity
+		let a = rect1.x - rect2.x
+		let b = rect1.y - rect2.y
+		return Math.sqrt(a * a + b * b)
+	}
+
 	const OnStartDrag = (panInfo: PanInfo) => {
 		// setDragging(true)
 		onDragStart(panInfo, card)
+	}
+
+	const OnDrag = (panInfo: PanInfo) => {
+		// setDragging(true)
+		let distance = GetDistance({ x: panInfo.offset.x, y: panInfo.offset.y }, { x: 0, y: 0 })
+		if (distance === dragPosDelta) return
+		setDragPosDelta(distance)
+		onDrag(panInfo, card)
 	}
 
 	const OnEndDrag = (panInfo: PanInfo) => {
@@ -47,50 +69,41 @@ const Card = ({ card, gameBoardDimensions, onDragStart, onDragEnd, onMouseEnter,
 		onDragEnd(panInfo, card)
 	}
 
-	const OnMouseEnter = (mouseEvent: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-		if (!card.droppableTarget) return
-		onMouseEnter(card)
-	}
-
-	const OnMouseExit = (mouseEvent: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-		if (!card.droppableTarget) return
-		onMouseExit(card)
-	}
-
 	const cardVariants: Variants = {
 		initial: {
 			scale: 1,
-			top: getPosPixels().y,
+			top: card.pos.y,
 			boxShadow: '0',
+			zIndex: card.zIndex
 		},
 		hovered: card.draggable
 			? {
 					scale: 1.03,
-					top: getPosPixels().y-20,
+					top: card.pos.y - 20,
 					boxShadow: '0px 3px 3px rgba(0,0,0,0.15)',
 					pointerEvents: 'all',
 			  }
 			: {},
-		dragging:
-			card.draggable
-				? {
-						scale: 1.12,
-						boxShadow: '0px 5px 5px rgba(0,0,0,0.1)',
-						cursor: 'grabbing',
-						zIndex: 15,
-						top: getPosPixels().y-20,
-						pointerEvents: disablePointerEvents ? 'none' : 'all',
-				  }
-				: {},
+		dragging: card.draggable
+			? {
+					scale: 1.12,
+					boxShadow: '0px 5px 5px rgba(0,0,0,0.1)',
+					cursor: 'grabbing',
+					zIndex: 15,
+					top: card.pos.y - 20,
+					pointerEvents: disablePointerEvents ? 'none' : 'all',
+			  }
+			: {},
 	}
 
 	return (
 		<CardParent
-			pos={getPosPixels()}
+			pos={card.pos}
 			card={card}
+			ref={card.ref}
 			variants={cardVariants}
 			drag={card.draggable}
-			onDrag={(event, info) => logCardPos(info)}
+			onDrag={(event, info) => OnDrag(info)}
 			initial="initial"
 			whileHover="hovered"
 			whileTap="dragging"
@@ -100,29 +113,30 @@ const Card = ({ card, gameBoardDimensions, onDragStart, onDragEnd, onMouseEnter,
 			dragElastic={1}
 			dragConstraints={{ top: 0, right: 0, bottom: 0, left: 0 }}
 			dragMomentum={false}
-			onMouseEnter={(e) => OnMouseEnter(e)}
+			dropTarget={isDropTarget}
+			distanceFromDraggingCard={distanceFromDraggingCard}
 		>
-			<img
-				draggable="false"
-				width={80}
-				key={card.Id}
-				src={CardImgSrc(card)}
-				alt={CardImgName(card)}
-			/>
+			<CardImg dropTarget={isDropTarget} draggable="false" width={80} key={card.Id} src={CardImgSrc(card)} alt={CardImgName(card)} />
 		</CardParent>
 	)
 }
 
-const CardParent = styled(motion.div)<{ card: IRenderableCard; pos: IPos }>`
+const CardParent = styled(motion.div)<{
+	dropTarget: boolean
+	distanceFromDraggingCard: number
+	card: IRenderableCard
+	pos: IPos
+}>`
 	width: 80px;
 	cursor: ${(p) => (p.card.draggable ? 'grab' : 'default')};
 	position: absolute;
 	left: ${(p) => p.pos.x}px;
 	top: ${(p) => p.pos.y}px;
-	${(p) => (p.card.hoveredDropTarget ? 'filter: brightness(-0.25)' : '')};
 `
 
-// const CardImg = styled.img``
+const CardImg = styled.img<{dropTarget: boolean}>`
+	${(p) => (p.dropTarget ? 'filter: brightness(0.9)' : '')};
+`
 
 const CardImgSrc = (card: ICard) => {
 	return `/Cards/${CardImgName(card)}.png`
