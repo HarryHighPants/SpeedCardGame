@@ -3,6 +3,8 @@ import styled from 'styled-components'
 import { CardLocationType, CardValue, ICard, IPos, IRenderableCard, Suit } from '../Interfaces/ICard'
 import { motion, PanInfo, Variants } from 'framer-motion'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
+import {usePrevious} from "../Helpers/UsePrevious";
+import {GetDistance, GetDistanceRect} from "../Helpers/Distance";
 
 export interface Props {
 	card: IRenderableCard
@@ -10,6 +12,8 @@ export interface Props {
 	onDrag: (info: PanInfo, card: IRenderableCard) => void
 	onDragEnd: (info: PanInfo, card: IRenderableCard) => void
 	draggingCard: IRenderableCard | undefined
+	// draggingCardDropped: IRenderableCard
+	// onPlayCard: (bottomCard: IRenderableCard, topCard: IRenderableCard)=>void
 }
 
 const Card = ({ card, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => {
@@ -23,6 +27,13 @@ const Card = ({ card, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => 
 	useEffect(() => {
 		setInitialRect(card.ref.current?.getBoundingClientRect())
 	}, [card.ref])
+
+	// useEffect(()=>{
+	// 	if(highlighted){
+	// 		onPlayCard(card, draggingCardDropped)
+	// 	}
+	// 	if()
+	// }, [draggingCardDropped])
 
 	useEffect(() => {
 		if (draggingCard?.Id === card.Id) return
@@ -56,21 +67,7 @@ const Card = ({ card, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => 
 			// We want to animate to either the left or the right on the dragged kitty card
 			setHorizontalOffset((draggingCardRect.x < initialRect.x ? 1 : 0) * 50)
 		}
-	}, [draggingCard?.ref.current?.getBoundingClientRect().x])
-
-	const GetDistance = (pos1: IPos | undefined, pos2: IPos | undefined) => {
-		if (!pos1 || !pos2) return Infinity
-		let a = pos1.x - pos2.x
-		let b = pos1.y - pos2.y
-		return Math.sqrt(a * a + b * b)
-	}
-
-	const GetDistanceRect = (rect1: DOMRect | undefined, rect2: DOMRect | undefined) => {
-		if (!rect1 || !rect2) return Infinity
-		let a = rect1.x - rect2.x
-		let b = rect1.y - rect2.y
-		return Math.sqrt(a * a + b * b)
-	}
+	}, [draggingCard?.ref.current?.getBoundingClientRect().x, draggingCard])
 
 	const OnStartDrag = (panInfo: PanInfo) => {
 		// setDragging(true)

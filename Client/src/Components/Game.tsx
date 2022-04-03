@@ -1,12 +1,13 @@
 import * as signalR from '@microsoft/signalr'
-import React, { useEffect, useLayoutEffect, useState } from 'react'
-import { IGameState } from '../Interfaces/IGameState'
-import { CardLocationType, IPos, IRenderableCard } from '../Interfaces/ICard'
+import React, {useEffect, useLayoutEffect, useState} from 'react'
+import {IGameState} from '../Interfaces/IGameState'
+import {CardLocationType, IPos, IRenderableCard} from '../Interfaces/ICard'
 import styled from 'styled-components'
 import Player from './Player'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import Card from './Card'
-import { PanInfo } from 'framer-motion'
+import {PanInfo} from 'framer-motion'
+import {GetDistanceRect} from "../Helpers/Distance";
 
 interface Props {
 	connection: signalR.HubConnection | undefined
@@ -25,10 +26,10 @@ interface BoardDimensions {
 // Clamp number between two values with the following line:
 const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max)
 
-const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
+const Game = ({connection, connectionId, gameState, roomId}: Props) => {
 	const [movedCards, setMovedCards] = useState<IMovedCardPos[]>([])
 	const [renderableCards, setRenderableCards] = useState<IRenderableCard[]>([] as IRenderableCard[])
-	const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>({ x: 600, y: 700 })
+	const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>({x: 600, y: 700})
 	const [draggingCard, setDraggingCard] = useState<IRenderableCard>()
 
 	useLayoutEffect(() => {
@@ -139,57 +140,43 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 	}
 
 	const OnStartDrag = (panInfo: PanInfo, card: IRenderableCard) => {
-		setDraggingCard({ ...card })
+		setDraggingCard({...card})
 	}
 
 	const OnDrag = (panInfo: PanInfo, card: IRenderableCard) => {
-		setDraggingCard({ ...card })
+		setDraggingCard({...card})
 	}
 
-	const OnEndDrag = (panInfo: PanInfo, droppedCard: IRenderableCard) => {
+	const OnEndDrag = (panInfo: PanInfo, topCard: IRenderableCard) => {
+		let ourPlayer = gameState.Players.find((p) => p.Id === connectionId)
+
+		// Get the bottom card
+		let cardDistances = renderableCards.map((c) => {
+			return {
+				card: c,
+				distance: GetDistanceRect(draggingCard?.ref.current?.getBoundingClientRect(), c.ref.current?.getBoundingClientRect())
+			}
+		})
+		cardDistances = cardDistances.sort((a, b) => a.distance - b.distance);
+		let bottomCard = cardDistances[1].card
+
+		// We are trying to play a card into the center
+		if (topCard.location === CardLocationType.Hand && bottomCard.location === CardLocationType.Center) {
+			console.log('Attempt play', topCard)
+		}
+
+		// We are trying to pickup a card from the kitty
+		if (topCard.location === CardLocationType.Kitty && bottomCard.location === CardLocationType.Hand && bottomCard.ourCard) {
+			console.log('Attempt pickup from kitty', topCard)
+		}
 		setDraggingCard(undefined)
-		// if (!!dropTarget) {
-		// 	let ourPlayer = gameState.Players.find((p) => p.Id === connectionId)
-		// 	let playedCardInHand = ourPlayer?.HandCards.find((c) => c.Id === droppedCard.Id)
-		// 	if (!!playedCardInHand) {
-		// 		// See if we dropped it onto a center pile
-		// 		let centerPileCard = gameState.CenterPiles.find((c) => c.Id === dropTarget.Id)
-		// 		if (!!centerPileCard) {
-		// 			// Try and play the card
-		// 			console.log('Attempt play', droppedCard)
-		// 		}
-		// 	}
-		//
-		// 	let playedKittyCard = ourPlayer?.TopKittyCardId === droppedCard.Id
-		// 	if (playedKittyCard) {
-		// 		let handCard = ourPlayer?.HandCards.find((c) => c.Id === dropTarget.Id)
-		// 		if (!!handCard) {
-		// 			// Try and pickup from Kitty
-		// 			console.log('Attempt pickup kitty', droppedCard)
-		// 		}
-		// 	}
-		// }
-		// setDraggingCard(undefined)
 	}
-
-	// const OnMouseEnter = (card: IRenderableCard) => {
-	// 	if (!draggingCard || !card.droppableTarget) return
-	// 	console.log('hovering over', card)
-	// 	setDropTarget(card)
-	// }
-	//
-	// const OnMouseExit = (card: IRenderableCard) => {
-	// 	if (!card.droppableTarget) return
-	// 	setDropTarget(undefined)
-	// }
 
 	return (
 		<Board>
-			<Player key={gameState.Players[0].Id} player={gameState.Players[0]} />
+			<Player key={gameState.Players[0].Id} player={gameState.Players[0]}/>
 			{renderableCards.map((c) => (
 				<Card
-					// 	onMouseEnter={OnMouseEnter}
-					// 	onMouseExit={OnMouseExit}
 					card={c}
 					onDragStart={OnStartDrag}
 					onDrag={OnDrag}
@@ -197,10 +184,11 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 					draggingCard={draggingCard}
 				/>
 			))}
-			<Player key={gameState.Players[1].Id} player={gameState.Players[1]} />
+			<Player key={gameState.Players[1].Id} player={gameState.Players[1]}/>
 		</Board>
 	)
 }
+
 
 const Board = styled.div`
 	margin-top: 100px;
