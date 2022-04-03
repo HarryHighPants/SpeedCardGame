@@ -87,7 +87,12 @@ public class GameHub : Hub
 
     public async Task TryPlayCard(int cardId, int centerPileId)
     {
-        // todo
+        var tryPlayCardResult = gameService.TryPlayCard(UserConnectionId, cardId, centerPileId);
+        await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
+        if (tryPlayCardResult is IErrorResult tryPlayCardResultError)
+        {
+	        throw new HubException(tryPlayCardResultError.Message, new UnauthorizedAccessException(tryPlayCardResultError.Message));
+        }
     }
 
     public async Task UpdateMovingCard(UpdateMovingCardData updateMovingCard)

@@ -94,6 +94,18 @@ public class InMemoryGameService : IGameService
         return Result.Successful(connectedPlayers);
     }
 
+    public Result TryPlayCard(string connectionId, int cardId, int centerPilIndex)
+    {
+	    var gameResult = GetConnectionsGame(connectionId);
+	    if (gameResult is IErrorResult gameResultError)
+	    {
+		    return Result.Error(gameResultError.Message);
+	    }
+	    var game = gameResult.Data;
+
+	    return game.TryPlayCard(GetConnectionsPlayer(connectionId).playerId.Value, cardId, centerPilIndex);
+    }
+
     private Result<Room> GetConnectionsRoom(string connectionId)
     {
         var roomId = GetConnectionsRoomId(connectionId);

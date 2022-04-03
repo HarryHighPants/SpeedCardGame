@@ -19,6 +19,8 @@ public interface IGameService
 
     public string GetConnectionsRoomId(string connectionId);
 
+    public Result TryPlayCard(string connectionId, int cardId, int centerPilIndex);
+
     public Result<GameStateDto> GetGameStateDto(string roomId);
 
     public Result<LobbyStateDto> GetLobbyStateDto(string roomId);
@@ -97,5 +99,6 @@ public record PlayerDto
         HandCards = player.HandCards.ToList();
         KittyCardsCount = player.KittyCards.Count;
         RequestingTopUp = player.RequestingTopUp;
+        TopKittyCardId = player.KittyCards.Last().Id;
     }
 }

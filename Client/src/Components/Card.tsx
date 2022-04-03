@@ -12,8 +12,6 @@ export interface Props {
 	onDrag: (info: PanInfo, card: IRenderableCard) => void
 	onDragEnd: (info: PanInfo, card: IRenderableCard) => void
 	draggingCard: IRenderableCard | undefined
-	// draggingCardDropped: IRenderableCard
-	// onPlayCard: (bottomCard: IRenderableCard, topCard: IRenderableCard)=>void
 }
 
 const Card = ({ card, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => {
@@ -27,13 +25,6 @@ const Card = ({ card, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => 
 	useEffect(() => {
 		setInitialRect(card.ref.current?.getBoundingClientRect())
 	}, [card.ref])
-
-	// useEffect(()=>{
-	// 	if(highlighted){
-	// 		onPlayCard(card, draggingCardDropped)
-	// 	}
-	// 	if()
-	// }, [draggingCardDropped])
 
 	useEffect(() => {
 		if (draggingCard?.Id === card.Id) return
@@ -49,7 +40,6 @@ const Card = ({ card, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => 
 		}
 
 		let distance = GetDistanceRect(draggingCardRect, ourRect)
-		console.log(card.Id, distance, draggingCardRect.x, ourRect.x)
 
 		// Check if we are a center card that can be dropped onto
 		let droppingOntoCenter =
@@ -115,6 +105,8 @@ const Card = ({ card, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => 
 
 	return (
 		<CardParent
+			key={`card-${card.Id}`}
+			layoutId={card.Id.toString()}
 			pos={card.pos}
 			whileInView={'initial'}
 			card={card}
