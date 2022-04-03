@@ -32,10 +32,16 @@ export enum Suit {
 	Spades,
 }
 
+export enum CardLocationType {
+	Hand,
+	Kitty,
+	Center,
+}
+
 export interface IRenderableCard extends ICard {
 	pos: IPos
-	draggable: boolean
-	droppableTarget: boolean
 	zIndex: number
 	ref: React.RefObject<HTMLDivElement>
+	ourCard: boolean
+	location: CardLocationType
 }

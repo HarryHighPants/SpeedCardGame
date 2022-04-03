@@ -1,7 +1,7 @@
-import { MouseEventHandler, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { ICard, CardValue, Suit, IPos, IRenderableCard } from '../Interfaces/ICard'
-import { motion, PanInfo, useDragControls, useMotionValue, useTransform, Variants } from 'framer-motion'
+import { CardLocationType, CardValue, ICard, IPos, IRenderableCard, Suit } from '../Interfaces/ICard'
+import { motion, PanInfo, Variants } from 'framer-motion'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 
 export interface Props {
@@ -16,25 +16,47 @@ export interface Props {
 const Card = ({ card, gameBoardDimensions, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => {
 	const [disablePointerEvents, setDisablePointerEvents] = useState(false)
 	const [dragPosDelta, setDragPosDelta] = useState(0)
-	const [distanceFromDraggingCard, setDistanceFromDraggingCard] = useState(Infinity)
-	const [isDropTarget, setIsDropTarget] = useState(false)
+	const [highlighted, setHighlighted] = useState(false)
+	const [shakingAmt, setShakingAmt] = useState(0)
+	const [horizontalOffset, setHorizontalOffset] = useState(0)
+	const [initialRect, setInitialRect] = useState<DOMRect | undefined>()
+
+	useEffect(()=>{
+		setInitialRect(card.ref.current?.getBoundingClientRect());
+	}, [card.ref])
 
 	useEffect(() => {
 		if (draggingCard?.Id === card.Id) return
+
 		let draggingCardRect = draggingCard?.ref.current?.getBoundingClientRect()
-		let distance = GetDistanceRect(draggingCardRect, card.ref.current?.getBoundingClientRect())
-		setDistanceFromDraggingCard(distance)
-		setIsDropTarget(distance < GameBoardLayout.dropDistance)
-		if (isDropTarget) {
-			console.log(true)
+		let ourRect = card.ref.current?.getBoundingClientRect()
+		if (!draggingCardRect || !ourRect) {
+			// Reset states
+			setShakingAmt(0)
+			setHighlighted(false)
+			setHorizontalOffset(0)
+			return
 		}
-		console.log(card.Id, distance)
+
+		let distance = GetDistanceRect(draggingCardRect, ourRect)
+
+		// Check if we are a center card that can be dropped onto
+		let droppingOntoCenter =
+			card.location === CardLocationType.Center && draggingCard?.location === CardLocationType.Hand
+		if (droppingOntoCenter) {
+			setShakingAmt((1 / distance) * 100)
+			setHighlighted(distance < GameBoardLayout.dropDistance)
+		}
+
+		// Check if we are a hand card that can be dragged onto
+		let droppingOntoHandCard =
+			card.ourCard && card.location === CardLocationType.Hand && draggingCard?.location === CardLocationType.Kitty
+		if (droppingOntoHandCard) {
+			if(!initialRect) return
+			// We want to animate to either the left or the right on the dragged kitty card
+			setHorizontalOffset((draggingCardRect.x < initialRect.x ? 1 : 0) * 50)
+		}
 	}, [draggingCard?.ref.current?.getBoundingClientRect().x])
-	//
-	// const logCardPos = (info: PanInfo) => {
-	// 	let distance = GetDistance({ x: info.offset.x, y: info.offset.y }, { x: 0, y: 0 })
-	// 	setDisablePointerEvents(distance > 150)
-	// }
 
 	const GetDistance = (pos1: IPos | undefined, pos2: IPos | undefined) => {
 		if (!pos1 || !pos2) return Infinity
@@ -72,70 +94,70 @@ const Card = ({ card, gameBoardDimensions, onDragStart, onDrag, onDragEnd, dragg
 	const cardVariants: Variants = {
 		initial: {
 			scale: 1,
+			zIndex: card.zIndex,
 			top: card.pos.y,
-			boxShadow: '0',
-			zIndex: card.zIndex
+			left: card.pos.x + horizontalOffset,
+			rotate: shakingAmt,
+			transition: { ease: "linear" },
 		},
-		hovered: card.draggable
+		hovered: card.ourCard
 			? {
 					scale: 1.03,
 					top: card.pos.y - 20,
 					boxShadow: '0px 3px 3px rgba(0,0,0,0.15)',
-					pointerEvents: 'all',
 			  }
 			: {},
-		dragging: card.draggable
-			? {
-					scale: 1.12,
-					boxShadow: '0px 5px 5px rgba(0,0,0,0.1)',
-					cursor: 'grabbing',
-					zIndex: 15,
-					top: card.pos.y - 20,
-					pointerEvents: disablePointerEvents ? 'none' : 'all',
-			  }
-			: {},
+		dragging: {
+			scale: 1.12,
+			boxShadow: '0px 5px 5px rgba(0,0,0,0.1)',
+			cursor: 'grabbing',
+			zIndex: 15,
+			top: card.pos.y - 20,
+		},
 	}
 
 	return (
 		<CardParent
 			pos={card.pos}
+			whileInView={'initial'}
 			card={card}
 			ref={card.ref}
 			variants={cardVariants}
-			drag={card.draggable}
+			drag={card.ourCard}
 			onDrag={(event, info) => OnDrag(info)}
 			initial="initial"
 			whileHover="hovered"
-			whileTap="dragging"
+			whileDrag="dragging"
 			onDragStart={(e, info) => OnStartDrag(info)}
 			onDragEnd={(e, info) => OnEndDrag(info)}
 			dragSnapToOrigin={true}
 			dragElastic={1}
 			dragConstraints={{ top: 0, right: 0, bottom: 0, left: 0 }}
 			dragMomentum={false}
-			dropTarget={isDropTarget}
-			distanceFromDraggingCard={distanceFromDraggingCard}
 		>
-			<CardImg dropTarget={isDropTarget} draggable="false" width={80} key={card.Id} src={CardImgSrc(card)} alt={CardImgName(card)} />
+			<CardImg
+				highlighted={highlighted}
+				draggable="false"
+				width={80}
+				key={card.Id}
+				src={CardImgSrc(card)}
+				alt={CardImgName(card)}
+			/>
 		</CardParent>
 	)
 }
 
 const CardParent = styled(motion.div)<{
-	dropTarget: boolean
-	distanceFromDraggingCard: number
 	card: IRenderableCard
 	pos: IPos
 }>`
 	width: 80px;
-	cursor: ${(p) => (p.card.draggable ? 'grab' : 'default')};
+	cursor: ${(p) => (p.card.ourCard ? 'grab' : 'default')};
 	position: absolute;
-	left: ${(p) => p.pos.x}px;
-	top: ${(p) => p.pos.y}px;
 `
 
-const CardImg = styled.img<{dropTarget: boolean}>`
-	${(p) => (p.dropTarget ? 'filter: brightness(0.9)' : '')};
+const CardImg = styled.img<{ highlighted: boolean }>`
+	${(p) => (p.highlighted ? 'filter: brightness(0.9)' : '')};
 `
 
 const CardImgSrc = (card: ICard) => {

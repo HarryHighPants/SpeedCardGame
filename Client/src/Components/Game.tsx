@@ -1,18 +1,12 @@
-import copyIcon from '../Assets/copyIcon.png'
 import * as signalR from '@microsoft/signalr'
-import { useEffect, useLayoutEffect, useState } from 'react'
-import { IGameState } from '../Interfaces/IGameState'
-import { ICard, CardValue, IPos, Suit, IRenderableCard } from '../Interfaces/ICard'
-import Draggable, { DraggableData } from 'react-draggable'
+import React, {useEffect, useLayoutEffect, useState} from 'react'
+import {IGameState} from '../Interfaces/IGameState'
+import {CardLocationType, IPos, IRenderableCard} from '../Interfaces/ICard'
 import styled from 'styled-components'
-import React from 'react'
-import { IPlayer } from '../Interfaces/IPlayer'
-import RenderPlayer from './Player'
 import Player from './Player'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import Card from './Card'
-import { PanInfo } from 'framer-motion'
-import card from './Card'
+import {PanInfo} from 'framer-motion'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
@@ -103,8 +97,8 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 				}
 				return {
 					...hc,
-					draggable: ourPlayer,
-					droppableTarget: false,
+					ourCard: ourPlayer,
+					location: CardLocationType.Hand,
 					pos: getPosPixels(movedCard?.pos ?? handCardPositions[cIndex]),
 					zIndex: zIndex,
 					ref: React.createRef<HTMLDivElement>(),
@@ -117,8 +111,8 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 			let kittyCardPosition = GameBoardLayout.GetKittyCardPosition(i)
 			let kittyCard = {
 				Id: p.TopKittyCardId,
-				draggable: ourPlayer,
-				droppableTarget: false,
+				ourCard: ourPlayer,
+				location: CardLocationType.Kitty,
 				pos: getPosPixels(movedCard?.pos ?? kittyCardPosition),
 				zIndex: ourPlayer ? 10 : 5,
 				ref: React.createRef<HTMLDivElement>(),
@@ -131,10 +125,10 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 		let centerPilePositions = gameState.CenterPiles.map((cp, cpIndex) => {
 			return {
 				...cp,
-				draggable: false,
-				droppableTarget: true,
+				location: CardLocationType.Center,
 				pos: getPosPixels(centerCardPositions[cpIndex]),
 				ref: React.createRef<HTMLDivElement>(),
+				ourCard: false
 			} as IRenderableCard
 		})
 		newRenderableCards.push(...centerPilePositions)
