@@ -6,14 +6,13 @@ import GameBoardLayout from '../Helpers/GameBoardLayout'
 
 export interface Props {
 	card: IRenderableCard
-	gameBoardDimensions: IPos
 	onDragStart: (info: PanInfo, card: IRenderableCard) => void
 	onDrag: (info: PanInfo, card: IRenderableCard) => void
 	onDragEnd: (info: PanInfo, card: IRenderableCard) => void
 	draggingCard: IRenderableCard | undefined
 }
 
-const Card = ({ card, gameBoardDimensions, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => {
+const Card = ({ card, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => {
 	const [disablePointerEvents, setDisablePointerEvents] = useState(false)
 	const [dragPosDelta, setDragPosDelta] = useState(0)
 	const [highlighted, setHighlighted] = useState(false)
@@ -21,8 +20,8 @@ const Card = ({ card, gameBoardDimensions, onDragStart, onDrag, onDragEnd, dragg
 	const [horizontalOffset, setHorizontalOffset] = useState(0)
 	const [initialRect, setInitialRect] = useState<DOMRect | undefined>()
 
-	useEffect(()=>{
-		setInitialRect(card.ref.current?.getBoundingClientRect());
+	useEffect(() => {
+		setInitialRect(card.ref.current?.getBoundingClientRect())
 	}, [card.ref])
 
 	useEffect(() => {
@@ -39,6 +38,7 @@ const Card = ({ card, gameBoardDimensions, onDragStart, onDrag, onDragEnd, dragg
 		}
 
 		let distance = GetDistanceRect(draggingCardRect, ourRect)
+		console.log(card.Id, distance, draggingCardRect.x, ourRect.x)
 
 		// Check if we are a center card that can be dropped onto
 		let droppingOntoCenter =
@@ -52,7 +52,7 @@ const Card = ({ card, gameBoardDimensions, onDragStart, onDrag, onDragEnd, dragg
 		let droppingOntoHandCard =
 			card.ourCard && card.location === CardLocationType.Hand && draggingCard?.location === CardLocationType.Kitty
 		if (droppingOntoHandCard) {
-			if(!initialRect) return
+			if (!initialRect) return
 			// We want to animate to either the left or the right on the dragged kitty card
 			setHorizontalOffset((draggingCardRect.x < initialRect.x ? 1 : 0) * 50)
 		}
@@ -98,7 +98,7 @@ const Card = ({ card, gameBoardDimensions, onDragStart, onDrag, onDragEnd, dragg
 			top: card.pos.y,
 			left: card.pos.x + horizontalOffset,
 			rotate: shakingAmt,
-			transition: { ease: "linear" },
+			transition: { ease: 'linear' },
 		},
 		hovered: card.ourCard
 			? {

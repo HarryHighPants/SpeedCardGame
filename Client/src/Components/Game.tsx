@@ -1,12 +1,12 @@
 import * as signalR from '@microsoft/signalr'
-import React, {useEffect, useLayoutEffect, useState} from 'react'
-import {IGameState} from '../Interfaces/IGameState'
-import {CardLocationType, IPos, IRenderableCard} from '../Interfaces/ICard'
+import React, { useEffect, useLayoutEffect, useState } from 'react'
+import { IGameState } from '../Interfaces/IGameState'
+import { CardLocationType, IPos, IRenderableCard } from '../Interfaces/ICard'
 import styled from 'styled-components'
 import Player from './Player'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import Card from './Card'
-import {PanInfo} from 'framer-motion'
+import { PanInfo } from 'framer-motion'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
@@ -30,7 +30,6 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 	const [renderableCards, setRenderableCards] = useState<IRenderableCard[]>([] as IRenderableCard[])
 	const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>({ x: 600, y: 700 })
 	const [draggingCard, setDraggingCard] = useState<IRenderableCard>()
-	// const [draggingCardMoved, onDraggingCardMoved] = useState(0)
 
 	useLayoutEffect(() => {
 		function UpdateGameBoardDimensions() {
@@ -44,6 +43,10 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 		window.addEventListener('resize', UpdateGameBoardDimensions)
 		return () => window.removeEventListener('resize', UpdateGameBoardDimensions)
 	}, [])
+
+	useEffect(() => {
+		UpdateRenderableCards()
+	}, [gameBoardDimensions])
 
 	useEffect(() => {
 		if (!connection) return
@@ -101,7 +104,7 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 					location: CardLocationType.Hand,
 					pos: getPosPixels(movedCard?.pos ?? handCardPositions[cIndex]),
 					zIndex: zIndex,
-					ref: React.createRef<HTMLDivElement>(),
+					ref: renderableCards.find((c) => c.Id === hc.Id)?.ref ?? React.createRef<HTMLDivElement>(),
 				} as IRenderableCard
 			})
 			newRenderableCards.push(...handCards)
@@ -115,32 +118,32 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 				location: CardLocationType.Kitty,
 				pos: getPosPixels(movedCard?.pos ?? kittyCardPosition),
 				zIndex: ourPlayer ? 10 : 5,
-				ref: React.createRef<HTMLDivElement>(),
+				ref: renderableCards.find((c) => c.Id === p.TopKittyCardId)?.ref ?? React.createRef<HTMLDivElement>(),
 			} as IRenderableCard
 			newRenderableCards.push(kittyCard)
 		})
 
 		// Add the center piles
 		let centerCardPositions = GameBoardLayout.GetCenterCardPositions()
-		let centerPilePositions = gameState.CenterPiles.map((cp, cpIndex) => {
+		let centerPiles = gameState.CenterPiles.map((cp, cpIndex) => {
 			return {
 				...cp,
 				location: CardLocationType.Center,
 				pos: getPosPixels(centerCardPositions[cpIndex]),
-				ref: React.createRef<HTMLDivElement>(),
-				ourCard: false
+				ref: renderableCards.find((c) => c.Id === cp.Id)?.ref ?? React.createRef<HTMLDivElement>(),
+				ourCard: false,
 			} as IRenderableCard
 		})
-		newRenderableCards.push(...centerPilePositions)
+		newRenderableCards.push(...centerPiles)
 		setRenderableCards(newRenderableCards)
 	}
 
 	const OnStartDrag = (panInfo: PanInfo, card: IRenderableCard) => {
-		setDraggingCard({...card})
+		setDraggingCard({ ...card })
 	}
 
 	const OnDrag = (panInfo: PanInfo, card: IRenderableCard) => {
-		setDraggingCard({...card})
+		setDraggingCard({ ...card })
 	}
 
 	const OnEndDrag = (panInfo: PanInfo, droppedCard: IRenderableCard) => {
@@ -188,7 +191,6 @@ const Game = ({ connection, connectionId, gameState, roomId }: Props) => {
 					// 	onMouseEnter={OnMouseEnter}
 					// 	onMouseExit={OnMouseExit}
 					card={c}
-					gameBoardDimensions={gameBoardDimensions}
 					onDragStart={OnStartDrag}
 					onDrag={OnDrag}
 					onDragEnd={OnEndDrag}
