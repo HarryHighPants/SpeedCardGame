@@ -82,18 +82,29 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 				onPickupFromKitty={OnPickupFromKitty}
 			/>
 			<Player key={`player-${gameState.Players[1].Id}`} player={gameState.Players[1]} />
+			<Background key={'bg'} />
 		</GameContainer>
 	)
 }
 
 const GameContainer = styled.div`
-	margin-top: 100px;
-	position: relative;
-	background-color: #729bf5;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
 	width: 100%;
 	height: 100%;
 	max-width: ${GameBoardLayout.maxWidth}px;
-	user-select: none;
+	overflow: hidden;
+`
+
+const Background = styled.div`
+	position: absolute;
+	background-color: azure;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	z-index: -5;
 `
 
 export default Game

@@ -1,18 +1,20 @@
-import {CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard} from '../Interfaces/ICard'
+import { CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard } from '../Interfaces/ICard'
 import { IGameState } from '../Interfaces/IGameState'
 import React from 'react'
 
 class GameBoardLayout {
 	public static maxWidth = 1000
 	public static dropDistance = 40
+	private static cardWidth = 80
+	private static cardHeight = GameBoardLayout.cardWidth * 1.35
 
 	private static playerHeightPadding = 0.25
-	private static playerCardSeperation = 0.1
-	private static playerHandCardsCenterX = 0.3
+	private static playerCardSeperation = 0.075
+	private static playerHandCardsCenterX = 0.35
 
 	private static playerKittyCenterX = 0.8
 
-	private static centerPilesPadding = 0.15
+	private static centerPilesPadding = 0.1
 
 	private gameBoardDimensions: IPos
 	private movedCards: IMovedCardPos[]
@@ -25,7 +27,6 @@ class GameBoardLayout {
 	}
 
 	public GetRenderableCards = (ourId: string | null | undefined, gameState: IGameState): IRenderableCard[] => {
-		// let ourId = connectionId ?? 'CUqUsFYm1zVoW-WcGr6sUQ'
 		let newRenderableCards = [] as IRenderableCard[]
 
 		// Add players cards
@@ -54,6 +55,20 @@ class GameBoardLayout {
 		})
 		newRenderableCards.push(...centerPiles)
 		return newRenderableCards
+	}
+
+	static FlipPositions(positions: IPos[]): IPos[] {
+		// return positions
+		return positions.map((c) => {
+			return { x: Math.abs(c.x - 1) , y: Math.abs(c.y - 1) } as IPos
+		})
+	}
+
+	static getPosPixels = (pos: IPos, gameBoardDimensions: IPos): IPos => {
+		return {
+			x: pos!! ? pos.x * gameBoardDimensions.x - (this.cardWidth / 2): 0,
+			y: pos!! ? pos.y * gameBoardDimensions.y - this.cardHeight : 0,
+		}
 	}
 
 	static GetCardDefaultPosition(ourPlayer: boolean, location: CardLocationType, index: number): IPos {
@@ -97,21 +112,8 @@ class GameBoardLayout {
 		return Array(2)
 			.fill(0)
 			.map((e, i) => {
-				return { x: 0.5 + this.centerPilesPadding * (i && -1), y: 0.5 } as IPos
+				return { x: 0.5 + this.centerPilesPadding * (i === 0 ? -1 : 1), y: 0.5 } as IPos
 			})
-	}
-
-	static FlipPositions(positions: IPos[]): IPos[] {
-		return positions.map((c) => {
-			return { x: Math.abs(c.x - 1) - 0.1, y: Math.abs(c.y - 1) } as IPos
-		})
-	}
-
-	static getPosPixels = (pos: IPos, gameBoardDimensions: IPos): IPos => {
-		return {
-			x: pos!! ? pos.x * gameBoardDimensions.x : 0,
-			y: pos!! ? pos.y * gameBoardDimensions.y : 0,
-		}
 	}
 
 	getPosPixels = (pos: IPos): IPos => {
@@ -122,7 +124,7 @@ class GameBoardLayout {
 		let movedCard = ourPlayer ? null : this.movedCards.find((c) => c.cardId === card.Id)
 		let defaultPos = GameBoardLayout.GetCardDefaultPosition(ourPlayer, location, index)
 		let pos = this.getPosPixels(movedCard?.pos ?? defaultPos)
-		let zIndex = !ourPlayer ? Math.abs(index - 4) : index
+		let zIndex = (!ourPlayer ? Math.abs(index - 4) : index) + (location != CardLocationType.Center ? 5 : 0)
 		let ref = this.renderableCards.find((c) => c.Id === card.Id)?.ref
 		return {
 			...{

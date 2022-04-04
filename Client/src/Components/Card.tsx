@@ -110,8 +110,7 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 
 	return (
 		<CardParent
-			key={`card-${card.Id}`}
-			layoutId={card.Id.toString()}
+			layoutId={`card-${card.Id}`}
 			pos={card.pos}
 			whileInView={'initial'}
 			card={card}

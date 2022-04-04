@@ -1,7 +1,8 @@
 import { IPlayer } from '../Interfaces/IPlayer'
 import { ICard, IPos } from '../Interfaces/ICard'
 import Card from './Card'
-import { IMovedCardPos } from './Game'
+import GameBoardLayout from "../Helpers/GameBoardLayout";
+import styled from 'styled-components'
 
 interface Props {
     player: IPlayer
@@ -9,13 +10,18 @@ interface Props {
 
 const Player = ({ player}: Props) => {
     return (
-        <div>
-            <div>
-                <p>{player.Name}</p>
-                {player.RequestingTopUp && <p>Requesting top up</p>}
-            </div>
-        </div>
+        <PlayerContainer>
+			<p>{player.Name}</p>
+			{player.RequestingTopUp && <p>Requesting top up</p>}
+        </PlayerContainer>
     )
 }
+
+const PlayerContainer = styled.div`
+	height: 200px;
+	flex: 0;
+	color: white;
+	background-color: #853939;
+`
 
 export default Player

@@ -9,12 +9,13 @@ import TestData from '../../Assets/TestData.js'
 
 interface Props {}
 
+const testing: boolean = true;
 const Room = (props: Props) => {
 	let urlParams = useParams()
 	const [connection, setConnection] = useState<HubConnection>()
 	const [roomId, setRoomId] = useState<string | undefined>(urlParams.roomId)
-	// const [gameState, setGameState] = useState<IGameState>(JSON.parse(TestData)) // Local debugging
-	const [gameState, setGameState] = useState<IGameState>()
+	const [gameState, setGameState] = useState<IGameState>(testing ? JSON.parse(TestData) : undefined) // Local debugging
+	// const [gameState, setGameState] = useState<IGameState>()
 
 	useEffect(() => {
 		// Builds the SignalR connection, mapping it to /server
@@ -57,7 +58,7 @@ const Room = (props: Props) => {
 	}
 
 	return gameState!! ? (
-		<Game roomId={roomId} connection={connection} connectionId={connection?.connectionId} gameState={gameState} />
+		<Game connection={connection} connectionId={testing ? "CUqUsFYm1zVoW-WcGr6sUQ" : connection?.connectionId} gameState={gameState} />
 	) : (
 		<Lobby roomId={roomId} connection={connection} />
 	)

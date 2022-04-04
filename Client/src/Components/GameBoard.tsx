@@ -1,7 +1,7 @@
 import * as signalR from '@microsoft/signalr'
 import React, { useEffect, useLayoutEffect, useState } from 'react'
 import { IGameState } from '../Interfaces/IGameState'
-import {CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard} from '../Interfaces/ICard'
+import { CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard } from '../Interfaces/ICard'
 import styled from 'styled-components'
 import Player from './Player'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
@@ -9,8 +9,8 @@ import Card from './Card'
 import { LayoutGroup, PanInfo } from 'framer-motion'
 import { GetDistanceRect } from '../Helpers/Distance'
 import { clamp } from '../Helpers/Utilities'
-import {IPlayer} from "../Interfaces/IPlayer";
-import gameBoardLayout from "../Helpers/GameBoardLayout";
+import { IPlayer } from '../Interfaces/IPlayer'
+import gameBoardLayout from '../Helpers/GameBoardLayout'
 
 interface Props {
 	playerId: string | undefined | null
@@ -34,14 +34,14 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 	}, [gameState])
 
 	const UpdateRenderableCards = () => {
-		let gameBoardLayout = new GameBoardLayout(gameBoardDimensions, movedCards, renderableCards);
+		let gameBoardLayout = new GameBoardLayout(gameBoardDimensions, movedCards, renderableCards)
 		setRenderableCards(gameBoardLayout.GetRenderableCards(playerId, gameState))
 	}
 
 	const OnEndDrag = (topCard: IRenderableCard) => {
 		let bottomCard = GetBottomCard()
-		if(!!bottomCard){
-			DetectMove(topCard, bottomCard);
+		if (!!bottomCard) {
+			DetectMove(topCard, bottomCard)
 		}
 		setDraggingCard(undefined)
 	}
@@ -79,26 +79,30 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 			}
 		})
 		cardDistances = cardDistances.sort((a, b) => a.distance - b.distance)
-		if(cardDistances[1].distance > gameBoardLayout.dropDistance) return
+		if (cardDistances[1].distance > gameBoardLayout.dropDistance) return
 		return cardDistances[1].card
 	}
 
 	return (
 		<GameBoardContainer>
 			{renderableCards.map((c) => (
-				<Card card={c} setDraggingCard={setDraggingCard} onDragEnd={OnEndDrag} cardBeingDragged={draggingCard} />
+				<Card
+					key={`card-${c.Id}`}
+					card={c}
+					setDraggingCard={setDraggingCard}
+					onDragEnd={OnEndDrag}
+					cardBeingDragged={draggingCard}
+				/>
 			))}
 		</GameBoardContainer>
 	)
 }
 
 const GameBoardContainer = styled.div`
-	margin-top: 100px;
+	background-color: #4d6947;
 	position: relative;
-	background-color: #729bf5;
-	width: 100%;
 	height: 100%;
-	max-width: ${GameBoardLayout.maxWidth}px;
+	flex: 1;
 	user-select: none;
 `
 
