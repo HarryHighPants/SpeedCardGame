@@ -19,6 +19,7 @@ const Player = ({ player}: Props) => {
 
 const PlayerContainer = styled.div`
 	height: 200px;
+	width: 100%;
 	flex: 0;
 	color: white;
 	background-color: #853939;

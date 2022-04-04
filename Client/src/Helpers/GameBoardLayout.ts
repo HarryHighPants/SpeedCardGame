@@ -3,10 +3,10 @@ import { IGameState } from '../Interfaces/IGameState'
 import React from 'react'
 
 class GameBoardLayout {
-	public static maxWidth = 1000
+	public static maxWidth = 750
 	public static dropDistance = 40
-	private static cardWidth = 80
-	private static cardHeight = GameBoardLayout.cardWidth * 1.35
+	public static cardWidth = 80
+	public static cardHeight = GameBoardLayout.cardWidth * 1.35
 
 	private static playerHeightPadding = 0.25
 	private static playerCardSeperation = 0.075

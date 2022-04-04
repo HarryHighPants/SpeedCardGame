@@ -19,11 +19,6 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 	const [highlighted, setHighlighted] = useState(false)
 	const [shakingAmt, setShakingAmt] = useState(0)
 	const [horizontalOffset, setHorizontalOffset] = useState(0)
-	const [initialRect, setInitialRect] = useState<DOMRect | undefined>()
-
-	useEffect(() => {
-		setInitialRect(card.ref.current?.getBoundingClientRect())
-	}, [card.ref])
 
 	// cardBeingDragged updated
 	useEffect(() => {
@@ -58,9 +53,8 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 			card.location === CardLocationType.Hand &&
 			cardBeingDragged?.location === CardLocationType.Kitty
 		if (droppingOntoHandCard) {
-			if (!initialRect) return
 			// We want to animate to either the left or the right on the dragged kitty card
-			setHorizontalOffset((draggingCardRect.x < initialRect.x ? 1 : 0) * 50)
+			setHorizontalOffset((draggingCardRect.x < ourRect.x ? 1 : 0) * 50)
 		}
 	}
 

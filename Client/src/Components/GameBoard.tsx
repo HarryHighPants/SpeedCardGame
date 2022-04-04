@@ -11,6 +11,7 @@ import { GetDistanceRect } from '../Helpers/Distance'
 import { clamp } from '../Helpers/Utilities'
 import { IPlayer } from '../Interfaces/IPlayer'
 import gameBoardLayout from '../Helpers/GameBoardLayout'
+import GameBoardAreas from "./GameBoardAreas/GameBoardAreas";
 
 interface Props {
 	playerId: string | undefined | null
@@ -94,14 +95,16 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 					cardBeingDragged={draggingCard}
 				/>
 			))}
+			<GameBoardAreas onPickupFromKitty={onPickupFromKitty}/>
 		</GameBoardContainer>
 	)
 }
 
 const GameBoardContainer = styled.div`
-	background-color: #4d6947;
 	position: relative;
 	height: 100%;
+	width: 100%;
+	max-width: ${GameBoardLayout.maxWidth}px;
 	flex: 1;
 	user-select: none;
 `

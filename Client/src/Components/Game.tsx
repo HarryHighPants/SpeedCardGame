@@ -90,16 +90,17 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 const GameContainer = styled.div`
 	display: flex;
 	flex-direction: column;
-	align-items: stretch;
-	width: 100%;
+	align-items: center;
 	height: 100%;
-	max-width: ${GameBoardLayout.maxWidth}px;
-	overflow: hidden;
+	max-width: 100%;
+	max-height: 100%;
+	//overflow: hidden;
+	overscroll-behavior: none;
 `
 
 const Background = styled.div`
+	background-color: #4d6947;
 	position: absolute;
-	background-color: azure;
 	top: 0;
 	left: 0;
 	width: 100%;
