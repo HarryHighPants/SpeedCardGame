@@ -3,18 +3,17 @@ import styled from 'styled-components'
 import { CardLocationType, CardValue, ICard, IPos, IRenderableCard, Suit } from '../Interfaces/ICard'
 import { motion, PanInfo, Variants } from 'framer-motion'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
-import {usePrevious} from "../Helpers/UsePrevious";
-import {GetDistance, GetDistanceRect} from "../Helpers/Distance";
+import { usePrevious } from '../Helpers/UsePrevious'
+import { GetDistance, GetDistanceRect } from '../Helpers/Distance'
 
 export interface Props {
 	card: IRenderableCard
-	onDragStart: (info: PanInfo, card: IRenderableCard) => void
-	onDrag: (info: PanInfo, card: IRenderableCard) => void
-	onDragEnd: (info: PanInfo, card: IRenderableCard) => void
-	draggingCard: IRenderableCard | undefined
+	setDraggingCard: (card: IRenderableCard) => void
+	onDragEnd: (card: IRenderableCard) => void
+	cardBeingDragged: IRenderableCard | undefined
 }
 
-const Card = ({ card, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => {
+const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => {
 	const [disablePointerEvents, setDisablePointerEvents] = useState(false)
 	const [dragPosDelta, setDragPosDelta] = useState(0)
 	const [highlighted, setHighlighted] = useState(false)
@@ -26,11 +25,15 @@ const Card = ({ card, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => 
 		setInitialRect(card.ref.current?.getBoundingClientRect())
 	}, [card.ref])
 
+	// cardBeingDragged updated
 	useEffect(() => {
-		if (draggingCard?.Id === card.Id) return
-
-		let draggingCardRect = draggingCard?.ref.current?.getBoundingClientRect()
+		if (cardBeingDragged?.Id === card.Id) return
+		let draggingCardRect = cardBeingDragged?.ref.current?.getBoundingClientRect()
 		let ourRect = card.ref.current?.getBoundingClientRect()
+		UpdateAnimationStates(ourRect, draggingCardRect)
+	}, [cardBeingDragged?.ref.current?.getBoundingClientRect().x, cardBeingDragged])
+
+	const UpdateAnimationStates = (ourRect: DOMRect | undefined, draggingCardRect: DOMRect | undefined) => {
 		if (!draggingCardRect || !ourRect) {
 			// Reset states
 			setShakingAmt(0)
@@ -43,7 +46,7 @@ const Card = ({ card, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => 
 
 		// Check if we are a center card that can be dropped onto
 		let droppingOntoCenter =
-			card.location === CardLocationType.Center && draggingCard?.location === CardLocationType.Hand
+			card.location === CardLocationType.Center && cardBeingDragged?.location === CardLocationType.Hand
 		if (droppingOntoCenter) {
 			setShakingAmt((1 / distance) * 100)
 			setHighlighted(distance < GameBoardLayout.dropDistance)
@@ -51,17 +54,19 @@ const Card = ({ card, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => 
 
 		// Check if we are a hand card that can be dragged onto
 		let droppingOntoHandCard =
-			card.ourCard && card.location === CardLocationType.Hand && draggingCard?.location === CardLocationType.Kitty
+			card.ourCard &&
+			card.location === CardLocationType.Hand &&
+			cardBeingDragged?.location === CardLocationType.Kitty
 		if (droppingOntoHandCard) {
 			if (!initialRect) return
 			// We want to animate to either the left or the right on the dragged kitty card
 			setHorizontalOffset((draggingCardRect.x < initialRect.x ? 1 : 0) * 50)
 		}
-	}, [draggingCard?.ref.current?.getBoundingClientRect().x, draggingCard])
+	}
 
 	const OnStartDrag = (panInfo: PanInfo) => {
 		// setDragging(true)
-		onDragStart(panInfo, card)
+		setDraggingCard({ ...card })
 	}
 
 	const OnDrag = (panInfo: PanInfo) => {
@@ -69,13 +74,13 @@ const Card = ({ card, onDragStart, onDrag, onDragEnd, draggingCard }: Props) => 
 		let distance = GetDistance({ x: panInfo.offset.x, y: panInfo.offset.y }, { x: 0, y: 0 })
 		if (distance === dragPosDelta) return
 		setDragPosDelta(distance)
-		onDrag(panInfo, card)
+		setDraggingCard({ ...card })
 	}
 
 	const OnEndDrag = (panInfo: PanInfo) => {
 		// setDragging(false)
 		setDisablePointerEvents(false)
-		onDragEnd(panInfo, card)
+		onDragEnd(card)
 	}
 
 	const cardVariants: Variants = {

@@ -45,3 +45,8 @@ export interface IRenderableCard extends ICard {
 	ourCard: boolean
 	location: CardLocationType
 }
+
+export interface IMovedCardPos {
+	cardId: number
+	pos: IPos
+}
