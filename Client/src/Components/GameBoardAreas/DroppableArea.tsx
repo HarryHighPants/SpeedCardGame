@@ -1,9 +1,11 @@
 import styled from 'styled-components'
-import { IPos } from '../../Interfaces/ICard'
+import {IPos, IRenderableCard} from '../../Interfaces/ICard'
+import {BaseAreaProps} from "./BaseArea";
 
-export interface BaseAreaProps {
+interface Props extends BaseAreaProps {
 	dimensions: AreaDimensions
 	text?: string | undefined
+	onDrop: (card: IRenderableCard)
 }
 
 export interface AreaDimensions {
@@ -11,13 +13,15 @@ export interface AreaDimensions {
 	size: IPos
 }
 
-const BaseArea = ({ dimensions, text }: BaseAreaProps) => {
+const PickupArea = ({ dimensions, droppable, text }: Props) => {
 	return <BaseAreaDiv padding={6} dimensions={dimensions} >
 		<AreaText><b>{text}</b></AreaText>
 	</BaseAreaDiv>
 }
 
 const BaseAreaDiv = styled.div<{ dimensions: AreaDimensions; padding: number }>`
+	//background-color: chocolate;
+	//outline: antiquewhite solid thick;
 	border: 3px solid white;
 	border-radius: 10px;
 	position: absolute;

@@ -86,6 +86,7 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 
 	return (
 		<GameBoardContainer>
+			<div>
 			{renderableCards.map((c) => (
 				<Card
 					key={`card-${c.Id}`}
@@ -95,7 +96,8 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 					cardBeingDragged={draggingCard}
 				/>
 			))}
-			<GameBoardAreas onPickupFromKitty={onPickupFromKitty}/>
+			</div>
+			<GameBoardAreas ourId={playerId} gameBoardDimensions={gameBoardDimensions} gameState={gameState} onPickupFromKitty={onPickupFromKitty}/>
 		</GameBoardContainer>
 	)
 }
