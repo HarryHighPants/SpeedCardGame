@@ -1,5 +1,4 @@
-import {IPos} from "../Interfaces/ICard";
-
+import { IPos } from '../Interfaces/ICard'
 
 // Clamp number between two values with the following line:
 export const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max)
@@ -20,8 +19,18 @@ export const GetDistanceRect = (rect1: DOMRect | undefined, rect2: DOMRect | und
 
 export const Overlaps = (rect1: DOMRect | undefined, rect2: DOMRect | undefined): boolean => {
 	if (!rect1 || !rect2) return false
-	return !(rect1.right < rect2.left ||
+	return !(
+		rect1.right < rect2.left ||
 		rect1.left > rect2.right ||
 		rect1.bottom < rect2.top ||
-		rect1.top > rect2.bottom)
+		rect1.top > rect2.bottom
+	)
+}
+
+export const GetRandomId = () => {
+	return GetRandomInt(99999999);
+}
+
+export const GetRandomInt = (max: number) => {
+	return Math.floor(Math.random() * max);
 }

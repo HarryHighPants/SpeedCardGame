@@ -4,7 +4,7 @@ import { CardLocationType, CardValue, ICard, IPos, IRenderableCard, Suit } from 
 import { motion, PanInfo, Variants } from 'framer-motion'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import { usePrevious } from '../Helpers/UsePrevious'
-import { GetDistanceRect, Overlaps } from '../Helpers/Utilities'
+import {GetDistanceRect, GetRandomId, GetRandomInt, Overlaps} from '../Helpers/Utilities'
 
 export interface Props {
 	id?: number
@@ -14,7 +14,7 @@ export interface Props {
 	onDistanceUpdated: (distance: number, overlaps?: boolean, delta?: IPos) => void
 }
 
-const Droppable = ({ cardBeingDragged, ourRef, id, children, onDistanceUpdated }: Props) => {
+const Droppable = ({ cardBeingDragged, ourRef, id = GetRandomId()+1000, children, onDistanceUpdated }: Props) => {
 	// cardBeingDragged updated
 	useEffect(() => {
 		if (cardBeingDragged?.Id === id) return
@@ -31,9 +31,6 @@ const Droppable = ({ cardBeingDragged, ourRef, id, children, onDistanceUpdated }
 				? undefined
 				: { x: draggingCardRect.x - ourRect.x, y: draggingCardRect.y - ourRect.y }
 		onDistanceUpdated(distance, overlaps, delta)
-		// if(id === undefined){
-			console.log(id, distance, overlaps, delta)
-		// }
 	}
 
 	return <>{children}</>

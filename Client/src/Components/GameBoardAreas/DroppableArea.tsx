@@ -16,7 +16,6 @@ const DroppableArea = ({ dimensions, text, cardBeingDragged, setIsHighlighted }:
 
 	const UpdateHighlighted = (distance: number, overlaps?: boolean, delta?: IPos) => {
 		setIsHighlighted(overlaps === true)
-		console.log('UpdateHighlighted overlaps', overlaps)
 		localSetHighlighted(overlaps === true)
 	}
 

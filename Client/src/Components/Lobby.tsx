@@ -94,7 +94,7 @@ const LobbyPlayer = (
     return (
         <li key={player.connectionId}>
             {player.connectionId == connectionId ? (
-                <input value={myPlayerName} onChange={(e) => onUpdateName(e.target.value)} />
+                <input maxLength={20} value={myPlayerName} onChange={(e) => onUpdateName(e.target.value)} />
             ) : (
                 player.name
             )}
