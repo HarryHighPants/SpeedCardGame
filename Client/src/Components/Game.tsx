@@ -65,6 +65,14 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 
 	const OnPickupFromKitty = () => {
 		// Call the event
+		connection?.invoke('TryPickupFromKitty').catch((e) => console.log(e))
+		// Show any messages (Move to a warnings component)
+		// assume the server will return success and update the gamestate
+	}
+
+	const OnRequestTopUp = () => {
+		// Call the event
+		connection?.invoke('TryRequestTopUp').catch((e) => console.log(e))
 		// Show any messages (Move to a warnings component)
 		// assume the server will return success and update the gamestate
 	}
@@ -80,7 +88,11 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 				onPlayCard={OnPlayCard}
 				onPickupFromKitty={OnPickupFromKitty}
 			/>
-			<Player key={`player-${gameState.Players[1].Id}`} player={gameState.Players[1]} />
+			<Player
+				onRequestTopUp={OnRequestTopUp}
+				key={`player-${gameState.Players[1].Id}`}
+				player={gameState.Players[1]}
+			/>
 			<Background key={'bg'} />
 		</GameContainer>
 	)

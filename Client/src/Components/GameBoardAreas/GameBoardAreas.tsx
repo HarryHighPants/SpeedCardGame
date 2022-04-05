@@ -1,7 +1,7 @@
-import { IGameState } from '../../Interfaces/IGameState'
+import {IGameState} from '../../Interfaces/IGameState'
 import BaseArea from './BaseArea'
 import GameBoardLayout from '../../Helpers/GameBoardLayout'
-import { CardLocationType, IPos, IRenderableCard } from '../../Interfaces/ICard'
+import {CardLocationType, IPos, IRenderableCard} from '../../Interfaces/ICard'
 import DroppableArea from './DroppableArea'
 
 interface Props {
@@ -27,7 +27,7 @@ const GameBoardAreas = ({ ourId, setHandAreaHighlighted, gameState, gameBoardDim
 									CardLocationType.Hand,
 									gameBoardDimensions
 								)}
-								cardBeingDragged={cardBeingDragged}
+								cardBeingDragged={cardBeingDragged?.location === CardLocationType.Kitty ? cardBeingDragged : undefined}
 								setIsHighlighted={setHandAreaHighlighted}
 							/>
 						) : (

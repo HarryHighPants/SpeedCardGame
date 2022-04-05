@@ -95,6 +95,26 @@ public class GameHub : Hub
         }
     }
 
+    public async Task TryPickupFromKitty()
+    {
+	    var pickupResult = gameService.TryPickupFromKitty(UserConnectionId);
+	    await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
+	    if (pickupResult is IErrorResult pickupResultError)
+	    {
+		    throw new HubException(pickupResultError.Message, new UnauthorizedAccessException(pickupResultError.Message));
+	    }
+    }
+
+    public async Task TryRequestTopUp()
+    {
+	    var topUpResult = gameService.TryRequestTopUp(UserConnectionId);
+	    await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
+	    if (topUpResult is IErrorResult topUpResultError)
+	    {
+		    throw new HubException(topUpResultError.Message, new UnauthorizedAccessException(topUpResultError.Message));
+	    }
+    }
+
     public async Task UpdateMovingCard(UpdateMovingCardData updateMovingCard)
     {
         // Check connection owns the card

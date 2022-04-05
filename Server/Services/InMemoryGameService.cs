@@ -106,6 +106,30 @@ public class InMemoryGameService : IGameService
 	    return game.TryPlayCard(GetConnectionsPlayer(connectionId).playerId.Value, cardId, centerPilIndex);
     }
 
+    public Result TryPickupFromKitty(string connectionId)
+    {
+	    var gameResult = GetConnectionsGame(connectionId);
+	    if (gameResult is IErrorResult gameResultError)
+	    {
+		    return Result.Error(gameResultError.Message);
+	    }
+	    var game = gameResult.Data;
+
+	    return game.TryPickupFromKitty(GetConnectionsPlayer(connectionId).playerId.Value);
+    }
+
+    public Result TryRequestTopUp(string connectionId)
+    {
+	    var gameResult = GetConnectionsGame(connectionId);
+	    if (gameResult is IErrorResult gameResultError)
+	    {
+		    return Result.Error(gameResultError.Message);
+	    }
+	    var game = gameResult.Data;
+
+	    return game.TryRequestTopUp(GetConnectionsPlayer(connectionId).playerId.Value);
+    }
+
     private Result<Room> GetConnectionsRoom(string connectionId)
     {
         var roomId = GetConnectionsRoomId(connectionId);
@@ -155,7 +179,7 @@ public class InMemoryGameService : IGameService
             return Result.Error<GameStateDto>("No game in room yet");
         }
 
-        return Result.Successful(new GameStateDto(room.game.State, room.connections));
+        return Result.Successful(new GameStateDto(room.game.State, room.connections, room.game.gameEngine));
     }
 
     public Result<LobbyStateDto> GetLobbyStateDto(string roomId)

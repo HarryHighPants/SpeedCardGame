@@ -7,7 +7,7 @@ import Player from './Player'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import Card from './Card'
 import { LayoutGroup, PanInfo } from 'framer-motion'
-import {clamp, GetDistanceRect} from '../Helpers/Utilities'
+import { clamp, GetDistanceRect } from '../Helpers/Utilities'
 import { IPlayer } from '../Interfaces/IPlayer'
 import gameBoardLayout from '../Helpers/GameBoardLayout'
 import GameBoardAreas from './GameBoardAreas/GameBoardAreas'
@@ -59,7 +59,7 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 			console.log('Attempt play', topCard)
 			onPlayCard(topCard, centerPileId)
 		}
-console.log(handAreaHighlighted)
+
 		// If we are trying to pickup a card from the kitty
 		if (
 			(topCard.location === CardLocationType.Kitty &&
@@ -90,6 +90,13 @@ console.log(handAreaHighlighted)
 
 	return (
 		<GameBoardContainer>
+			<GameBoardAreas
+				cardBeingDragged={cardBeingDragged}
+				ourId={playerId}
+				gameBoardDimensions={gameBoardDimensions}
+				gameState={gameState}
+				setHandAreaHighlighted={setHandAreaHighlighted}
+			/>
 			<div>
 				{renderableCards.map((c) => (
 					<Card
@@ -101,13 +108,6 @@ console.log(handAreaHighlighted)
 					/>
 				))}
 			</div>
-			<GameBoardAreas
-				cardBeingDragged={cardBeingDragged}
-				ourId={playerId}
-				gameBoardDimensions={gameBoardDimensions}
-				gameState={gameState}
-				setHandAreaHighlighted={setHandAreaHighlighted}
-			/>
 		</GameBoardContainer>
 	)
 }

@@ -7,4 +7,5 @@ export interface IPlayer {
     TopKittyCardId: number
     KittyCardsCount: number
     RequestingTopUp: boolean
+	CanRequestTopUp: boolean
 }

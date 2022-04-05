@@ -6,14 +6,16 @@ import styled from 'styled-components'
 
 interface Props {
     player: IPlayer
+	onRequestTopUp?: ()=>void
 }
 
-const Player = ({ player}: Props) => {
+const Player = ({ player, onRequestTopUp }: Props) => {
     return (
         <PlayerContainer>
 			<p>{player.Name}</p>
 			{player.RequestingTopUp && <p>Requesting top up</p>}
-        </PlayerContainer>
+			{(player.CanRequestTopUp && !player.RequestingTopUp && !!onRequestTopUp) && <button onClick={onRequestTopUp}>Request top up</button>}
+		</PlayerContainer>
     )
 }
 
