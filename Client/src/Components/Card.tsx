@@ -5,6 +5,7 @@ import { motion, PanInfo, Variants } from 'framer-motion'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import { usePrevious } from '../Helpers/UsePrevious'
 import { GetDistance, GetDistanceRect } from '../Helpers/Distance'
+import Droppable from './Droppable'
 
 export interface Props {
 	card: IRenderableCard
@@ -20,24 +21,14 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 	const [shakingAmt, setShakingAmt] = useState(0)
 	const [horizontalOffset, setHorizontalOffset] = useState(0)
 
-	// cardBeingDragged updated
-	useEffect(() => {
-		if (cardBeingDragged?.Id === card.Id) return
-		let draggingCardRect = cardBeingDragged?.ref.current?.getBoundingClientRect()
-		let ourRect = card.ref.current?.getBoundingClientRect()
-		UpdateAnimationStates(ourRect, draggingCardRect)
-	}, [cardBeingDragged?.ref.current?.getBoundingClientRect().x, cardBeingDragged])
-
-	const UpdateAnimationStates = (ourRect: DOMRect | undefined, draggingCardRect: DOMRect | undefined) => {
-		if (!draggingCardRect || !ourRect) {
+	const UpdateAnimationStates = (distance: number, isRight: boolean) => {
+		if (distance === Infinity) {
 			// Reset states
 			setShakingAmt(0)
 			setHighlighted(false)
 			setHorizontalOffset(0)
 			return
 		}
-
-		let distance = GetDistanceRect(draggingCardRect, ourRect)
 
 		// Check if we are a center card that can be dropped onto
 		let droppingOntoCenter =
@@ -54,7 +45,7 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 			cardBeingDragged?.location === CardLocationType.Kitty
 		if (droppingOntoHandCard) {
 			// We want to animate to either the left or the right on the dragged kitty card
-			setHorizontalOffset((draggingCardRect.x < ourRect.x ? 1 : 0) * 50)
+			setHorizontalOffset((isRight ? 1 : 0) * 50)
 		}
 	}
 
@@ -103,34 +94,36 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 	}
 
 	return (
-		<CardParent
-			layoutId={`card-${card.Id}`}
-			pos={card.pos}
-			whileInView={'initial'}
-			card={card}
-			ref={card.ref}
-			variants={cardVariants}
-			drag={card.ourCard}
-			onDrag={(event, info) => OnDrag(info)}
-			initial="initial"
-			whileHover="hovered"
-			whileDrag="dragging"
-			onDragStart={(e, info) => OnStartDrag(info)}
-			onDragEnd={(e, info) => OnEndDrag(info)}
-			dragSnapToOrigin={true}
-			dragElastic={1}
-			dragConstraints={{ top: 0, right: 0, bottom: 0, left: 0 }}
-			dragMomentum={false}
-		>
-			<CardImg
-				highlighted={highlighted}
-				draggable="false"
-				width={80}
-				key={card.Id}
-				src={CardImgSrc(card)}
-				alt={CardImgName(card)}
-			/>
-		</CardParent>
+		<Droppable id={card.Id} cardBeingDragged={cardBeingDragged} ourRef={card.ref} onDistanceUpdated={UpdateAnimationStates}>
+			<CardParent
+				layoutId={`card-${card.Id}`}
+				pos={card.pos}
+				whileInView={'initial'}
+				card={card}
+				ref={card.ref}
+				variants={cardVariants}
+				drag={card.ourCard}
+				onDrag={(event, info) => OnDrag(info)}
+				initial="initial"
+				whileHover="hovered"
+				whileDrag="dragging"
+				onDragStart={(e, info) => OnStartDrag(info)}
+				onDragEnd={(e, info) => OnEndDrag(info)}
+				dragSnapToOrigin={true}
+				dragElastic={1}
+				dragConstraints={{ top: 0, right: 0, bottom: 0, left: 0 }}
+				dragMomentum={false}
+			>
+				<CardImg
+					highlighted={highlighted}
+					draggable="false"
+					width={80}
+					key={card.Id}
+					src={CardImgSrc(card)}
+					alt={CardImgName(card)}
+				/>
+			</CardParent>
+		</Droppable>
 	)
 }
 

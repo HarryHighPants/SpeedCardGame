@@ -23,7 +23,6 @@ const GameBoardAreas = ({ ourId, onPickupFromKitty, gameState, gameBoardDimensio
 								CardLocationType.Hand,
 								gameBoardDimensions
 							)}
-							droppable={ourPlayer}
 						/>
 						<BaseArea
 							dimensions={GameBoardLayout.GetAreaDimensions(
@@ -31,7 +30,6 @@ const GameBoardAreas = ({ ourId, onPickupFromKitty, gameState, gameBoardDimensio
 								CardLocationType.Kitty,
 								gameBoardDimensions
 							)}
-							droppable={false}
 							text={`remaining: ${p.KittyCardsCount}`}
 						/>
 						<BaseArea
@@ -41,7 +39,6 @@ const GameBoardAreas = ({ ourId, onPickupFromKitty, gameState, gameBoardDimensio
 								gameBoardDimensions,
 								i
 							)}
-							droppable={false}
 						/>
 					</>
 				)
