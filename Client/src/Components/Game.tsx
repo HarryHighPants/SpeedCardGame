@@ -7,7 +7,6 @@ import Player from './Player'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import Card from './Card'
 import { LayoutGroup, PanInfo } from 'framer-motion'
-import { GetDistanceRect } from '../Helpers/Distance'
 import { clamp } from '../Helpers/Utilities'
 import GameBoard from './GameBoard'
 

@@ -1,9 +1,11 @@
+import { forwardRef } from 'react'
 import styled from 'styled-components'
 import { IPos } from '../../Interfaces/ICard'
 
 export interface BaseAreaProps {
 	dimensions: AreaDimensions
 	text?: string | undefined
+	highlight?: boolean
 }
 
 export interface AreaDimensions {
@@ -11,13 +13,20 @@ export interface AreaDimensions {
 	size: IPos
 }
 
-const BaseArea = ({ dimensions, text }: BaseAreaProps) => {
-	return <BaseAreaDiv padding={6} dimensions={dimensions} >
-		<AreaText><b>{text}</b></AreaText>
-	</BaseAreaDiv>
-}
+const BaseArea = forwardRef<HTMLDivElement, BaseAreaProps>(
+	({ dimensions, text, highlight }: BaseAreaProps, forwardRef) => {
+		return (
+			<BaseAreaDiv highlight={highlight} ref={forwardRef} padding={6} dimensions={dimensions}>
+				<AreaText>
+					<b>{text}</b>
+				</AreaText>
+			</BaseAreaDiv>
+		)
+	}
+)
 
-const BaseAreaDiv = styled.div<{ dimensions: AreaDimensions; padding: number }>`
+const BaseAreaDiv = styled.div<{ highlight: boolean | undefined; dimensions: AreaDimensions; padding: number }>`
+	${(p) => (p.highlight ? 'background-color: #00000047;' : '')}
 	border: 3px solid white;
 	border-radius: 10px;
 	position: absolute;
@@ -32,7 +41,7 @@ const BaseAreaDiv = styled.div<{ dimensions: AreaDimensions; padding: number }>`
 	height: ${(p) => p.dimensions.size.y}px;
 `
 
-const AreaText = styled.p<{ }>`
+const AreaText = styled.p<{}>`
 	z-index: 50;
 	font-size: x-small;
 	color: #fff4f0;
@@ -40,6 +49,5 @@ const AreaText = styled.p<{ }>`
 	height: 25px;
 	text-transform: uppercase;
 `
-
 
 export default BaseArea

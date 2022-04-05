@@ -1,30 +1,47 @@
 import { IGameState } from '../../Interfaces/IGameState'
 import BaseArea from './BaseArea'
 import GameBoardLayout from '../../Helpers/GameBoardLayout'
-import { CardLocationType, IPos } from '../../Interfaces/ICard'
+import { CardLocationType, IPos, IRenderableCard } from '../../Interfaces/ICard'
+import DroppableArea from './DroppableArea'
 
 interface Props {
 	gameState: IGameState
 	ourId: string | null | undefined
-	onPickupFromKitty: () => void
+	setHandAreaHighlighted: (higlighted: boolean) => void
 	gameBoardDimensions: IPos
+	cardBeingDragged: IRenderableCard | undefined
 }
 
-const GameBoardAreas = ({ ourId, onPickupFromKitty, gameState, gameBoardDimensions }: Props) => {
+const GameBoardAreas = ({ ourId, setHandAreaHighlighted, gameState, gameBoardDimensions, cardBeingDragged }: Props) => {
 	return (
 		<>
 			{gameState.Players.map((p, i) => {
 				let ourPlayer = p.Id === ourId
 				return (
 					<>
+						{ourPlayer ? (
+							<DroppableArea
+								key={`area-${CardLocationType.Hand}-${i}`}
+								dimensions={GameBoardLayout.GetAreaDimensions(
+									ourPlayer,
+									CardLocationType.Hand,
+									gameBoardDimensions
+								)}
+								cardBeingDragged={cardBeingDragged}
+								setIsHighlighted={setHandAreaHighlighted}
+							/>
+						) : (
+							<BaseArea
+								key={`area-${CardLocationType.Hand}-${i}`}
+								dimensions={GameBoardLayout.GetAreaDimensions(
+									ourPlayer,
+									CardLocationType.Hand,
+									gameBoardDimensions
+								)}
+							/>
+						)}
 						<BaseArea
-							dimensions={GameBoardLayout.GetAreaDimensions(
-								ourPlayer,
-								CardLocationType.Hand,
-								gameBoardDimensions
-							)}
-						/>
-						<BaseArea
+							key={`area-${CardLocationType.Kitty}-${i}`}
 							dimensions={GameBoardLayout.GetAreaDimensions(
 								ourPlayer,
 								CardLocationType.Kitty,
@@ -33,6 +50,7 @@ const GameBoardAreas = ({ ourId, onPickupFromKitty, gameState, gameBoardDimensio
 							text={`remaining: ${p.KittyCardsCount}`}
 						/>
 						<BaseArea
+							key={`area-${CardLocationType.Center}-${i}`}
 							dimensions={GameBoardLayout.GetAreaDimensions(
 								false,
 								CardLocationType.Center,

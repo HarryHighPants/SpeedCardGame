@@ -7,11 +7,10 @@ import Player from './Player'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import Card from './Card'
 import { LayoutGroup, PanInfo } from 'framer-motion'
-import { GetDistanceRect } from '../Helpers/Distance'
-import { clamp } from '../Helpers/Utilities'
+import {clamp, GetDistanceRect} from '../Helpers/Utilities'
 import { IPlayer } from '../Interfaces/IPlayer'
 import gameBoardLayout from '../Helpers/GameBoardLayout'
-import GameBoardAreas from "./GameBoardAreas/GameBoardAreas";
+import GameBoardAreas from './GameBoardAreas/GameBoardAreas'
 
 interface Props {
 	playerId: string | undefined | null
@@ -24,7 +23,8 @@ interface Props {
 
 const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPlayCard, onPickupFromKitty }: Props) => {
 	const [renderableCards, setRenderableCards] = useState<IRenderableCard[]>([] as IRenderableCard[])
-	const [draggingCard, setDraggingCard] = useState<IRenderableCard>()
+	const [cardBeingDragged, setCardBeingDragged] = useState<IRenderableCard>()
+	const [handAreaHighlighted, setHandAreaHighlighted] = useState<boolean>(false)
 
 	useEffect(() => {
 		UpdateRenderableCards()
@@ -41,15 +41,17 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 
 	const OnEndDrag = (topCard: IRenderableCard) => {
 		let bottomCard = GetBottomCard()
-		if (!!bottomCard) {
-			DetectMove(topCard, bottomCard)
-		}
-		setDraggingCard(undefined)
+		DetectMove(topCard, bottomCard)
+		setCardBeingDragged(undefined)
 	}
 
-	const DetectMove = (topCard: IRenderableCard, bottomCard: IRenderableCard) => {
+	const DetectMove = (topCard: IRenderableCard, bottomCard: IRenderableCard | undefined) => {
 		// If we are trying to play a card into the center
-		if (topCard.location === CardLocationType.Hand && bottomCard.location === CardLocationType.Center) {
+		if (
+			topCard.location === CardLocationType.Hand &&
+			!!bottomCard &&
+			bottomCard.location === CardLocationType.Center
+		) {
 			let centerPileCard = gameState.CenterPiles.find((c) => c.Id === bottomCard.Id)
 			if (!centerPileCard) return
 			let centerPileId = gameState.CenterPiles.indexOf(centerPileCard)
@@ -57,12 +59,14 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 			console.log('Attempt play', topCard)
 			onPlayCard(topCard, centerPileId)
 		}
-
+console.log(handAreaHighlighted)
 		// If we are trying to pickup a card from the kitty
 		if (
-			topCard.location === CardLocationType.Kitty &&
-			bottomCard.location === CardLocationType.Hand &&
-			bottomCard.ourCard
+			(topCard.location === CardLocationType.Kitty &&
+				!!bottomCard &&
+				bottomCard.location === CardLocationType.Hand &&
+				bottomCard.ourCard) ||
+			handAreaHighlighted
 		) {
 			console.log('Attempt pickup from kitty', topCard)
 			onPickupFromKitty()
@@ -74,7 +78,7 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 			return {
 				card: c,
 				distance: GetDistanceRect(
-					draggingCard?.ref.current?.getBoundingClientRect(),
+					cardBeingDragged?.ref.current?.getBoundingClientRect(),
 					c.ref.current?.getBoundingClientRect()
 				),
 			}
@@ -87,17 +91,23 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 	return (
 		<GameBoardContainer>
 			<div>
-			{renderableCards.map((c) => (
-				<Card
-					key={`card-${c.Id}`}
-					card={c}
-					setDraggingCard={setDraggingCard}
-					onDragEnd={OnEndDrag}
-					cardBeingDragged={draggingCard}
-				/>
-			))}
+				{renderableCards.map((c) => (
+					<Card
+						key={`card-${c.Id}`}
+						card={c}
+						setDraggingCard={setCardBeingDragged}
+						onDragEnd={OnEndDrag}
+						cardBeingDragged={cardBeingDragged}
+					/>
+				))}
 			</div>
-			<GameBoardAreas ourId={playerId} gameBoardDimensions={gameBoardDimensions} gameState={gameState} onPickupFromKitty={onPickupFromKitty}/>
+			<GameBoardAreas
+				cardBeingDragged={cardBeingDragged}
+				ourId={playerId}
+				gameBoardDimensions={gameBoardDimensions}
+				gameState={gameState}
+				setHandAreaHighlighted={setHandAreaHighlighted}
+			/>
 		</GameBoardContainer>
 	)
 }

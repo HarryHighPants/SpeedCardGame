@@ -4,8 +4,8 @@ import { CardLocationType, CardValue, ICard, IPos, IRenderableCard, Suit } from 
 import { motion, PanInfo, Variants } from 'framer-motion'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import { usePrevious } from '../Helpers/UsePrevious'
-import { GetDistance, GetDistanceRect } from '../Helpers/Distance'
 import Droppable from './Droppable'
+import {GetDistance} from "../Helpers/Utilities";
 
 export interface Props {
 	card: IRenderableCard
@@ -21,7 +21,7 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 	const [shakingAmt, setShakingAmt] = useState(0)
 	const [horizontalOffset, setHorizontalOffset] = useState(0)
 
-	const UpdateAnimationStates = (distance: number, isRight: boolean) => {
+	const UpdateAnimationStates = (distance: number, overlaps?: boolean, delta?: IPos) => {
 		if (distance === Infinity) {
 			// Reset states
 			setShakingAmt(0)
@@ -45,7 +45,7 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 			cardBeingDragged?.location === CardLocationType.Kitty
 		if (droppingOntoHandCard) {
 			// We want to animate to either the left or the right on the dragged kitty card
-			setHorizontalOffset((isRight ? 1 : 0) * 50)
+			setHorizontalOffset((!!delta && delta?.x < 0 ? 1 : 0) * 50)
 		}
 	}
 
