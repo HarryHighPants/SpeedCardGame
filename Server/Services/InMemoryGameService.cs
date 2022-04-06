@@ -9,7 +9,7 @@ using Engine.Models;
 
 public class InMemoryGameService : IGameService
 {
-    private static readonly ConcurrentDictionary<string, Room> rooms = new();
+    private readonly ConcurrentDictionary<string, Room> rooms = new();
 
     public InMemoryGameService()
     {
@@ -98,7 +98,7 @@ public class InMemoryGameService : IGameService
         return Result.Successful();
     }
 
-    public async Task RunBots(string roomId, IGameService.UpdateGameState updateGameState)
+    public async Task RunBots(string roomId,  Func<string, Task> updateGameState)
     {
 	    if (!rooms.ContainsKey(roomId))
 	    {
@@ -182,7 +182,7 @@ public class InMemoryGameService : IGameService
         // Check we have a room with that Id
         if (!rooms.ContainsKey(roomId))
         {
-            return Result.Error<GameStateDto>("Connection not found in any room");
+            return Result.Error<GameStateDto>("Game not found in any room");
         }
 
         // Check we have a game in the room

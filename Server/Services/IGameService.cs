@@ -9,16 +9,15 @@ using Engine.Models;
 public interface IGameService
 {
 
+	public void GetRoom(string roomId);
+
 	public void JoinRoom(string roomId, string connectionId);
 
 	public void LeaveRoom(string roomId, string connectionId);
 
 	public void UpdateName(string updatedName, string connectionId);
 
-	public delegate Task UpdateGameState(string roomId);
 	public Result StartGame(string connectionId, bool botGame, int botDifficulty);
-
-	public Task RunBots(string gameId, UpdateGameState updateGameState);
 
 	public Connection GetConnectionsPlayer(string connectionId);
 
@@ -54,14 +53,12 @@ public class Room
 	public ConcurrentDictionary<string, Connection> connections = new();
 	public WebGame? game;
 	public string roomId;
-	public bool isBotGame;
+	public bool isBotGame; //todo see if I need this
 	public int botDifficulty;
 }
 
 public class Connection
 {
-	public bool isBot;
-	public BotData botData;
 	public string connectionId;
 	public string name;
 	public int? playerId;
@@ -85,10 +82,10 @@ public class GameStateDto
 {
 	public List<PlayerDto> Players;
 	public List<Card> CenterPiles;
-	public string lastMove;
+	public string LastMove;
+	public int? WinnerId;
 
-	public GameStateDto(GameState gameState, ConcurrentDictionary<string, Connection> connections,
-		GameEngine gameEngine)
+	public GameStateDto(GameState gameState, ConcurrentDictionary<string, Connection> connections, GameEngine gameEngine)
 	{
 		Players = gameState.Players
 			.Select((p, i) => new PlayerDto(p, gameEngine.Checks.CanRequestTopUp(gameState, i).Success))
@@ -105,7 +102,11 @@ public class GameStateDto
 		}
 
 		CenterPiles = gameState.CenterPiles.Select((pile, i) => pile.Cards.Last()).ToList();
-		lastMove = gameState.LastMove;
+		LastMove = gameState.LastMove;
+
+		var winnerResult = gameEngine.Checks.TryGetWinner(gameState);
+		WinnerId = gameEngine.Checks.TryGetWinner(gameState).Map<int?>(x => x, _ => null);
+		// WinnerId = winnerResult.Success ? winnerResult.Data : null;
 	}
 }
 
@@ -119,6 +120,8 @@ public record PlayerDto
 	public bool RequestingTopUp { get; init; }
 	public bool CanRequestTopUp { get; init; }
 
+	public string LastMove { get; init; } = "";
+
 	public PlayerDto(Player player, bool canRequestTopUp)
 	{
 		Id = player.Id.ToString();
@@ -128,5 +131,6 @@ public record PlayerDto
 		RequestingTopUp = player.RequestingTopUp;
 		TopKittyCardId = player.KittyCards.Last().Id;
 		CanRequestTopUp = canRequestTopUp;
+		LastMove = player.LastMove;
 	}
 }

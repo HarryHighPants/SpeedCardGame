@@ -14,6 +14,30 @@ public abstract class Result
     public static Result<T> Error<T>(string message) => new ErrorResult<T>(message);
 
     public static Result Error(string message) => new ErrorResult(message);
+
+    public TR Map<TR>(Func<TR> success, Func<IErrorResult, TR> error)
+    {
+	    if (Success)
+	    {
+		    return success();
+	    }
+	    else
+	    {
+		    return error((IErrorResult)this);
+	    }
+    }
+
+    public Result MapError(Func<IErrorResult, Result> error)
+    {
+	    if (Success)
+	    {
+		    return Result.Successful();
+	    }
+	    else
+	    {
+		    return error((IErrorResult)this);
+	    }
+    }
 }
 
 public abstract class Result<T> : Result, IEnumerable<T>
@@ -31,6 +55,30 @@ public abstract class Result<T> : Result, IEnumerable<T>
                     $"You can't access .{nameof(Data)} when .{nameof(Success)} is false. Error Message:{(this as IErrorResult)?.Message}");
         set => _data = value;
     }
+
+    public TR Map<TR>(Func<T, TR> success, Func<IErrorResult, TR> error)
+    {
+	    if (Success)
+	    {
+		    return success(Data);
+	    }
+	    else
+	    {
+		    return error((IErrorResult)this);
+	    }
+    }
+
+    // public TR FlatMap<TR>(Func<T, Result<TR>> success, Func<IErrorResult, Result<TR>> error)
+    // {
+	   //  if (Success)
+	   //  {
+		  //   return success(Data);
+	   //  }
+	   //  else
+	   //  {
+		  //   return error((IErrorResult)this);
+	   //  }
+    // }
 
     public IEnumerator<T> GetEnumerator()
     {

@@ -8,10 +8,12 @@ using Services;
 public class GameHub : Hub
 {
     private readonly IGameService gameService;
+    private readonly IHubContext<GameHub> hubContext;
 
-    public GameHub(IGameService gameService)
+    public GameHub(IGameService gameService, IHubContext<GameHub> hubContext)
     {
         this.gameService = gameService;
+        this.hubContext = hubContext;
     }
 
     // private string UserIdentifier => Context.UserIdentifier!;
@@ -82,7 +84,7 @@ public class GameHub : Hub
             throw new HubException(startGameError.Message, new UnauthorizedAccessException(startGameError.Message));
         }
         await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
-        // await gameService.RunBots(gameService.GetConnectionsRoomId(UserConnectionId), SendGameState);
+        gameService.RunBots(gameService.GetConnectionsRoomId(UserConnectionId), SendGameState);
     }
 
     public async Task TryPlayCard(int cardId, int centerPileId)
@@ -130,7 +132,7 @@ public class GameHub : Hub
     }
 
 
-    public async Task SendGameState(string roomId)
+    private async Task SendGameState(string roomId)
     {
         if (!gameService.GameStarted(roomId))
         {
@@ -148,10 +150,10 @@ public class GameHub : Hub
 
         // Send the gameState to the roomId
         var jsonData = JsonConvert.SerializeObject(gameStateResult.Data);
-        await Clients.Group(roomId).SendAsync("UpdateGameState", jsonData);
+        await hubContext.Clients.Group(roomId).SendAsync("UpdateGameState", jsonData);
     }
 
-    public async Task SendLobbyState(string roomId)
+    private async Task SendLobbyState(string roomId)
     {
         // Get the gameState from the gameService
         var lobbyStateResult = gameService.GetLobbyStateDto(roomId);

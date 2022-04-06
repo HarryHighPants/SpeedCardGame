@@ -5,7 +5,7 @@ import { motion, PanInfo, Variants } from 'framer-motion'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import { usePrevious } from '../Helpers/UsePrevious'
 import Droppable from './Droppable'
-import {GetDistance} from "../Helpers/Utilities";
+import { GetDistance } from '../Helpers/Utilities'
 
 export interface Props {
 	card: IRenderableCard
@@ -69,14 +69,14 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 	}
 
 	const cardVariants: Variants = {
-		initial: {
+		initial: (shakingAmt)=>( {
 			scale: 1,
 			zIndex: card.zIndex,
 			top: card.pos.y,
 			left: card.pos.x + horizontalOffset,
 			rotate: shakingAmt,
 			transition: { ease: 'linear' },
-		},
+		}),
 		hovered: card.ourCard
 			? {
 					scale: 1.03,
@@ -94,8 +94,15 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 	}
 
 	return (
-		<Droppable id={card.Id} cardBeingDragged={cardBeingDragged} ourRef={card.ref} onDistanceUpdated={UpdateAnimationStates}>
+		<Droppable
+			id={card.Id}
+			cardBeingDragged={cardBeingDragged}
+			ourRef={card.ref}
+			onDistanceUpdated={UpdateAnimationStates}
+		>
 			<CardParent
+				// animate={{ rotate: [-shakingAmt, shakingAmt], transition: { repeat: Infinity } }}
+				custom={shakingAmt}
 				layoutId={`card-${card.Id}`}
 				pos={card.pos}
 				whileInView={'initial'}

@@ -79,7 +79,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 
 	return (
 		<GameContainer>
-			<Player key={`player-${gameState.Players[0].Id}`} player={gameState.Players[0]} />
+			<Player key={`player-${gameState.Players[0].Id}`} player={gameState.Players[0]} onTop={false} />
 			<GameBoard
 				playerId={connectionId}
 				gameState={gameState}
@@ -92,6 +92,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 				onRequestTopUp={OnRequestTopUp}
 				key={`player-${gameState.Players[1].Id}`}
 				player={gameState.Players[1]}
+				onTop={false}
 			/>
 			<Background key={'bg'} />
 		</GameContainer>
