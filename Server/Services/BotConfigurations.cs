@@ -1,5 +1,3 @@
-namespace CliGame;
-
 using Engine;
 
 public enum BotDifficulty
@@ -10,11 +8,9 @@ public enum BotDifficulty
     Impossible
 }
 
-public class BotRunnerCli
+public class BotConfigurations
 {
-	public static BotData Bot { get; private set; }
-	public static void SetDifficulty(BotDifficulty difficulty) => Bot = Bots[difficulty];
-
+	public static BotData GetBot(BotDifficulty difficulty) => BotConfigurations.Bots[difficulty];
     private static readonly Dictionary<BotDifficulty, BotData> Bots = new()
     {
         {

@@ -1,3 +1,4 @@
+import { NavigateOptions } from 'react-router-dom'
 import { IPos } from '../Interfaces/ICard'
 
 // Clamp number between two values with the following line:
@@ -28,9 +29,9 @@ export const Overlaps = (rect1: DOMRect | undefined, rect2: DOMRect | undefined)
 }
 
 export const GetRandomId = () => {
-	return GetRandomInt(99999999);
+	return GetRandomInt(99999999)
 }
 
 export const GetRandomInt = (max: number) => {
-	return Math.floor(Math.random() * max);
+	return Math.floor(Math.random() * max)
 }

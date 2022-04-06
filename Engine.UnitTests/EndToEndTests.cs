@@ -3,6 +3,7 @@ namespace Engine.UnitTests;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using CliGame.Helpers;
 using Helpers;
 using Models;
 using Xunit;
@@ -17,7 +18,7 @@ public class EndToEndTests
     [Fact]
     public void BotGame()
     {
-        var game = new Game();
+        var game = new CliGame();
 
         var movesMade = 0;
         while (game.TryGetWinner().Failure && movesMade < 1000)

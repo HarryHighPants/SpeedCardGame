@@ -3,12 +3,13 @@ namespace Engine;
 using Helpers;
 using Models;
 
-public class Game
+public abstract class Game
 {
-    public Game(List<string>? playerNames = null, Settings? settings = null, GameEngine? gameEngine = null)
+
+    protected void Initialise(List<string>? playerNames = null, Settings? settings = null, GameEngine? gameEngine = null)
     {
-        this.gameEngine = gameEngine ?? new GameEngine();
-        State = this.gameEngine.NewGame(playerNames, settings);
+	    this.gameEngine = gameEngine ?? new GameEngine();
+	    State = this.gameEngine.NewGame(playerNames, settings);
     }
 
     public GameEngine gameEngine { get; protected set; }

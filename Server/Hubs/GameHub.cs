@@ -7,7 +7,6 @@ using Services;
 
 public class GameHub : Hub
 {
-    // Todo: update to interface
     private readonly IGameService gameService;
 
     public GameHub(IGameService gameService)
@@ -75,14 +74,15 @@ public class GameHub : Hub
         await SendLobbyState(roomId);
     }
 
-    public async Task StartGame()
+    public async Task StartGame(bool botGame = false, int botDifficulty = 0)
     {
-        var startGameResult = gameService.StartGame(UserConnectionId);
+        var startGameResult = gameService.StartGame(UserConnectionId, botGame, botDifficulty);
         if (startGameResult is IErrorResult startGameError)
         {
             throw new HubException(startGameError.Message, new UnauthorizedAccessException(startGameError.Message));
         }
         await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
+        // await gameService.RunBots(gameService.GetConnectionsRoomId(UserConnectionId), SendGameState);
     }
 
     public async Task TryPlayCard(int cardId, int centerPileId)

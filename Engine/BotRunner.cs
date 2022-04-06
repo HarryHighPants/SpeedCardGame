@@ -13,9 +13,12 @@ public struct BotData
     public int SlowestResponseTimeMs;
 }
 
-public class BotRunner
+public static class BotRunner
 {
-    public static Result MakeMove(
+	// public BotData data { get; init; }
+	// public BotRunner(BotData data) => this.data = data;
+
+	public static Result MakeMove(
         Game game, int playerId)
     {
         var winnerResult = game.TryGetWinner();
