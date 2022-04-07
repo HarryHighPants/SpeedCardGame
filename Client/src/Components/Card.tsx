@@ -45,7 +45,7 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 			cardBeingDragged?.location === CardLocationType.Kitty
 		if (droppingOntoHandCard) {
 			// We want to animate to either the left or the right on the dragged kitty card
-			setHorizontalOffset((!!delta && delta?.x < 0 ? 1 : 0) * 50)
+			setHorizontalOffset((!!delta && delta?.X < 0 ? 1 : 0) * 50)
 		}
 	}
 
@@ -56,7 +56,7 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 
 	const OnDrag = (panInfo: PanInfo) => {
 		// setDragging(true)
-		let distance = GetDistance({ x: panInfo.offset.x, y: panInfo.offset.y }, { x: 0, y: 0 })
+		let distance = GetDistance({ X: panInfo.offset.x, Y: panInfo.offset.y }, { X: 0, Y: 0 })
 		if (distance === dragPosDelta) return
 		setDragPosDelta(distance)
 		setDraggingCard({ ...card })
@@ -72,15 +72,15 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 		initial: (shakingAmt)=>( {
 			scale: 1,
 			zIndex: card.zIndex,
-			top: card.pos.y,
-			left: card.pos.x + horizontalOffset,
+			top: card.pos.Y,
+			left: card.pos.X + horizontalOffset,
 			rotate: shakingAmt,
 			transition: { ease: 'linear' },
 		}),
 		hovered: card.ourCard
 			? {
 					scale: 1.03,
-					top: card.pos.y - 20,
+					top: card.pos.Y - 20,
 					boxShadow: '0px 3px 3px rgba(0,0,0,0.15)',
 			  }
 			: {},
@@ -89,7 +89,7 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 			boxShadow: '0px 5px 5px rgba(0,0,0,0.1)',
 			cursor: 'grabbing',
 			zIndex: 15,
-			top: card.pos.y - 20,
+			top: card.pos.Y - 20,
 		},
 	}
 

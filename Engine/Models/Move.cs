@@ -2,13 +2,8 @@ namespace Engine.Models;
 
 using System.Linq;
 
-public record Move
+public record Move(MoveType Type, int? PlayerId = null, int? CardId = null, int? CenterPileIndex = null)
 {
-    public int? CardId;
-    public int? CenterPileIndex;
-    public int? PlayerId;
-    public MoveType Type;
-
     public string GetDescription(GameState gameState, bool minified = false, bool includeSuit = false) =>
         Type switch
         {

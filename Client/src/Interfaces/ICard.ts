@@ -5,8 +5,8 @@ export interface ICard {
 }
 
 export interface IPos {
-	x: number
-	y: number
+	X: number
+	Y: number
 }
 
 export enum CardValue {

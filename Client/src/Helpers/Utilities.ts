@@ -6,8 +6,8 @@ export const clamp = (num: number, min: number, max: number) => Math.min(Math.ma
 
 export const GetDistance = (pos1: IPos | undefined, pos2: IPos | undefined) => {
 	if (!pos1 || !pos2) return Infinity
-	let a = pos1.x - pos2.x
-	let b = pos1.y - pos2.y
+	let a = pos1.X - pos2.X
+	let b = pos1.Y - pos2.Y
 	return Math.sqrt(a * a + b * b)
 }
 

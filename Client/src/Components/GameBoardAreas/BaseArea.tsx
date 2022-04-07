@@ -35,10 +35,10 @@ const BaseAreaDiv = styled.div<{ highlight: boolean | undefined; dimensions: Are
 	align-items: center;
 	justify-content: flex-end;
 	padding: ${(p) => p.padding}px;
-	left: ${(p) => p.dimensions.pos.x - 9}px;
-	top: ${(p) => p.dimensions.pos.y - 9}px;
-	width: ${(p) => p.dimensions.size.x}px;
-	height: ${(p) => p.dimensions.size.y}px;
+	left: ${(p) => p.dimensions.pos.X - 9}px;
+	top: ${(p) => p.dimensions.pos.Y - 9}px;
+	width: ${(p) => p.dimensions.size.X}px;
+	height: ${(p) => p.dimensions.size.Y}px;
 `
 
 const AreaText = styled.p<{}>`

@@ -30,17 +30,17 @@ const Lobby = ({ connection, roomId }: Props) => {
 	const UpdateLobbyData = (data: any) => {
 		let lobbyData: ILobby = JSON.parse(data)
 		setLobbyData(lobbyData)
-		let myPlayerInfo = lobbyData.connections.find((c) => c.connectionId === connectionId)
+		let myPlayerInfo = lobbyData.Connections.find((c) => c.ConnectionId === connectionId)
 
 		let inputGameType = searchParams.get('type') as GameType
-		if (!!inputGameType && !lobbyData.gameStarted && !lobbyData.isBotGame && inputGameType === 'bot') {
+		if (!!inputGameType && !lobbyData.GameStarted && !lobbyData.IsBotGame && inputGameType === 'bot') {
 			let inputDifficulty = searchParams.get('difficulty')
 			let botDifficulty = !!inputDifficulty ? +inputDifficulty : 0
 			onStartGame(true, botDifficulty)
 		}
 
 		if (myPlayerInfo) {
-			setMyPlayerName(myPlayerInfo.name)
+			setMyPlayerName(myPlayerInfo.Name)
 		}
 	}
 
@@ -71,13 +71,13 @@ const Lobby = ({ connection, roomId }: Props) => {
 					<h4>Players</h4>
 					{lobbyData != null ? (
 						<ul>
-							{lobbyData?.connections?.map((p) => LobbyPlayer(connectionId, myPlayerName, p, UpdateName))}
+							{lobbyData?.Connections?.map((p) => LobbyPlayer(connectionId, myPlayerName, p, UpdateName))}
 						</ul>
 					) : (
 						<div>Loading</div>
 					)}
 				</div>
-				<button disabled={lobbyData == null || lobbyData.connections?.length < 2} onClick={() => onStartGame()}>
+				<button disabled={lobbyData == null || lobbyData.Connections?.length < 2} onClick={() => onStartGame()}>
 					Start Game
 				</button>
 			</div>
@@ -94,11 +94,11 @@ const LobbyPlayer = (
 	onUpdateName: (newName: string) => void
 ) => {
 	return (
-		<li key={player.connectionId}>
-			{player.connectionId == connectionId ? (
+		<li key={player.ConnectionId}>
+			{player.ConnectionId == connectionId ? (
 				<input maxLength={20} value={myPlayerName} onChange={(e) => onUpdateName(e.target.value)} />
 			) : (
-				player.name
+				player.Name
 			)}
 		</li>
 	)

@@ -10,6 +10,6 @@ public class WebGame : Game
 {
 	public WebGame(List<KeyValuePair<string,Server.Connection>> connections, Settings? settings = null, GameEngine? gameEngine = null)
     {
-	    Initialise(connections.Select(c=>c.Value.name).ToList(), settings, gameEngine);
+	    Initialise(connections.Select(c=>c.Value.Name).ToList(), settings, gameEngine);
     }
 }

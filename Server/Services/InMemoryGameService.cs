@@ -21,20 +21,30 @@ public class InMemoryGameService : IGameService
         // Create the room if we don't have one yet
         if (!rooms.ContainsKey(roomId))
         {
-            rooms.TryAdd(roomId, new Room(){roomId = roomId});
+            rooms.TryAdd(roomId, new Room(){RoomId = roomId});
         }
 
         // Add the connection to the room
         var room = rooms[roomId];
-        if (!room.connections.ContainsKey(connectionId))
+        if (!room.Connections.ContainsKey(connectionId))
         {
-            room.connections.TryAdd(connectionId, new Connection {connectionId = connectionId, name = "Player"});
+            room.Connections.TryAdd(connectionId, new Connection {ConnectionId = connectionId, Name = "Player"});
         }
 
         if (GameStarted(roomId))
         {
             UpdateConnectionsPlayerId(roomId);
         }
+    }
+
+    public int ConnectionsInRoomCount(string roomId)
+    {
+	    if (!rooms.ContainsKey(roomId))
+	    {
+		    return -1;
+	    }
+
+	    return rooms[roomId].Connections.Count;
     }
 
     public void LeaveRoom(string roomId, string connectionId)
@@ -47,16 +57,21 @@ public class InMemoryGameService : IGameService
 
         // Remove the connection to the room
         var room = rooms[roomId];
-        if (room.connections.ContainsKey(connectionId))
+        if (room.Connections.ContainsKey(connectionId))
         {
-            room.connections.Remove(connectionId, out _);
+            room.Connections.TryRemove(connectionId, out _);
+        }
+
+        if (room.Connections.IsEmpty)
+        {
+	        rooms.TryRemove(roomId, out _);
         }
     }
 
     public void UpdateName(string updatedName, string connectionId) =>
-        GetConnectionsPlayer(connectionId).name = updatedName;
+        GetConnectionsPlayer(connectionId).Name = updatedName;
 
-    public Result StartGame(string connectionId, bool botGame, int botDifficulty)
+    public Result StartGame(string connectionId)
     {
         var roomResult = GetConnectionsRoom(connectionId);
         if (roomResult is IErrorResult roomError)
@@ -65,46 +80,28 @@ public class InMemoryGameService : IGameService
         }
         var room = roomResult.Data;
 
-        if (botGame)
-        {
-	        var bot = BotConfigurations.GetBot((BotDifficulty)botDifficulty);
-	        room.connections.TryAdd(bot.Name,
-		        new Connection() {name = bot.Name, connectionId = bot.Name, isBot = true, botData = bot});
-        }
-
-        if (room.connections.Count < GameEngine.PlayersPerGame)
+        if (room.Connections.Count < GameEngine.PlayersPerGame)
         {
             return Result.Error("Must have a minimum of two players to start the game");
         }
 
-        if (room.game != null)
+        if (room.Game != null)
         {
             return Result.Error("Game already exists");
         }
 
-        var connectionsPlaying = room.connections.Take(GameEngine.PlayersPerGame).ToList();
+        var connectionsPlaying = room.Connections.Take(GameEngine.PlayersPerGame).ToList();
         // Create the game with the players
-        room.game = new WebGame(connectionsPlaying, new Settings());
-        room.isBotGame = botGame;
-        room.botDifficulty = botDifficulty;
+        room.Game = new WebGame(connectionsPlaying, new Settings());
 
         // Update the connections with their playerId
         for (var i = 0; i < connectionsPlaying.Count; i++)
         {
 	        var connection = connectionsPlaying[i];
-	        room.connections[connection.Key].playerId = room.game.State.Players[i].Id;
+	        room.Connections[connection.Key].PlayerId = room.Game.State.Players[i].Id;
         }
 
         return Result.Successful();
-    }
-
-    public async Task RunBots(string roomId,  Func<string, Task> updateGameState)
-    {
-	    if (!rooms.ContainsKey(roomId))
-	    {
-		    throw new KeyNotFoundException();
-	    }
-	    await rooms[roomId].game.RunBots(()=> updateGameState(roomId));
     }
 
     public Result TryPlayCard(string connectionId, int cardId, int centerPilIndex)
@@ -116,7 +113,7 @@ public class InMemoryGameService : IGameService
 	    }
 	    var game = gameResult.Data;
 
-	    return game.TryPlayCard(GetConnectionsPlayer(connectionId).playerId.Value, cardId, centerPilIndex);
+	    return game.TryPlayCard(GetConnectionsPlayer(connectionId).PlayerId.Value, cardId, centerPilIndex);
     }
 
     public Result TryPickupFromKitty(string connectionId)
@@ -128,7 +125,7 @@ public class InMemoryGameService : IGameService
 	    }
 	    var game = gameResult.Data;
 
-	    return game.TryPickupFromKitty(GetConnectionsPlayer(connectionId).playerId.Value);
+	    return game.TryPickupFromKitty(GetConnectionsPlayer(connectionId).PlayerId.Value);
     }
 
     public Result TryRequestTopUp(string connectionId)
@@ -140,7 +137,12 @@ public class InMemoryGameService : IGameService
 	    }
 	    var game = gameResult.Data;
 
-	    return game.TryRequestTopUp(GetConnectionsPlayer(connectionId).playerId.Value);
+	    return game.TryRequestTopUp(GetConnectionsPlayer(connectionId).PlayerId.Value);
+    }
+
+    public WebGame GetGame(string roomId)
+    {
+	    return rooms[roomId].Game;
     }
 
     private Result<Room> GetConnectionsRoom(string connectionId)
@@ -163,19 +165,19 @@ public class InMemoryGameService : IGameService
         }
         var room = roomResult.Data;
 
-        if (!GameStarted(room.roomId))
+        if (!GameStarted(room.RoomId))
         {
             return Result.Error<WebGame>("Game hasn't started yet");
         }
 
-        return Result.Successful(room.game!);
+        return Result.Successful(room.Game!);
     }
 
     public Connection GetConnectionsPlayer(string connectionId) =>
-        rooms[GetConnectionsRoomId(connectionId)].connections[connectionId];
+        rooms[GetConnectionsRoomId(connectionId)].Connections[connectionId];
 
     public string GetConnectionsRoomId(string connectionId) =>
-        rooms.FirstOrDefault(g => g.Value.connections.ContainsKey(connectionId)).Key;
+        rooms.FirstOrDefault(g => g.Value.Connections.ContainsKey(connectionId)).Key;
 
     public Result<GameStateDto> GetGameStateDto(string roomId)
     {
@@ -192,7 +194,7 @@ public class InMemoryGameService : IGameService
             return Result.Error<GameStateDto>("No game in room yet");
         }
 
-        return Result.Successful(new GameStateDto(room.game.State, room.connections, room.game.gameEngine));
+        return Result.Successful(new GameStateDto(room.Game.State, room.Connections, room.Game.gameEngine));
     }
 
     public Result<LobbyStateDto> GetLobbyStateDto(string roomId)
@@ -204,7 +206,7 @@ public class InMemoryGameService : IGameService
         }
 
         var room = rooms[roomId];
-        var LobbyStateDto = new LobbyStateDto(room.connections.Values.ToList(), room.isBotGame, room.game != null);
+        var LobbyStateDto = new LobbyStateDto(room.Connections.Values.ToList(), room.IsBotGame, room.Game != null);
         return Result.Successful(LobbyStateDto);
     }
 
@@ -215,22 +217,22 @@ public class InMemoryGameService : IGameService
             return false;
         }
 
-        return rooms[roomId].game != null;
+        return rooms[roomId].Game != null;
     }
 
-    private static void UpdateConnectionsPlayerId(string roomId)
+    private void UpdateConnectionsPlayerId(string roomId)
     {
         var room = rooms[roomId];
-        var assignedPlayers = room.connections.Values.Where(c => c.playerId != null).ToList();
-        if (assignedPlayers.Count < GameEngine.PlayersPerGame && room.connections.Count >= GameEngine.PlayersPerGame)
+        var assignedPlayers = room.Connections.Values.Where(c => c.PlayerId != null).ToList();
+        if (assignedPlayers.Count < GameEngine.PlayersPerGame && room.Connections.Count >= GameEngine.PlayersPerGame)
         {
             // At least 1 connection can be assigned to a player
-            var assignedPlayerIds = assignedPlayers.Select(p => p.playerId!.Value).ToList();
+            var assignedPlayerIds = assignedPlayers.Select(p => p.PlayerId!.Value).ToList();
 
             // Get a list of assignable playerIds
             var playerIdsToAssign = Enumerable.Range(0, GameEngine.PlayersPerGame).ToList().Except(assignedPlayerIds).ToList();
 
-            var unassignedPlayers = room.connections.Values.Where(c => c.playerId == null).ToList();
+            var unassignedPlayers = room.Connections.Values.Where(c => c.PlayerId == null).ToList();
 
             for (var i = 0; i < unassignedPlayers.Count; i++)
             {
@@ -238,7 +240,7 @@ public class InMemoryGameService : IGameService
                 {
                     break;
                 }
-                room.connections[unassignedPlayers[i].connectionId].playerId = playerIdsToAssign.Pop();
+                room.Connections[unassignedPlayers[i].ConnectionId].PlayerId = playerIdsToAssign.Pop();
             }
         }
     }
@@ -263,7 +265,7 @@ public class InMemoryGameService : IGameService
         }
         var game = gameResult.Data;
 
-        var connectionsPlayerId = GetConnectionsPlayer(connectionId).playerId;
+        var connectionsPlayerId = GetConnectionsPlayer(connectionId).PlayerId;
         if (connectionsPlayerId == null)
         {
             return false;

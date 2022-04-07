@@ -13,7 +13,9 @@ interface Props {
 const Player = ({ player, onRequestTopUp, onTop }: Props) => {
 	return (
 		<PlayerContainer>
-			<AdditionalInfo onTop={onTop}>{!!player.LastMove && <p>{player.LastMove}</p>}</AdditionalInfo>
+			<AdditionalInfo id={'player-info-' + player.Id} key={'player-info-' + player.Id} onTop={onTop}>
+				{!!player.LastMove && <p>{player.LastMove}</p>}
+			</AdditionalInfo>
 			<TextMargin>{player.Name}</TextMargin>
 			{player.CanRequestTopUp && !player.RequestingTopUp && !!onRequestTopUp && (
 				<RequestTopUpButton onClick={onRequestTopUp}>Request top up</RequestTopUpButton>

@@ -71,12 +71,16 @@ public class EngineActions
 			gameState.Settings.IncludeSuitInCardStrings);
 
 		// Update the players last move
-		var playerIndex = gameState.Players.IndexOf(gameState.Players.FirstOrDefault(p => p.Id == data.PlayerId.Value));
 		var newPlayers = gameState.Players;
-		if (playerIndex != -1)
+		if (data.PlayerId != null)
 		{
-			var newPlayer = gameState.Players[playerIndex] with {LastMove = moveDescription};
-			newPlayers = newPlayers.Replace(gameState.Players[playerIndex], newPlayer);
+			var playerIndex =
+				gameState.Players.IndexOf(gameState.Players.FirstOrDefault(p => p.Id == data.PlayerId.Value));
+			if (playerIndex != -1)
+			{
+				var newPlayer = gameState.Players[playerIndex] with {LastMove = moveDescription};
+				newPlayers = newPlayers.Replace(gameState.Players[playerIndex], newPlayer);
+			}
 		}
 
 		newGameState = newGameState with {LastMove = moveDescription, Players = newPlayers};
@@ -93,7 +97,7 @@ public class EngineActions
 		var newGameState = gameState with {Players = newPlayers};
 
 		// Add the move to the history
-		newGameState = UpdateLastMove(newGameState, new Move {Type = MoveType.RequestTopUp, PlayerId = playerId});
+		newGameState = UpdateLastMove(newGameState, new Move(MoveType.RequestTopUp, playerId));
 
 		return newGameState;
 	}
@@ -131,7 +135,7 @@ public class EngineActions
 		newGameState = newGameState with {Players = newPlayers};
 
 		// Add the move to the history
-		newGameState = UpdateLastMove(newGameState, new Move {Type = MoveType.TopUp});
+		newGameState = UpdateLastMove(newGameState, new Move(MoveType.TopUp));
 
 		return Result.Successful(newGameState);
 	}
@@ -187,7 +191,7 @@ public class EngineActions
 
 		// Add the move to the history
 		newGameState = UpdateLastMove(newGameState,
-			new Move {Type = MoveType.PickupCard, PlayerId = player.Id, CardId = newPlayer.HandCards.Last().Id});
+			new Move(MoveType.PickupCard, player.Id, newPlayer.HandCards.Last().Id));
 
 		return newGameState;
 	}
@@ -213,13 +217,12 @@ public class EngineActions
 
 		// Add the move to the history
 		newGameState = UpdateLastMove(newGameState,
-			new Move
-			{
-				Type = MoveType.PlayCard,
-				CardId = card.Id,
-				PlayerId = playerWithCard.Id,
-				CenterPileIndex = centerPileIndex
-			});
+			new Move(
+				MoveType.PlayCard,
+				playerWithCard.Id,
+				card.Id,
+				centerPileIndex
+			));
 
 		return newGameState;
 	}

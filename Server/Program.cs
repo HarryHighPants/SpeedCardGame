@@ -7,6 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<IGameService, InMemoryGameService>();
+builder.Services.AddSingleton<IBotService, BotService>();
+
 
 //services cors
 builder.Services.AddCors(options => options.AddDefaultPolicy(

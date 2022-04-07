@@ -8,16 +8,14 @@ using Engine.Models;
 
 public interface IGameService
 {
-
-	public void GetRoom(string roomId);
-
 	public void JoinRoom(string roomId, string connectionId);
+	public int ConnectionsInRoomCount(string roomId);
 
 	public void LeaveRoom(string roomId, string connectionId);
 
 	public void UpdateName(string updatedName, string connectionId);
 
-	public Result StartGame(string connectionId, bool botGame, int botDifficulty);
+	public Result StartGame(string connectionId);
 
 	public Connection GetConnectionsPlayer(string connectionId);
 
@@ -28,6 +26,8 @@ public interface IGameService
 	public Result TryRequestTopUp(string connectionId);
 
 	public Result TryPlayCard(string connectionId, int cardId, int centerPilIndex);
+
+	public WebGame GetGame(string roomId);
 
 	public Result<GameStateDto> GetGameStateDto(string roomId);
 
@@ -50,31 +50,30 @@ public class Pos
 
 public class Room
 {
-	public ConcurrentDictionary<string, Connection> connections = new();
-	public WebGame? game;
-	public string roomId;
-	public bool isBotGame; //todo see if I need this
-	public int botDifficulty;
+	public ConcurrentDictionary<string, Connection> Connections = new();
+	public WebGame? Game;
+	public string RoomId;
+	public bool IsBotGame;
 }
 
 public class Connection
 {
-	public string connectionId;
-	public string name;
-	public int? playerId;
+	public string ConnectionId;
+	public string Name;
+	public int? PlayerId;
 }
 
 public class LobbyStateDto
 {
-	public List<Connection> connections;
-	public bool isBotGame;
-	public bool gameStarted;
+	public List<Connection> Connections;
+	public bool IsBotGame;
+	public bool GameStarted;
 
 	public LobbyStateDto(List<Connection> connections, bool isBotGame, bool gameStarted)
 	{
-		this.isBotGame = isBotGame;
-		this.connections = connections;
-		this.gameStarted = gameStarted;
+		this.IsBotGame = isBotGame;
+		this.Connections = connections;
+		this.GameStarted = gameStarted;
 	}
 }
 
@@ -94,10 +93,10 @@ public class GameStateDto
 		// Replace the playerId with the players connectionId
 		foreach (var player in Players)
 		{
-			var connection = connections.FirstOrDefault(c => c.Value.playerId.ToString() == player.Id).Value;
+			var connection = connections.FirstOrDefault(c => c.Value.PlayerId.ToString() == player.Id).Value;
 			if (connection != null)
 			{
-				player.Id = connection.connectionId;
+				player.Id = connection.ConnectionId;
 			}
 		}
 
@@ -115,11 +114,10 @@ public record PlayerDto
 	public string Id { get; set; }
 	public string Name { get; init; } = "";
 	public List<Card> HandCards { get; init; }
-	public int TopKittyCardId { get; init; }
+	public int? TopKittyCardId { get; init; }
 	public int KittyCardsCount { get; init; }
 	public bool RequestingTopUp { get; init; }
 	public bool CanRequestTopUp { get; init; }
-
 	public string LastMove { get; init; } = "";
 
 	public PlayerDto(Player player, bool canRequestTopUp)
@@ -129,7 +127,7 @@ public record PlayerDto
 		HandCards = player.HandCards.ToList();
 		KittyCardsCount = player.KittyCards.Count;
 		RequestingTopUp = player.RequestingTopUp;
-		TopKittyCardId = player.KittyCards.Last().Id;
+		TopKittyCardId = player.KittyCards.Count >= 1 ? player.KittyCards.Last().Id : null;
 		CanRequestTopUp = canRequestTopUp;
 		LastMove = player.LastMove;
 	}

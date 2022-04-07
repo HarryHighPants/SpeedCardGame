@@ -1,17 +1,12 @@
 export interface ILobby {
-	connections: IPlayerConnection[]
-	isBotGame: boolean
-	gameStarted: boolean
+	Connections: IPlayerConnection[]
+	IsBotGame: boolean
+	GameStarted: boolean
 }
 
 export interface IPlayerConnection {
-	connectionId: string
-	name: string
+	ConnectionId: string
+	Name: string
 }
-//
-// export enum GameType {
-// 	multiplayer="multiplayer",
-// 	bot="bot"
-// }
 
 export type GameType = 'bot' | 'multiplayer'

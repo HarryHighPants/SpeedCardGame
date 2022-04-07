@@ -9,11 +9,13 @@ public class GameHub : Hub
 {
     private readonly IGameService gameService;
     private readonly IHubContext<GameHub> hubContext;
+    private readonly IBotService botService;
 
-    public GameHub(IGameService gameService, IHubContext<GameHub> hubContext)
+    public GameHub(IGameService gameService, IHubContext<GameHub> hubContext, IBotService botService)
     {
         this.gameService = gameService;
         this.hubContext = hubContext;
+        this.botService = botService;
     }
 
     // private string UserIdentifier => Context.UserIdentifier!;
@@ -68,23 +70,36 @@ public class GameHub : Hub
         // Remove connection to the group
         await Groups.RemoveFromGroupAsync(UserConnectionId, roomId);
 
-        // Remove the player to the room
+        // Remove the connection from the room
         gameService.LeaveRoom(roomId, UserConnectionId);
+
+        if (botService.BotsInRoomCount(roomId) == gameService.ConnectionsInRoomCount(roomId))
+        {
+	        botService.RemoveBotsFromRoom(roomId);
+        }
 
         // Send gameState for roomId
         await SendGameState(roomId);
         await SendLobbyState(roomId);
     }
 
-    public async Task StartGame(bool botGame = false, int botDifficulty = 0)
+    public async Task StartGame(bool botGame = false, BotDifficulty botDifficulty = 0)
     {
-        var startGameResult = gameService.StartGame(UserConnectionId, botGame, botDifficulty);
+	    var roomId = gameService.GetConnectionsRoomId(UserConnectionId);
+
+	    if (botGame)
+	    {
+		    botService.AddBotToRoom(roomId, botDifficulty);
+	    }
+
+        var startGameResult = gameService.StartGame(UserConnectionId);
         if (startGameResult is IErrorResult startGameError)
         {
             throw new HubException(startGameError.Message, new UnauthorizedAccessException(startGameError.Message));
         }
-        await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
-        gameService.RunBots(gameService.GetConnectionsRoomId(UserConnectionId), SendGameState);
+
+        botService.RunBotsInRoom(roomId);
+        await SendGameState(roomId);
     }
 
     public async Task TryPlayCard(int cardId, int centerPileId)

@@ -29,7 +29,7 @@ const Droppable = ({ cardBeingDragged, ourRef, id = GetRandomId()+1000, children
 		let delta =
 			!draggingCardRect || !ourRect
 				? undefined
-				: { x: draggingCardRect.x - ourRect.x, y: draggingCardRect.y - ourRect.y }
+				: { X: draggingCardRect.x - ourRect.x, Y: draggingCardRect.y - ourRect.y }
 		onDistanceUpdated(distance, overlaps, delta)
 	}
 

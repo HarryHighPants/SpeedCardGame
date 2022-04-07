@@ -1,17 +1,20 @@
 namespace Server.Services;
 
 using System.Collections.Concurrent;
+using System.Linq;
 using Engine;
 using Engine.Helpers;
+using Engine.Models;
 using Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 
-public class BotService
+public class BotService : IBotService
 {
-	public record Bot(string ConnectionId, BotData Data);
+	public record Bot(string ConnectionId, BotData Data, string roomId);
 
-	private ConcurrentDictionary<string, Task> BotRunners;
+	private ConcurrentDictionary<string, Bot> Bots = new ConcurrentDictionary<string, Bot>();
+	private ConcurrentDictionary<string, CancellationTokenSource> BotRunners = new ConcurrentDictionary<string, CancellationTokenSource>();
 
 	private readonly IHubContext<GameHub> hubContext;
 	private readonly IGameService gameService;
@@ -22,33 +25,74 @@ public class BotService
 		this.hubContext = hubContext;
 	}
 
-	// Start bot for room (RoomId)
-
 	public void AddBotToRoom(string roomId, BotDifficulty difficulty)
 	{
 		var botId = Guid.NewGuid().ToString();
 		gameService.JoinRoom(roomId, botId);
 		var botData = BotConfigurations.GetBot(difficulty);
-		var bot = new Bot(botId, botData);
-		BotRunners.TryAdd(roomId, RunBots(roomId, new List<Bot> {bot}));
+		Bots.TryAdd(botId, new Bot(botId, botData, roomId));
 	}
 
-	public async Task RunBots(string roomId, List<Bot> bots)
+	public int BotsInRoomCount(string roomId) => GetBotsInRoom(roomId).Count;
+
+	public void RunBotsInRoom(string roomId)
+	{
+		var botsInRoom = GetBotsInRoom(roomId);
+		foreach (var bot in botsInRoom)
+		{
+			var cancellationSource = new CancellationTokenSource();
+			RunBot(bot, cancellationSource.Token);
+			BotRunners.TryAdd(bot.ConnectionId, cancellationSource);
+		}
+	}
+
+	public void RemoveBotsFromRoom(string roomId)
+	{
+		var botsInRoom = GetBotsInRoom(roomId);
+		foreach (var bot in botsInRoom)
+		{
+			gameService.LeaveRoom(roomId, bot.ConnectionId);
+			BotRunners[bot.ConnectionId].Cancel();
+			BotRunners.Remove(bot.ConnectionId, out _);
+			Bots.Remove(bot.ConnectionId, out _);
+		}
+	}
+
+	private List<Bot> GetBotsInRoom(string roomId) => Bots.Where(b => b.Value.roomId == roomId).Select(b=>b.Value).ToList();
+
+	private async Task RunBot(Bot bot, CancellationToken cancellationToken)
 	{
 		var random = new Random();
-		while (gameService.GetGameStateDto(roomId).Data.WinnerId == null)
+
+		var checks = gameService.GetGame(bot.roomId).gameEngine.Checks;
+		var playerId = gameService.GetConnectionsPlayer(bot.ConnectionId).PlayerId;
+		while (!cancellationToken.IsCancellationRequested || gameService.GetGameStateDto(bot.roomId).Data.WinnerId == null)
 		{
-			for (var i = 0; i < bots.Count; i++)
-			{
-				await Task.Delay(random.Next(bots[i].Data.QuickestResponseTimeMs, bots[i].Data.SlowestResponseTimeMs));
-				var move = BotRunner.MakeMove(gameService, bots[i].playerId);
+				await Task.Delay(random.Next(bot.Data.QuickestResponseTimeMs, bot.Data.SlowestResponseTimeMs));
+
+				if (playerId == null)
+				{
+					continue;
+				}
+				var move = BotRunner.GetMove(checks, gameService.GetGame(bot.roomId).State, playerId.Value);
 				if (move is IErrorResult)
 				{
 					continue;
 				}
 
-				SendGameState()
-			}
+				var result =  move.Data.Type switch
+				{
+					MoveType.PlayCard => gameService.TryPlayCard(bot.ConnectionId, move.Data.CardId.Value, move.Data.CenterPileIndex.Value),
+					MoveType.PickupCard => gameService.TryPickupFromKitty(bot.ConnectionId),
+					MoveType.RequestTopUp => gameService.TryRequestTopUp(bot.ConnectionId),
+					_ => throw new ArgumentOutOfRangeException()
+				};
+
+				if (result is IErrorResult moveError)
+				{
+					throw new Exception(moveError.Message);
+				}
+				await SendGameState(bot.roomId);
 		}
 	}
 
