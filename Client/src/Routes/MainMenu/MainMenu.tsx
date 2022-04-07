@@ -19,7 +19,7 @@ const MainMenu = (props: Props) => {
 		})
 
 		// Set the game url param
-		navigate(`/${gameId}${bot&&"?type=bot"}${difficulty&&"&difficulty="+difficulty}`)
+		navigate(`/${gameId}${bot&&"?type=bot"}${bot&&"&difficulty="+difficulty}`)
 	}
 
 	return (

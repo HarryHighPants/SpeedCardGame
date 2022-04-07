@@ -27,10 +27,12 @@ public class BotService : IBotService
 
 	public void AddBotToRoom(string roomId, BotDifficulty difficulty)
 	{
-		var botId = Guid.NewGuid().ToString();
-		gameService.JoinRoom(roomId, botId);
 		var botData = BotConfigurations.GetBot(difficulty);
-		Bots.TryAdd(botId, new Bot(botId, botData, roomId));
+		var botId = Guid.NewGuid().ToString();
+		var bot = new Bot(botId, botData, roomId);
+		gameService.JoinRoom(roomId, botId);
+		gameService.UpdateName(bot.Data.Name, botId);
+		Bots.TryAdd(botId, bot);
 	}
 
 	public int BotsInRoomCount(string roomId) => GetBotsInRoom(roomId).Count;
