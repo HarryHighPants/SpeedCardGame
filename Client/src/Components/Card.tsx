@@ -18,31 +18,13 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 	const [disablePointerEvents, setDisablePointerEvents] = useState(false)
 	const [dragPosDelta, setDragPosDelta] = useState(0)
 	const [highlighted, setHighlighted] = useState(false)
-	const controls = useAnimation()
-	const [shaking, setShaking] = useState(false)
 	const [horizontalOffset, setHorizontalOffset] = useState(0)
-	const shakingAmount = 10
-	const transitionDuration = 0.5
-
-	useEffect(() => {
-		controls.start('idle')
-	}, [])
-
-	useEffect(() => {
-		if (shaking) {
-			controls.start('preAnimate').then(() => controls.start('animate'))
-		} else {
-			controls.start('idle')
-		}
-	}, [shaking])
 
 	const UpdateAnimationStates = (distance: number, overlaps?: boolean, delta?: IPos) => {
 		if (distance === Infinity) {
 			// Reset states
-			setShaking(false)
 			setHighlighted(false)
 			setHorizontalOffset(0)
-			controls.start('idle')
 			return
 		}
 
@@ -50,10 +32,6 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 		let droppingOntoCenter =
 			card.location === CardLocationType.Center && cardBeingDragged?.location === CardLocationType.Hand
 		if (droppingOntoCenter) {
-			// console.log(distance < GameBoardLayout.dropDistance * 2 ? 0.2 : 999)
-			let shouldShake = distance < GameBoardLayout.dropDistance * 2
-			setShaking(shouldShake)
-
 			setHighlighted(distance < GameBoardLayout.dropDistance)
 		}
 
@@ -69,12 +47,10 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 	}
 
 	const OnStartDrag = (panInfo: PanInfo) => {
-		// setDragging(true)
 		setDraggingCard({ ...card })
 	}
 
 	const OnDrag = (panInfo: PanInfo) => {
-		// setDragging(true)
 		let distance = GetDistance({ X: panInfo.offset.x, Y: panInfo.offset.y }, { X: 0, Y: 0 })
 		if (distance.toFixed(0) === dragPosDelta.toFixed(0)) return
 		setDragPosDelta(distance)
@@ -82,51 +58,36 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 	}
 
 	const OnEndDrag = (panInfo: PanInfo) => {
-		// setDragging(false)
 		setDisablePointerEvents(false)
 		onDragEnd(card)
 	}
 
+	const transitionDuration = 0.5
+	const defaultEase = 'easeOut'
+	const defaultTransition = {
+		type: 'tween',
+		ease: defaultEase,
+		duration: transitionDuration,
+	}
 	const cardVariants: Variants = {
 		initial: {
-			// opacity: 0,
 			zIndex: card.zIndex,
-			rotate: 0,
 			top: card.pos.Y,
 			left: card.pos.X + horizontalOffset + (card.animateInHorizontalOffset ?? 0),
-			transition: { ease: 'linear', duration: transitionDuration },
+			transition: defaultTransition,
 		},
-		idle: {
-			// opacity: 1,
+		animate: {
 			zIndex: card.zIndex,
 			top: card.pos.Y,
 			left: card.pos.X + horizontalOffset,
-			rotate: 0,
-			transition: {
-				ease: 'linear',
-				duration: transitionDuration,
-			},
-		},
-		preAnimate: {
-			rotate: -shakingAmount,
-			transition: {
-				duration: transitionDuration,
-			},
-		},
-		animate: {
-			rotate: [-shakingAmount, shakingAmount],
-			transition: {
-				duration: 0.3,
-				repeat: Infinity,
-				repeatType: 'reverse',
-			},
+			transition: defaultTransition,
 		},
 		hovered: card.ourCard
 			? {
 					scale: 1.03,
 					top: card.pos.Y - 20,
 					boxShadow: '0px 7px 15px rgba(0,0,0,0.3)',
-					transition: { ease: 'easeOut', duration: transitionDuration },
+					transition: defaultTransition,
 			  }
 			: {},
 		dragging: {
@@ -135,11 +96,18 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 			cursor: 'grabbing',
 			zIndex: 15,
 			top: card.pos.Y - 20,
-			transition: { ease: 'easeOut', duration: transitionDuration },
+			transition: defaultTransition,
 		},
 		exit: {
 			opacity: 0,
-			transition: { ease: 'easeOut', duration: transitionDuration },
+			zIndex: 0,
+			transition: {
+				ease: 'easeOut',
+				duration: 0.2,
+				opacity: {
+					delay: 1,
+				},
+			},
 		},
 	}
 
@@ -151,14 +119,12 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 			onDistanceUpdated={UpdateAnimationStates}
 		>
 			<CardParent
-				layout
 				ref={card.ref}
 				key={`card-${card.Id}`}
 				layoutId={`card-${card.Id}`}
 				variants={cardVariants}
 				initial="initial"
-				animate={controls}
-				// animate="idle"
+				animate="animate"
 				whileHover="hovered"
 				whileDrag="dragging"
 				exit="exit"
@@ -168,9 +134,13 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 				onDragStart={(e, info) => OnStartDrag(info)}
 				onDragEnd={(e, info) => OnEndDrag(info)}
 				dragSnapToOrigin={true}
-				dragElastic={1}
-				// dragConstraints={{ top: 0, right: 0, bottom: 0, left: 0 }}
 				dragMomentum={false}
+				dragElastic={1}
+				dragTransition={{
+					bounceDamping: 100,
+					bounceStiffness: 1000,
+				}}
+				dragConstraints={{ top: 0, right: 0, bottom: 0, left: 0 }}
 			>
 				<CardImg
 					highlighted={highlighted}
@@ -192,7 +162,7 @@ const CardParent = styled(motion.div)<{ $grabCursor: boolean }>`
 `
 
 const CardImg = styled.img<{ highlighted: boolean }>`
-	${(p) => (p.highlighted ? 'filter: brightness(0.9)' : '')};
+	${(p) => (p.highlighted ? 'filter: brightness(0.85)' : '')};
 `
 
 const CardImgSrc = (card: ICard) => {

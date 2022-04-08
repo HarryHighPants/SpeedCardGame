@@ -98,7 +98,7 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 				setHandAreaHighlighted={setHandAreaHighlighted}
 			/>
 			<div>
-				{/*<AnimatePresence>*/}
+				<AnimatePresence>
 					{renderableCards.map((c) => (
 						<Card
 							key={`card-${c.Id}`}
@@ -108,7 +108,7 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 							cardBeingDragged={cardBeingDragged}
 						/>
 					))}
-				{/*</AnimatePresence>*/}
+				</AnimatePresence>
 			</div>
 		</GameBoardContainer>
 	)
