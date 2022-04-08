@@ -60,7 +60,7 @@ class GameBoardLayout {
 			newRenderableCards.push(...handCards)
 
 			// Add the players Kitty card
-			if (!!p.TopKittyCardId) {
+			if (p.TopKittyCardId != undefined || p.TopKittyCardId != -1) {
 				let kittyCard = this.GetRenderableCard(
 					{ Id: p.TopKittyCardId } as ICard,
 					-1,

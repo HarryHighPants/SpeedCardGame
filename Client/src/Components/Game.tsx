@@ -20,12 +20,17 @@ const getGameBoardDimensions = () => {
 	return {
 		X: clamp(window.innerWidth, 0, GameBoardLayout.maxWidth),
 		Y: window.innerHeight,
-	} as IPos;
+	} as IPos
 }
 
 const Game = ({ connection, connectionId, gameState }: Props) => {
 	const [movedCards, setMovedCards] = useState<IMovedCardPos[]>([])
 	const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>(getGameBoardDimensions())
+	const [localGameState, setLocalGameState] = useState<IGameState>(gameState)
+
+	useEffect(()=>{
+		setLocalGameState(gameState)
+	}, [gameState])
 
 	useLayoutEffect(() => {
 		function UpdateGameBoardDimensions() {
@@ -36,8 +41,6 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 		window.addEventListener('resize', UpdateGameBoardDimensions)
 		return () => window.removeEventListener('resize', UpdateGameBoardDimensions)
 	}, [])
-
-
 
 	useEffect(() => {
 		if (!connection) return
@@ -67,6 +70,19 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 		// Show any messages (Move to a warnings component)
 
 		// assume the server will return success and update the gamestate
+		UpdateGameStatePlayCard(topCard, centerPileIndex)
+	}
+	const UpdateGameStatePlayCard = (topCard: ICard, centerPileIndex: number) => {
+		let player = gameState.Players.find((p) => p.Id === connectionId)
+		if (player == null) {
+			return
+		}
+
+		let playerIndex = gameState.Players.indexOf(player)
+		gameState.Players[playerIndex].HandCards = player.HandCards.filter((c)=>c.Id != topCard.Id);
+		gameState.CenterPiles[centerPileIndex] = topCard
+		setLocalGameState({ ...gameState })
+		console.log("UpdateGameStatePlayCard");
 	}
 
 	const OnPickupFromKitty = () => {
@@ -74,6 +90,19 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 		connection?.invoke('TryPickupFromKitty').catch((e) => console.log(e))
 		// Show any messages (Move to a warnings component)
 		// assume the server will return success and update the gamestate
+		UpdateGameStatePickupFromKitty()
+	}
+	const UpdateGameStatePickupFromKitty = () => {
+		let player = gameState.Players.find((p) => p.Id === connectionId)
+		if (player == null) {
+			return
+		}
+
+		let playerIndex = gameState.Players.indexOf(player)
+		gameState.Players[playerIndex].HandCards.push({ Id: player.TopKittyCardId } as ICard)
+		gameState.Players[playerIndex].TopKittyCardId = -1
+		setLocalGameState({ ...gameState })
+		console.log("UpdateGameStatePickupFromKitty");
 	}
 
 	const OnRequestTopUp = () => {
@@ -85,10 +114,10 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 
 	return (
 		<GameContainer>
-			<Player key={`player-${gameState.Players[0].Id}`} player={gameState.Players[0]} onTop={true} />
+			<Player key={`player-${localGameState.Players[0].Id}`} player={localGameState.Players[0]} onTop={true} />
 			<GameBoard
 				playerId={connectionId}
-				gameState={gameState}
+				gameState={localGameState}
 				movedCards={movedCards}
 				gameBoardDimensions={gameBoardDimensions}
 				onPlayCard={OnPlayCard}
@@ -96,8 +125,8 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 			/>
 			<Player
 				onRequestTopUp={OnRequestTopUp}
-				key={`player-${gameState.Players[1].Id}`}
-				player={gameState.Players[1]}
+				key={`player-${localGameState.Players[1].Id}`}
+				player={localGameState.Players[1]}
 				onTop={false}
 			/>
 			<Background key={'bg'} />
