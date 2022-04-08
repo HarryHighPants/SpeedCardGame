@@ -6,7 +6,7 @@ import styled from 'styled-components'
 import Player from './Player'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import Card from './Card'
-import { LayoutGroup, PanInfo } from 'framer-motion'
+import { AnimatePresence, LayoutGroup, PanInfo } from 'framer-motion'
 import { clamp, GetDistanceRect } from '../Helpers/Utilities'
 import { IPlayer } from '../Interfaces/IPlayer'
 import gameBoardLayout from '../Helpers/GameBoardLayout'
@@ -98,15 +98,17 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 				setHandAreaHighlighted={setHandAreaHighlighted}
 			/>
 			<div>
-				{renderableCards.map((c) => (
-					<Card
-						key={`card-${c.Id}`}
-						card={c}
-						setDraggingCard={setCardBeingDragged}
-						onDragEnd={OnEndDrag}
-						cardBeingDragged={cardBeingDragged}
-					/>
-				))}
+				{/*<AnimatePresence>*/}
+					{renderableCards.map((c) => (
+						<Card
+							key={`card-${c.Id}`}
+							card={c}
+							setDraggingCard={setCardBeingDragged}
+							onDragEnd={OnEndDrag}
+							cardBeingDragged={cardBeingDragged}
+						/>
+					))}
+				{/*</AnimatePresence>*/}
 			</div>
 		</GameBoardContainer>
 	)

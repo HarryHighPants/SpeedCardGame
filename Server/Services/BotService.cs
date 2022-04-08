@@ -70,6 +70,7 @@ public class BotService : IBotService
 		var playerId = gameService.GetConnectionsPlayer(bot.ConnectionId).PlayerId;
 		while (!cancellationToken.IsCancellationRequested || gameService.GetGameStateDto(bot.roomId).Data.WinnerId == null)
 		{
+			// todo: make picking up faster for bots
 				await Task.Delay(random.Next(bot.Data.QuickestResponseTimeMs, bot.Data.SlowestResponseTimeMs));
 
 				if (playerId == null)

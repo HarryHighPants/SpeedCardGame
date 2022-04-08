@@ -5,7 +5,7 @@ import { AreaDimensions } from '../Components/GameBoardAreas/BaseArea'
 
 class GameBoardLayout {
 	public static maxWidth = 750
-	public static dropDistance = 40
+	public static dropDistance = 50
 	public static cardWidth = 80
 	public static cardHeight = GameBoardLayout.cardWidth * 1.45
 	public static maxHandCardCount = 5
@@ -89,15 +89,19 @@ class GameBoardLayout {
 		})
 	}
 
-	static getPosPixels = (pos: IPos, gameBoardDimensions: IPos): IPos => {
+	static GetRelativeAsPixels = (x: number | undefined, gameBoardLength: number): number => {
+		return x!! ? x * gameBoardLength : 0
+	}
+
+	static GetPosPixels = (pos: IPos, gameBoardDimensions: IPos): IPos => {
 		return {
-			X: pos!! ? pos.X * gameBoardDimensions.X : 0,
-			Y: pos!! ? pos.Y * gameBoardDimensions.Y : 0,
+			X: this.GetRelativeAsPixels(pos.X, gameBoardDimensions.X),
+			Y: this.GetRelativeAsPixels(pos.Y, gameBoardDimensions.Y),
 		}
 	}
 
-	static getCardPosPixels = (pos: IPos, gameBoardDimensions: IPos): IPos => {
-		let posPixels = this.getPosPixels(pos, gameBoardDimensions)
+	static GetCardPosPixels = (pos: IPos, gameBoardDimensions: IPos): IPos => {
+		let posPixels = this.GetPosPixels(pos, gameBoardDimensions)
 		return {
 			X: posPixels.X - this.cardWidth / 2,
 			Y: posPixels.Y - this.cardHeight,
@@ -159,8 +163,8 @@ class GameBoardLayout {
 
 	static AreaDimensionsToPixels = (areaDimensions: AreaDimensions, gameBoardDimensions: IPos): AreaDimensions => {
 		let pixelAreaDimensions = { ...areaDimensions }
-		pixelAreaDimensions.pos = this.getCardPosPixels(areaDimensions.pos, gameBoardDimensions)
-		pixelAreaDimensions.size = this.getPosPixels(areaDimensions.size, gameBoardDimensions)
+		pixelAreaDimensions.pos = this.GetCardPosPixels(areaDimensions.pos, gameBoardDimensions)
+		pixelAreaDimensions.size = this.GetPosPixels(areaDimensions.size, gameBoardDimensions)
 		return pixelAreaDimensions
 	}
 
@@ -202,7 +206,7 @@ class GameBoardLayout {
 	}
 
 	getPosPixels = (pos: IPos): IPos => {
-		return GameBoardLayout.getCardPosPixels(pos, this.gameBoardDimensions)
+		return GameBoardLayout.GetCardPosPixels(pos, this.gameBoardDimensions)
 	}
 
 	GetRenderableCard = (card: ICard, index: number, ourPlayer: boolean, location: CardLocationType) => {
@@ -213,6 +217,11 @@ class GameBoardLayout {
 			(!ourPlayer ? Math.abs(index - GameBoardLayout.maxHandCardCount - 1) : index) +
 			(location != CardLocationType.Center ? GameBoardLayout.maxHandCardCount : 0)
 		let ref = this.renderableCards.find((c) => c.Id === card.Id)?.ref
+		// Animate in any new center cards from the left or right
+		let animateInHorizontalOffset =
+			location === CardLocationType.Center
+				? GameBoardLayout.GetRelativeAsPixels(0.6, this.gameBoardDimensions.X) * (index === 0 ? -1 : 1)
+				: 0
 		return {
 			...{
 				...card,
@@ -221,6 +230,7 @@ class GameBoardLayout {
 				pos: pos,
 				zIndex: zIndex,
 				ref: ref ?? React.createRef<HTMLDivElement>(),
+				animateInHorizontalOffset: animateInHorizontalOffset,
 			},
 		} as IRenderableCard
 	}

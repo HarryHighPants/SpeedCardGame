@@ -105,7 +105,6 @@ public class GameStateDto
 
 		var winnerResult = gameEngine.Checks.TryGetWinner(gameState);
 		WinnerId = gameEngine.Checks.TryGetWinner(gameState).Map<int?>(x => x, _ => null);
-		// WinnerId = winnerResult.Success ? winnerResult.Data : null;
 	}
 }
 

@@ -13,7 +13,7 @@ interface Props {
 const Player = ({ player, onRequestTopUp, onTop }: Props) => {
 	return (
 		<PlayerContainer>
-			<AdditionalInfo id={'player-info-' + player.Id} key={'player-info-' + player.Id} onTop={onTop}>
+			<AdditionalInfo id={'player-info-' + player.Id} key={'player-info-' + player.Id} topOfBoard={onTop}>
 				{!!player.LastMove && <p>{player.LastMove}</p>}
 			</AdditionalInfo>
 			<TextMargin>{player.Name}</TextMargin>
@@ -33,11 +33,11 @@ const PlayerContainer = styled.div`
 	color: white;
 	background-color: #853939;
 `
-const AdditionalInfo = styled.div<{ onTop: boolean }>`
+const AdditionalInfo = styled.div<{ topOfBoard: boolean }>`
 	position: absolute;
 	transform: translateX(-50%);
 	left: 50%;
-	margin: ${(p) => !p.onTop && '-'}50px 0 0 0;
+	margin: ${(p) => !p.topOfBoard && '-'}50px 0 0 0;
 `
 
 const RequestTopUpButton = styled.button`

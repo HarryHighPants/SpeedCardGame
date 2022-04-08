@@ -18,7 +18,7 @@ const GameBoardAreas = ({ ourId, setHandAreaHighlighted, gameState, gameBoardDim
 			{gameState.Players.map((p, i) => {
 				let ourPlayer = p.Id === ourId
 				return (
-					<>
+					<div key={`player-${i}`}>
 						{ourPlayer ? (
 							<DroppableArea
 								key={`area-${CardLocationType.Hand}-${i}`}
@@ -58,7 +58,7 @@ const GameBoardAreas = ({ ourId, setHandAreaHighlighted, gameState, gameBoardDim
 								i
 							)}
 						/>
-					</>
+					</div>
 				)
 			})}
 		</>

@@ -44,6 +44,7 @@ export interface IRenderableCard extends ICard {
 	ref: React.RefObject<HTMLDivElement>
 	ourCard: boolean
 	location: CardLocationType
+	animateInHorizontalOffset: number | undefined
 }
 
 export interface IMovedCardPos {

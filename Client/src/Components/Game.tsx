@@ -16,22 +16,28 @@ interface Props {
 	gameState: IGameState
 }
 
+const getGameBoardDimensions = () => {
+	return {
+		X: clamp(window.innerWidth, 0, GameBoardLayout.maxWidth),
+		Y: window.innerHeight,
+	} as IPos;
+}
+
 const Game = ({ connection, connectionId, gameState }: Props) => {
 	const [movedCards, setMovedCards] = useState<IMovedCardPos[]>([])
-	const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>({ X: 600, Y: 700 })
+	const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>(getGameBoardDimensions())
 
 	useLayoutEffect(() => {
 		function UpdateGameBoardDimensions() {
-			setGameBoardDimensions({
-				X: clamp(window.innerWidth, 0, GameBoardLayout.maxWidth),
-				Y: window.innerHeight,
-			} as IPos)
+			setGameBoardDimensions(getGameBoardDimensions)
 		}
 
 		UpdateGameBoardDimensions()
 		window.addEventListener('resize', UpdateGameBoardDimensions)
 		return () => window.removeEventListener('resize', UpdateGameBoardDimensions)
 	}, [])
+
+
 
 	useEffect(() => {
 		if (!connection) return
