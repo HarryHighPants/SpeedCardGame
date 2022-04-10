@@ -65,7 +65,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 
 	const OnPlayCard = (topCard: ICard, centerPileIndex: number) => {
 		// Call the event
-		connection?.invoke('TryPlayCard', topCard.Id, centerPileIndex).catch((e) => console.log(e))
+		// connection?.invoke('TryPlayCard', topCard.Id, centerPileIndex).catch((e) => console.log(e))
 
 		// Show any messages (Move to a warnings component)
 

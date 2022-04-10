@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { CardLocationType, CardValue, ICard, IPos, IRenderableCard, Suit } from '../Interfaces/ICard'
-import { AnimatePresence, motion, motionValue, PanInfo, useAnimation, useTransform, Variants } from 'framer-motion'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import { usePrevious } from '../Helpers/UsePrevious'
 import Droppable from './Droppable'
 import { GetDistance } from '../Helpers/Utilities'
+import { motion, PanInfo, Variants } from 'framer-motion'
 
 export interface Props {
 	card: IRenderableCard
@@ -130,17 +130,13 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 				exit="exit"
 				$grabCursor={card.ourCard}
 				drag={card.ourCard}
-				onDrag={(event, info) => OnDrag(info)}
-				onDragStart={(e, info) => OnStartDrag(info)}
-				onDragEnd={(e, info) => OnEndDrag(info)}
+				onDrag={(e: any, info: PanInfo) => OnDrag(info)}
+				onDragStart={(e: any, info: PanInfo) => OnStartDrag(info)}
+				onDragEnd={(e: any, info: PanInfo) => OnEndDrag(info)}
 				dragSnapToOrigin={true}
 				dragMomentum={false}
 				dragElastic={1}
-				dragTransition={{
-					bounceDamping: 100,
-					bounceStiffness: 1000,
-				}}
-				dragConstraints={{ top: 0, right: 0, bottom: 0, left: 0 }}
+				dragTransition={defaultTransition}
 			>
 				<CardImg
 					highlighted={highlighted}
