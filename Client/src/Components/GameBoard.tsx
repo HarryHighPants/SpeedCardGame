@@ -52,12 +52,12 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 			!!bottomCard &&
 			bottomCard.location === CardLocationType.Center
 		) {
-			let centerPileCard = gameState.CenterPiles.find((c) => c.Id === bottomCard.Id)
-			if (!centerPileCard) return
-			let centerPileId = gameState.CenterPiles.indexOf(centerPileCard)
-			if (centerPileId === -1) return
+			let centerPileIndex: number = gameState.CenterPiles.findIndex(
+				(cp) => cp.Cards.find((c) => c.Id === bottomCard.Id) !== undefined
+			)
+			if (centerPileIndex === -1) return
 			console.log('Attempt play', topCard)
-			onPlayCard(topCard, centerPileId)
+			onPlayCard(topCard, centerPileIndex)
 		}
 
 		// If we are trying to pickup a card from the kitty

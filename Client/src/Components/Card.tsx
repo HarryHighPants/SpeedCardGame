@@ -59,7 +59,7 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 
 	const OnEndDrag = (panInfo: PanInfo) => {
 		setDisablePointerEvents(false)
-		onDragEnd(card)
+		onDragEnd({...card})
 	}
 
 	const transitionDuration = 0.5

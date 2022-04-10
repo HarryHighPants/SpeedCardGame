@@ -53,7 +53,6 @@ const Room = (props: Props) => {
 
 	const UpdateGameState = (data: any) => {
 		let parsedData: IGameState = JSON.parse(data)
-		console.log('updated game state')
 		// Order the players so that we are the last player so we get shown at the bottom of the screen
 		parsedData.Players = [
 			...parsedData.Players.sort(

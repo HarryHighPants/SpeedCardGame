@@ -60,7 +60,7 @@ class GameBoardLayout {
 			newRenderableCards.push(...handCards)
 
 			// Add the players Kitty card
-			if (p.TopKittyCardId != undefined || p.TopKittyCardId != -1) {
+			if (p.TopKittyCardId != undefined && p.TopKittyCardId != -1) {
 				let kittyCard = this.GetRenderableCard(
 					{ Id: p.TopKittyCardId } as ICard,
 					-1,
@@ -71,10 +71,11 @@ class GameBoardLayout {
 			}
 		})
 
-		// Add the center piles
-		let centerPiles = gameState.CenterPiles.map((cp, cpIndex) => {
-			return this.GetRenderableCard(cp, cpIndex, false, CardLocationType.Center)
-		})
+		// Add the center pile cards
+		let centerPiles = gameState.CenterPiles.reduce<IRenderableCard[]>((result, cp, cpIndex) => {
+			cp.Cards.map((c)=>result.push(this.GetRenderableCard(c, cpIndex, false, CardLocationType.Center)))
+			return result
+		}, [] as IRenderableCard[])
 		newRenderableCards.push(...centerPiles)
 		return newRenderableCards
 	}
@@ -111,7 +112,7 @@ class GameBoardLayout {
 	static GetCardDefaultPosition(ourPlayer: boolean, location: CardLocationType, index: number): IPos {
 		switch (location) {
 			case CardLocationType.Hand:
-				return GameBoardLayout.GetHandCardPositions(ourPlayer)[index]
+				return GameBoardLayout.GetHandCardPosition(ourPlayer, index)
 			case CardLocationType.Kitty:
 				return GameBoardLayout.GetKittyCardPosition(ourPlayer)
 			case CardLocationType.Center:
@@ -123,15 +124,15 @@ class GameBoardLayout {
 	static GetHandArea(ourPlayer: boolean, gameBoardDimensions: IPos): AreaDimensions {
 		let areaDimensions = {} as AreaDimensions
 		areaDimensions.pos = {
-			X: this.GetHandCardPositions(ourPlayer)[ourPlayer ? 0 : this.maxHandCardCount - 1].X,
-			Y: this.GetHandCardPositions(ourPlayer)[0].Y,
+			X: this.GetHandCardPosition(ourPlayer, ourPlayer ? 0 : this.maxHandCardCount - 1).X,
+			Y: this.GetHandCardPosition(ourPlayer, 0).Y,
 		} as IPos
 
 		areaDimensions.size = {
 			X:
 				Math.abs(
-					this.GetHandCardPositions(ourPlayer)[0].X -
-						this.GetHandCardPositions(ourPlayer)[this.maxHandCardCount - 1].X
+					this.GetHandCardPosition(ourPlayer, 0).X -
+						this.GetHandCardPosition(ourPlayer, this.maxHandCardCount - 1).X
 				) + this.pixelsToPercent(this.cardWidth, gameBoardDimensions.X),
 			Y: this.pixelsToPercent(this.cardHeight, gameBoardDimensions.Y),
 		}
@@ -172,7 +173,10 @@ class GameBoardLayout {
 		return 1 / (gameBoardLength / pixels)
 	}
 
-	static GetHandCardPositions(ourPlayer: boolean): IPos[] {
+	static GetHandCardPosition(ourPlayer: boolean, index: number): IPos {
+		if(index > 4){
+			return this.GetKittyCardPosition(ourPlayer);
+		}
 		let cardPositions = Array(this.maxHandCardCount)
 			.fill(0)
 			.map((e, i) => {
@@ -185,7 +189,7 @@ class GameBoardLayout {
 		if (!ourPlayer) {
 			cardPositions = this.FlipPositions(cardPositions)
 		}
-		return cardPositions
+		return cardPositions[index]
 	}
 
 	static GetKittyCardPosition(ourPlayer: boolean): IPos {

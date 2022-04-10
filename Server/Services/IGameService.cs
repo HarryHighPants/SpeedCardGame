@@ -1,6 +1,7 @@
 namespace Server;
 
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Linq;
 using Engine;
 using Engine.Helpers;
@@ -80,7 +81,7 @@ public class LobbyStateDto
 public class GameStateDto
 {
 	public List<PlayerDto> Players;
-	public List<Card> CenterPiles;
+	public List<CenterPile> CenterPiles;
 	public string LastMove;
 	public int? WinnerId;
 
@@ -100,7 +101,8 @@ public class GameStateDto
 			}
 		}
 
-		CenterPiles = gameState.CenterPiles.Select((pile, i) => pile.Cards.Last()).ToList();
+		// Only send the top 3
+		CenterPiles = gameState.CenterPiles.Select((pile, i) => new CenterPile{Cards = pile.Cards.TakeLast(3).ToImmutableList()} ).ToList();
 		LastMove = gameState.LastMove;
 
 		var winnerResult = gameEngine.Checks.TryGetWinner(gameState);

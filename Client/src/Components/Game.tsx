@@ -65,7 +65,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 
 	const OnPlayCard = (topCard: ICard, centerPileIndex: number) => {
 		// Call the event
-		// connection?.invoke('TryPlayCard', topCard.Id, centerPileIndex).catch((e) => console.log(e))
+		connection?.invoke('TryPlayCard', topCard.Id, centerPileIndex).catch((e) => console.log(e))
 
 		// Show any messages (Move to a warnings component)
 
@@ -80,7 +80,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 
 		let playerIndex = gameState.Players.indexOf(player)
 		gameState.Players[playerIndex].HandCards = player.HandCards.filter((c)=>c.Id != topCard.Id);
-		gameState.CenterPiles[centerPileIndex] = topCard
+		gameState.CenterPiles[centerPileIndex].Cards.push(topCard);
 		setLocalGameState({ ...gameState })
 		console.log("UpdateGameStatePlayCard");
 	}

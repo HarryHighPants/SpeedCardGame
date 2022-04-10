@@ -3,7 +3,11 @@ import { IPlayer } from './IPlayer'
 
 export interface IGameState {
     Players: IPlayer[]
-    CenterPiles: ICard[]
+    CenterPiles: CenterPile[]
     LastMove: string
 	WinnerId?: number
+}
+
+export interface CenterPile {
+	Cards: ICard[]
 }
