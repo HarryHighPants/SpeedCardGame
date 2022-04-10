@@ -39,14 +39,14 @@ public interface IGameService
 
 public class UpdateMovingCardData
 {
-	public int CardId;
-	public Pos? Pos;
+	public int CardId {get; set;}
+	public Pos? Pos {get; set;}
 }
 
 public class Pos
 {
-	public float X;
-	public float Y;
+	public float X {get; set;}
+	public float Y {get; set;}
 }
 
 public class Room

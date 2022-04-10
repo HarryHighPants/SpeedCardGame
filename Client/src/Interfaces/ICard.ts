@@ -48,6 +48,6 @@ export interface IRenderableCard extends ICard {
 }
 
 export interface IMovedCardPos {
-	cardId: number
-	pos: IPos
+	CardId: number
+	Pos: IPos | undefined
 }

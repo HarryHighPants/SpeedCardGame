@@ -15,13 +15,22 @@ import GameBoardAreas from './GameBoardAreas/GameBoardAreas'
 interface Props {
 	playerId: string | undefined | null
 	gameState: IGameState
-	movedCards: IMovedCardPos[]
+	movedCard: IMovedCardPos | undefined
 	gameBoardDimensions: IPos
 	onPlayCard: (topCard: ICard, centerPileIndex: number) => void
 	onPickupFromKitty: () => void
+	onDraggingCardUpdated: (draggingCard: IMovedCardPos | undefined) => void
 }
 
-const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPlayCard, onPickupFromKitty }: Props) => {
+const GameBoard = ({
+	gameBoardDimensions,
+	playerId,
+	gameState,
+	movedCard,
+	onPlayCard,
+	onPickupFromKitty,
+	onDraggingCardUpdated,
+}: Props) => {
 	const [renderableCards, setRenderableCards] = useState<IRenderableCard[]>([] as IRenderableCard[])
 	const [cardBeingDragged, setCardBeingDragged] = useState<IRenderableCard>()
 	const [handAreaHighlighted, setHandAreaHighlighted] = useState<boolean>(false)
@@ -34,15 +43,38 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 		UpdateRenderableCards()
 	}, [gameState])
 
+	useEffect(() => {
+		UpdateRenderableCards()
+	}, [movedCard])
+
 	const UpdateRenderableCards = () => {
-		let gameBoardLayout = new GameBoardLayout(gameBoardDimensions, movedCards, renderableCards)
+		let gameBoardLayout = new GameBoardLayout(gameBoardDimensions, movedCard, renderableCards)
 		setRenderableCards(gameBoardLayout.GetRenderableCards(playerId, gameState))
+	}
+
+	const DraggingCardUpdated = (draggingCard: IRenderableCard | undefined) => {
+		let newDraggingCard = draggingCard !== undefined ? { ...draggingCard } : undefined
+		setCardBeingDragged(newDraggingCard)
+
+		let rect = newDraggingCard?.ref?.current?.getBoundingClientRect()
+
+		// Send the event to the other player
+		let movedCard =
+			newDraggingCard !== undefined && rect !== undefined
+				? ({
+						CardId: newDraggingCard.Id,
+						Pos: GameBoardLayout.CardRectToPercent(rect, gameBoardDimensions),
+				  } as IMovedCardPos)
+				: undefined
+		console.log('Sending:', movedCard?.Pos?.X, movedCard?.Pos?.Y)
+		console.log('ideal', {X: 0.8, Y: 0.75})
+		onDraggingCardUpdated(movedCard)
 	}
 
 	const OnEndDrag = (topCard: IRenderableCard) => {
 		let bottomCard = GetBottomCard()
 		DetectMove(topCard, bottomCard)
-		setCardBeingDragged(undefined)
+		DraggingCardUpdated(undefined)
 	}
 
 	const DetectMove = (topCard: IRenderableCard, bottomCard: IRenderableCard | undefined) => {
@@ -103,7 +135,7 @@ const GameBoard = ({ gameBoardDimensions, playerId, gameState, movedCards, onPla
 						<Card
 							key={`card-${c.Id}`}
 							card={c}
-							setDraggingCard={setCardBeingDragged}
+							draggingCardUpdated={DraggingCardUpdated}
 							onDragEnd={OnEndDrag}
 							cardBeingDragged={cardBeingDragged}
 						/>

@@ -13,7 +13,8 @@ import GameBoard from './GameBoard'
 interface Props {
 	connection: signalR.HubConnection | undefined
 	connectionId: string | undefined | null
-	gameState: IGameState
+	gameState: IGameState,
+	invertedCenterPiles: boolean
 }
 
 const getGameBoardDimensions = () => {
@@ -23,12 +24,12 @@ const getGameBoardDimensions = () => {
 	} as IPos
 }
 
-const Game = ({ connection, connectionId, gameState }: Props) => {
-	const [movedCards, setMovedCards] = useState<IMovedCardPos[]>([])
+const Game = ({ connection, connectionId, gameState, invertedCenterPiles }: Props) => {
+	const [movedCard, setMovedCard] = useState<IMovedCardPos>()
 	const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>(getGameBoardDimensions())
 	const [localGameState, setLocalGameState] = useState<IGameState>(gameState)
 
-	useEffect(()=>{
+	useEffect(() => {
 		setLocalGameState(gameState)
 	}, [gameState])
 
@@ -44,28 +45,23 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 
 	useEffect(() => {
 		if (!connection) return
-		connection.on('CardMoved', CardMoved)
+		connection.on('MovingCardUpdated', UpdateMovingCard)
 
 		return () => {
-			connection.off('CardMoved', CardMoved)
+			connection.off('MovingCardUpdated', UpdateMovingCard)
 		}
 	}, [connection])
 
-	const CardMoved = (data: any) => {
+	const UpdateMovingCard = (data: any) => {
 		let parsedData: IMovedCardPos = JSON.parse(data)
-
-		let existingMovingCard = movedCards.find((c) => c.cardId === parsedData.cardId)
-		if (existingMovingCard) {
-			existingMovingCard.pos = parsedData.pos
-		} else {
-			movedCards.push(parsedData)
-		}
-		setMovedCards([...movedCards])
+		console.log(data)
+		setMovedCard(parsedData)
 	}
 
 	const OnPlayCard = (topCard: ICard, centerPileIndex: number) => {
 		// Call the event
-		connection?.invoke('TryPlayCard', topCard.Id, centerPileIndex).catch((e) => console.log(e))
+		let correctedCenterPileIndex = invertedCenterPiles ? ((centerPileIndex + 1) % 2) : centerPileIndex
+		connection?.invoke('TryPlayCard', topCard.Id, correctedCenterPileIndex).catch((e) => console.log(e))
 
 		// Show any messages (Move to a warnings component)
 
@@ -79,10 +75,10 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 		}
 
 		let playerIndex = gameState.Players.indexOf(player)
-		gameState.Players[playerIndex].HandCards = player.HandCards.filter((c)=>c.Id != topCard.Id);
-		gameState.CenterPiles[centerPileIndex].Cards.push(topCard);
+		gameState.Players[playerIndex].HandCards = player.HandCards.filter((c) => c.Id != topCard.Id)
+		gameState.CenterPiles[centerPileIndex].Cards.push(topCard)
 		setLocalGameState({ ...gameState })
-		console.log("UpdateGameStatePlayCard");
+		console.log('UpdateGameStatePlayCard')
 	}
 
 	const OnPickupFromKitty = () => {
@@ -102,7 +98,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 		gameState.Players[playerIndex].HandCards.push({ Id: player.TopKittyCardId } as ICard)
 		gameState.Players[playerIndex].TopKittyCardId = -1
 		setLocalGameState({ ...gameState })
-		console.log("UpdateGameStatePickupFromKitty");
+		console.log('UpdateGameStatePickupFromKitty')
 	}
 
 	const OnRequestTopUp = () => {
@@ -112,16 +108,22 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 		// assume the server will return success and update the gamestate
 	}
 
+	const OnDraggingCardUpdated = (draggingCard: IMovedCardPos | undefined) => {
+		console.log("OnDraggingCardUpdated", draggingCard?.Pos?.X, draggingCard?.Pos?.Y)
+		connection?.invoke('UpdateMovingCard', draggingCard).catch((e) => console.log(e))
+	}
+
 	return (
 		<GameContainer>
 			<Player key={`player-${localGameState.Players[0].Id}`} player={localGameState.Players[0]} onTop={true} />
 			<GameBoard
 				playerId={connectionId}
 				gameState={localGameState}
-				movedCards={movedCards}
+				movedCard={movedCard}
 				gameBoardDimensions={gameBoardDimensions}
 				onPlayCard={OnPlayCard}
 				onPickupFromKitty={OnPickupFromKitty}
+				onDraggingCardUpdated={OnDraggingCardUpdated}
 			/>
 			<Player
 				onRequestTopUp={OnRequestTopUp}

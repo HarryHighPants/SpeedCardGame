@@ -15,6 +15,7 @@ const Room = (props: Props) => {
 	const [connection, setConnection] = useState<HubConnection>()
 	const [roomId, setRoomId] = useState<string | undefined>(urlParams.roomId)
 	const [gameState, setGameState] = useState<IGameState>(testing ? JSON.parse(TestData) : undefined) // Local debugging
+	const [invertedCenterPiles, setInvertedCenterPiles] = useState(false)
 
 	useEffect(() => {
 		// Builds the SignalR connection, mapping it to /server
@@ -53,12 +54,16 @@ const Room = (props: Props) => {
 
 	const UpdateGameState = (data: any) => {
 		let parsedData: IGameState = JSON.parse(data)
-		// Order the players so that we are the last player so we get shown at the bottom of the screen
-		parsedData.Players = [
-			...parsedData.Players.sort(
-				(a, b) => (a.Id === connection?.connectionId ? 1 : 0) - (b.Id === connection?.connectionId ? 1 : 0)
-			),
-		]
+
+		if (parsedData.Players[0].Id === connection?.connectionId) {
+			// We need to invert the center piles so that 0 is on the right
+			// This way we will have a perfectly mirrored board simplifying sending card IPos to the other player
+			setInvertedCenterPiles(true)
+			parsedData.CenterPiles = parsedData.CenterPiles.reverse()
+
+			// Order the players so that we are the last player so we get shown at the bottom of the screen
+			parsedData.Players = parsedData.Players.reverse()
+		}
 
 		setGameState({ ...parsedData })
 	}
@@ -68,6 +73,7 @@ const Room = (props: Props) => {
 			connection={connection}
 			connectionId={testing ? 'CUqUsFYm1zVoW-WcGr6sUQ' : connection?.connectionId}
 			gameState={gameState}
+			invertedCenterPiles={invertedCenterPiles}
 		/>
 	) : (
 		<Lobby roomId={roomId} connection={connection} />

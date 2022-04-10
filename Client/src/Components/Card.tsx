@@ -9,12 +9,12 @@ import { motion, PanInfo, Variants } from 'framer-motion'
 
 export interface Props {
 	card: IRenderableCard
-	setDraggingCard: (card: IRenderableCard) => void
+	draggingCardUpdated: (card: IRenderableCard) => void
 	onDragEnd: (card: IRenderableCard) => void
 	cardBeingDragged: IRenderableCard | undefined
 }
 
-const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => {
+const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props) => {
 	const [disablePointerEvents, setDisablePointerEvents] = useState(false)
 	const [dragPosDelta, setDragPosDelta] = useState(0)
 	const [highlighted, setHighlighted] = useState(false)
@@ -47,19 +47,19 @@ const Card = ({ card, onDragEnd, setDraggingCard, cardBeingDragged }: Props) => 
 	}
 
 	const OnStartDrag = (panInfo: PanInfo) => {
-		setDraggingCard({ ...card })
+		draggingCardUpdated({ ...card })
 	}
 
 	const OnDrag = (panInfo: PanInfo) => {
 		let distance = GetDistance({ X: panInfo.offset.x, Y: panInfo.offset.y }, { X: 0, Y: 0 })
 		if (distance.toFixed(0) === dragPosDelta.toFixed(0)) return
 		setDragPosDelta(distance)
-		setDraggingCard({ ...card })
+		draggingCardUpdated({ ...card })
 	}
 
 	const OnEndDrag = (panInfo: PanInfo) => {
 		setDisablePointerEvents(false)
-		onDragEnd({...card})
+		onDragEnd({ ...card })
 	}
 
 	const transitionDuration = 0.5

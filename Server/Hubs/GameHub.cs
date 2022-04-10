@@ -116,34 +116,42 @@ public class GameHub : Hub
     {
 	    var pickupResult = gameService.TryPickupFromKitty(UserConnectionId);
 	    await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
-	    // if (pickupResult is IErrorResult pickupResultError)
-	    // {
-		   //  throw new HubException(pickupResultError.Message, new UnauthorizedAccessException(pickupResultError.Message));
-	    // }
+	    if (pickupResult is IErrorResult pickupResultError)
+	    {
+		    throw new HubException(pickupResultError.Message, new UnauthorizedAccessException(pickupResultError.Message));
+	    }
     }
 
     public async Task TryRequestTopUp()
     {
 	    var topUpResult = gameService.TryRequestTopUp(UserConnectionId);
 	    await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
-	    // if (topUpResult is IErrorResult topUpResultError)
-	    // {
-		   //  throw new HubException(topUpResultError.Message, new UnauthorizedAccessException(topUpResultError.Message));
-	    // }
+	    if (topUpResult is IErrorResult topUpResultError)
+	    {
+		    throw new HubException(topUpResultError.Message, new UnauthorizedAccessException(topUpResultError.Message));
+	    }
     }
 
-    public async Task UpdateMovingCard(UpdateMovingCardData updateMovingCard)
+    public async Task UpdateMovingCard(UpdateMovingCardData? updateMovingCard)
     {
+	    if (updateMovingCard != null)
+	    {
+		    var a = 1;
+		    if (updateMovingCard.CardId != 0)
+		    {
+			    var b = 1;
+		    }
+	    }
         // Check connection owns the card
-        if (!gameService.ConnectionOwnsCard(UserConnectionId, updateMovingCard.CardId))
+        if (updateMovingCard != null && !gameService.ConnectionOwnsCard(UserConnectionId, updateMovingCard.CardId))
         {
             throw new HubException("Connection can't move that card", new UnauthorizedAccessException());
         }
 
-        // Send update to the group
+        // Send update to the others in the group
         var roomId = gameService.GetConnectionsRoomId(UserConnectionId);
         var jsonData = JsonConvert.SerializeObject(updateMovingCard);
-        await Clients.Group(roomId).SendAsync("CardMoved", jsonData);
+        await Clients.OthersInGroup(roomId).SendAsync("MovingCardUpdated", jsonData);
     }
 
 
