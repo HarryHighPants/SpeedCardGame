@@ -2,7 +2,7 @@ import { CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard } from '.
 import { IGameState } from '../Interfaces/IGameState'
 import React from 'react'
 import { AreaDimensions } from '../Components/GameBoardAreas/BaseArea'
-import {clamp} from "./Utilities";
+import { clamp } from './Utilities'
 
 class GameBoardLayout {
 	public static maxWidth = 750
@@ -65,6 +65,15 @@ class GameBoardLayout {
 				let kittyCard = this.GetRenderableCard(
 					{ Id: p.TopKittyCardId } as ICard,
 					-1,
+					ourPlayer,
+					CardLocationType.Kitty
+				)
+				newRenderableCards.push(kittyCard)
+			}
+			if (p.KittyCardsCount > 1 && p.TopKittyCardId) {
+				let kittyCard = this.GetRenderableCard(
+					{ Id: p.TopKittyCardId + 100 } as ICard,
+					-5,
 					ourPlayer,
 					CardLocationType.Kitty
 				)
@@ -179,9 +188,9 @@ class GameBoardLayout {
 
 	public static CardRectToPercent = (rect: DOMRect, gameBoardDimensions: IPos) => {
 		// Need to subtract half of the size of the screen over the actual size of the screen from x
-		let excessWidth = clamp(window.innerWidth - gameBoardDimensions.X, 0, Infinity);
+		let excessWidth = clamp(window.innerWidth - gameBoardDimensions.X, 0, Infinity)
 		return {
-			X: this.PixelsToPercent((rect.x - excessWidth / 2 ) + this.cardWidth / 2, gameBoardDimensions.X),
+			X: this.PixelsToPercent(rect.x - excessWidth / 2 + this.cardWidth / 2, gameBoardDimensions.X),
 			Y: this.PixelsToPercent(rect.y + this.cardHeight / 2, gameBoardDimensions.Y),
 		} as IPos
 	}
@@ -249,11 +258,28 @@ class GameBoardLayout {
 			(!ourPlayer ? Math.abs(index - GameBoardLayout.maxHandCardCount - 1) : index) +
 			(location != CardLocationType.Center ? GameBoardLayout.maxHandCardCount : 0)
 		let ref = this.renderableCards.find((c) => c.Id === card.Id)?.ref
+
+		let previousCard = this.renderableCards.find((c) => c.Id === card.Id)
+
 		// Animate in any new center cards from the left or right
-		let animateInHorizontalOffset =
-			location === CardLocationType.Center
-				? GameBoardLayout.GetRelativeAsPixels(0.6, this.gameBoardDimensions.X) * (index === 0 ? -1 : 1)
-				: 0
+		let animateInHorizontalOffset = previousCard?.animateInHorizontalOffset ?? 0
+		let animateInDelay = previousCard?.animateInDelay ?? 0
+		let animateInZIndex = previousCard?.animateInZIndex ?? zIndex
+		// Setup the original cards with the correct transition in settings
+		if (this.renderableCards.length <= 0) {
+			if (location === CardLocationType.Center) {
+				animateInHorizontalOffset =
+					GameBoardLayout.GetRelativeAsPixels(0.6, this.gameBoardDimensions.X) * (index === 0 ? -1 : 1)
+				animateInDelay = 3
+			} else if (location === CardLocationType.Hand) {
+				animateInHorizontalOffset = GameBoardLayout.GetRelativeAsPixels(
+					GameBoardLayout.GetKittyCardPosition(ourPlayer).X - defaultPos.X,
+					this.gameBoardDimensions.X
+				)
+				animateInDelay = index * 0.5
+				animateInZIndex = Math.abs(index - GameBoardLayout.maxHandCardCount - 1) + 20
+			}
+		}
 		return {
 			...{
 				...card,
@@ -263,6 +289,8 @@ class GameBoardLayout {
 				zIndex: zIndex,
 				ref: ref ?? React.createRef<HTMLDivElement>(),
 				animateInHorizontalOffset: animateInHorizontalOffset,
+				animateInDelay: animateInDelay,
+				animateInZIndex: animateInZIndex,
 			},
 		} as IRenderableCard
 	}

@@ -6,6 +6,7 @@ import { usePrevious } from '../Helpers/UsePrevious'
 import Droppable from './Droppable'
 import { GetDistance } from '../Helpers/Utilities'
 import { motion, PanInfo, Variants } from 'framer-motion'
+import { AnimationDefinition } from 'framer-motion/types/render/utils/animation'
 
 export interface Props {
 	card: IRenderableCard
@@ -19,6 +20,7 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 	const [dragPosDelta, setDragPosDelta] = useState(0)
 	const [highlighted, setHighlighted] = useState(false)
 	const [horizontalOffset, setHorizontalOffset] = useState(0)
+	const [transitionDelay, setTransitionDelay] = useState(card.animateInDelay)
 
 	const UpdateAnimationStates = (distance: number, overlaps?: boolean, delta?: IPos) => {
 		if (distance === Infinity) {
@@ -71,16 +73,26 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 	}
 	const cardVariants: Variants = {
 		initial: {
-			zIndex: card.zIndex,
+			zIndex: card.animateInZIndex,
 			top: card.pos.Y,
 			left: card.pos.X + horizontalOffset + (card.animateInHorizontalOffset ?? 0),
-			transition: defaultTransition,
+			transition: {
+				type: defaultTransition.type,
+				ease: defaultTransition.ease,
+				duration: defaultTransition.duration,
+				delay: transitionDelay
+			},
 		},
 		animate: {
 			zIndex: card.zIndex,
 			top: card.pos.Y,
 			left: card.pos.X + horizontalOffset,
-			transition: defaultTransition,
+			transition: {
+				type: defaultTransition.type,
+				ease: defaultTransition.ease,
+				duration: defaultTransition.duration,
+				delay: transitionDelay
+			},
 		},
 		hovered: card.ourCard
 			? {
@@ -94,7 +106,7 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 			scale: 1.12,
 			boxShadow: '0px 15px 30px rgba(0,0,0,0.5)',
 			cursor: 'grabbing',
-			zIndex: 15,
+			zIndex: 20,
 			top: card.pos.Y - 20,
 			transition: defaultTransition,
 		},
@@ -109,6 +121,13 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 				},
 			},
 		},
+	}
+
+	const AnimEnd = (anim:  AnimationDefinition) => {
+		if(card.animateInDelay === transitionDelay){
+			setTransitionDelay(0)
+			// setTransitionZIndex(card.zIndex)
+		}
 	}
 
 	return (
@@ -128,6 +147,7 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 				whileHover="hovered"
 				whileDrag="dragging"
 				exit="exit"
+				onAnimationComplete={(a)=>AnimEnd(a)}
 				$grabCursor={card.ourCard}
 				drag={card.ourCard}
 				onDrag={(e: any, info: PanInfo) => OnDrag(info)}
