@@ -2,20 +2,24 @@ import * as signalR from '@microsoft/signalr'
 import { HubConnection, HubConnectionState } from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import Lobby from '../../Components/Lobby'
 import { IGameState } from '../../Interfaces/IGameState'
 import Game from '../../Components/Game'
 import TestData from '../../Assets/TestData.js'
+import Lobby from './Lobby'
 
-interface Props {}
+interface Props {
+	onGameStarted: () => void
+}
 
 const testing: boolean = false
-const Room = (props: Props) => {
+const Room = ({ onGameStarted }: Props) => {
 	let urlParams = useParams()
 	const [connection, setConnection] = useState<HubConnection>()
 	const [roomId, setRoomId] = useState<string | undefined>(urlParams.roomId)
 	const [gameState, setGameState] = useState<IGameState>(testing ? JSON.parse(TestData) : undefined) // Local debugging
 	const [invertedCenterPiles, setInvertedCenterPiles] = useState(false)
+
+	const [rawGameStateHistory, setRawGameStateHistory] = useState<any[]>([])
 
 	useEffect(() => {
 		// Builds the SignalR connection, mapping it to /server
@@ -64,6 +68,14 @@ const Room = (props: Props) => {
 			// Order the players so that we are the last player so we get shown at the bottom of the screen
 			parsedData.Players = parsedData.Players.reverse()
 		}
+
+		if (!gameState) {
+			onGameStarted()
+		}
+
+		rawGameStateHistory.push(data)
+		setRawGameStateHistory(rawGameStateHistory)
+		console.log(JSON.stringify(rawGameStateHistory))
 
 		setGameState({ ...parsedData })
 	}

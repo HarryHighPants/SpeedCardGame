@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import MenuHeader from "../../Components/MenuHeader";
+import MenuHeader from "./MenuHeader";
 
 const JoinGameMenu = () => {
     const [gameId, setGameId] = useState('')

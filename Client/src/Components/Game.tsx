@@ -109,7 +109,6 @@ const Game = ({ connection, connectionId, gameState, invertedCenterPiles }: Prop
 	}
 
 	const OnDraggingCardUpdated = (draggingCard: IMovedCardPos | undefined) => {
-		console.log('OnDraggingCardUpdated', draggingCard?.Pos?.X, draggingCard?.Pos?.Y)
 		connection?.invoke('UpdateMovingCard', draggingCard).catch((e) => console.log(e))
 	}
 
@@ -143,7 +142,7 @@ const GameContainer = styled.div`
 	height: 100%;
 	max-width: 100%;
 	max-height: 100%;
-	//overflow: hidden;
+	overflow: hidden;
 	overscroll-behavior: none;
 `
 

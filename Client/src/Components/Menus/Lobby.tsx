@@ -1,8 +1,8 @@
-import copyIcon from '../Assets/copyIcon.png'
+import copyIcon from '../../Assets/copyIcon.png'
 import * as signalR from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
-import { GameType, ILobby, IPlayerConnection } from '../Interfaces/ILobby'
 import { useParams, useSearchParams } from 'react-router-dom'
+import {GameType, ILobby, IPlayerConnection} from "../../Interfaces/ILobby";
 
 interface Props {
 	connection: signalR.HubConnection | undefined

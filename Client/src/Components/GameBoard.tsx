@@ -66,8 +66,6 @@ const GameBoard = ({
 						Pos: GameBoardLayout.CardRectToPercent(rect, gameBoardDimensions),
 				  } as IMovedCardPos)
 				: undefined
-		console.log('Sending:', movedCard?.Pos?.X, movedCard?.Pos?.Y)
-		console.log('ideal', {X: 0.8, Y: 0.75})
 		onDraggingCardUpdated(movedCard)
 	}
 

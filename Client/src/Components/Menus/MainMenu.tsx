@@ -3,7 +3,7 @@ import { Route, Routes, useNavigate } from 'react-router-dom'
 import { uniqueNamesGenerator } from 'unique-names-generator'
 import animals from '../../Assets/Animals.json'
 import adjectives from '../../Assets/Adjectives.json'
-import MenuHeader from '../../Components/MenuHeader'
+import MenuHeader from "./MenuHeader";
 
 interface Props {}
 
