@@ -260,10 +260,12 @@ class GameBoardLayout {
 		let animateInHorizontalOffset = previousCard?.animateInHorizontalOffset ?? 0
 		let animateInDelay = previousCard?.animateInDelay ?? 0
 		let animateInZIndex = previousCard?.animateInZIndex ?? zIndex
+		let startTransparent = false;
 		if (location === CardLocationType.Center) {
 			animateInHorizontalOffset =
 				GameBoardLayout.GetRelativeAsPixels(0.6, this.gameBoardDimensions.X) * (index === 0 ? -1 : 1)
 			animateInDelay = this.renderableCards.filter(c=>c.location === CardLocationType.Center).length <= 2 ? 3 : 0
+			startTransparent = true;
 		}
 		// Setup the original cards with the correct transition in settings
 		if (this.renderableCards.length <= 0) {
@@ -287,6 +289,7 @@ class GameBoardLayout {
 				animateInHorizontalOffset: animateInHorizontalOffset,
 				animateInDelay: animateInDelay,
 				animateInZIndex: animateInZIndex,
+				startTransparent: startTransparent
 			},
 		} as IRenderableCard
 	}

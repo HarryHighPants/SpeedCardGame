@@ -73,6 +73,7 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 	}
 	const cardVariants: Variants = {
 		initial: {
+			opacity: card.startTransparent ? 0 : 1,
 			zIndex: card.animateInZIndex,
 			top: card.pos.Y,
 			left: card.pos.X + horizontalOffset + (card.animateInHorizontalOffset ?? 0),
@@ -84,6 +85,7 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 			},
 		},
 		animate: {
+			opacity: 1,
 			zIndex: card.zIndex,
 			top: card.pos.Y,
 			left: card.pos.X + horizontalOffset,

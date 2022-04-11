@@ -47,6 +47,7 @@ export interface IRenderableCard extends ICard {
 	animateInHorizontalOffset: number | undefined
 	animateInDelay: number
 	animateInZIndex: number
+	startTransparent: boolean
 }
 
 export interface IMovedCardPos {
