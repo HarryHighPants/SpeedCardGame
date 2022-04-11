@@ -89,6 +89,7 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 			zIndex: card.zIndex,
 			top: card.pos.Y,
 			left: card.pos.X + horizontalOffset,
+			boxShadow: '0px 0px 10px rgba(0,0,0,0.3)',
 			transition: {
 				type: defaultTransition.type,
 				ease: defaultTransition.ease,
@@ -100,13 +101,13 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 			? {
 					scale: 1.03,
 					top: card.pos.Y - 20,
-					boxShadow: '0px 7px 15px rgba(0,0,0,0.3)',
+					boxShadow: '0px 0px 20px rgba(0,0,0,0.4)',
 					transition: defaultTransition,
 			  }
 			: {},
 		dragging: {
 			scale: 1.12,
-			boxShadow: '0px 15px 30px rgba(0,0,0,0.5)',
+			boxShadow: '0px 30px 30px rgba(0,0,0,0.6)',
 			cursor: 'grabbing',
 			zIndex: 20,
 			top: card.pos.Y - 20,
@@ -128,7 +129,6 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 	const AnimEnd = (anim:  AnimationDefinition) => {
 		if(card.animateInDelay === transitionDelay){
 			setTransitionDelay(0)
-			// setTransitionZIndex(card.zIndex)
 		}
 	}
 
@@ -177,6 +177,7 @@ const CardParent = styled(motion.div)<{ $grabCursor: boolean }>`
 	width: 80px;
 	cursor: ${(p) => (p.$grabCursor ? 'grab' : 'default')};
 	position: absolute;
+	display: flex;
 `
 
 const CardImg = styled.img<{ highlighted: boolean }>`
