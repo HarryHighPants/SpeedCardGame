@@ -105,7 +105,6 @@ const Game = ({ connection, connectionId, gameState, invertedCenterPiles }: Prop
 		// Call the event
 		connection?.invoke('TryRequestTopUp').catch((e) => console.log(e))
 		// Show any messages (Move to a warnings component)
-		// assume the server will return success and update the gamestate
 	}
 
 	const OnDraggingCardUpdated = (draggingCard: IMovedCardPos | undefined) => {

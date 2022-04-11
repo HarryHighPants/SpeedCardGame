@@ -140,7 +140,7 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 			<CardParent
 				ref={card.ref}
 				key={`card-${card.Id}`}
-				layoutId={`card-${card.Id}`}
+				// layoutId={`card-${card.Id}`}
 				variants={cardVariants}
 				initial="initial"
 				animate="animate"

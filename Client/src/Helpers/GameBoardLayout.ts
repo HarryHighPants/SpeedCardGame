@@ -1,8 +1,8 @@
-import { CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard } from '../Interfaces/ICard'
-import { IGameState } from '../Interfaces/IGameState'
+import {CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard} from '../Interfaces/ICard'
+import {IGameState} from '../Interfaces/IGameState'
 import React from 'react'
-import { AreaDimensions } from '../Components/GameBoardAreas/BaseArea'
-import { clamp } from './Utilities'
+import {AreaDimensions} from '../Components/GameBoardAreas/BaseArea'
+import {clamp} from './Utilities'
 
 class GameBoardLayout {
 	public static maxWidth = 750
@@ -260,13 +260,14 @@ class GameBoardLayout {
 		let animateInHorizontalOffset = previousCard?.animateInHorizontalOffset ?? 0
 		let animateInDelay = previousCard?.animateInDelay ?? 0
 		let animateInZIndex = previousCard?.animateInZIndex ?? zIndex
+		if (location === CardLocationType.Center) {
+			animateInHorizontalOffset =
+				GameBoardLayout.GetRelativeAsPixels(0.6, this.gameBoardDimensions.X) * (index === 0 ? -1 : 1)
+			animateInDelay = this.renderableCards.filter(c=>c.location === CardLocationType.Center).length <= 2 ? 3 : 0
+		}
 		// Setup the original cards with the correct transition in settings
 		if (this.renderableCards.length <= 0) {
-			if (location === CardLocationType.Center) {
-				animateInHorizontalOffset =
-					GameBoardLayout.GetRelativeAsPixels(0.6, this.gameBoardDimensions.X) * (index === 0 ? -1 : 1)
-				animateInDelay = 3
-			} else if (location === CardLocationType.Hand) {
+			 if (location === CardLocationType.Hand) {
 				animateInHorizontalOffset = GameBoardLayout.GetRelativeAsPixels(
 					GameBoardLayout.GetKittyCardPosition(ourPlayer).X - defaultPos.X,
 					this.gameBoardDimensions.X
