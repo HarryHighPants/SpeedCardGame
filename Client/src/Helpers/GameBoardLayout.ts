@@ -249,11 +249,6 @@ class GameBoardLayout {
 		let pos = this.getCardPosPixels(
 			movedCard?.Pos !== undefined ? GameBoardLayout.FlipPosition(movedCard.Pos) : defaultPos
 		)
-		// if(movedCard?.Pos !== undefined){
-		// 	pos = this.getPosPixels(
-		// 		GameBoardLayout.FlipPosition(movedCard.Pos)
-		// 	)
-		// }
 		let zIndex =
 			(!ourPlayer ? Math.abs(index - GameBoardLayout.maxHandCardCount - 1) : index) +
 			(location != CardLocationType.Center ? GameBoardLayout.maxHandCardCount : 0)
