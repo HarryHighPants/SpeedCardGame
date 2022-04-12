@@ -6,7 +6,9 @@ import RouteManager from "./Components/Menus/RouteManager";
 function App() {
     return (
         <div className="App">
-            <RouteManager/>
+			<BrowserRouter>
+				<RouteManager/>
+			</BrowserRouter>
         </div>
     )
 }

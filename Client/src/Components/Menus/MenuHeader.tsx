@@ -1,8 +1,14 @@
+import styled from 'styled-components'
+
 const MenuHeader = () => {
   return(
     // Todo: add logo
-    <h1>Speed Card Game</h1>
+    <Header>Speed Card Game</Header>
   )
 }
+
+const Header = styled.h1`
+	margin-top: 0;
+`
 
 export default MenuHeader;

@@ -45,6 +45,7 @@ const Room = ({ onGameStarted }: Props) => {
 	}, [connection])
 
 	useEffect(() => {
+		console.log(urlParams.roomId)
 		setRoomId(urlParams.roomId)
 		if (connection?.state == HubConnectionState.Connected) {
 			JoinRoom()

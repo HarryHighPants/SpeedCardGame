@@ -1,8 +1,11 @@
 import copyIcon from '../../Assets/copyIcon.png'
 import * as signalR from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
-import {GameType, ILobby, IPlayerConnection} from "../../Interfaces/ILobby";
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { GameType, ILobby, IPlayerConnection } from '../../Interfaces/ILobby'
+import Popup from './Popup'
+import styled from 'styled-components'
+import { HiOutlineDocumentDuplicate } from 'react-icons/hi'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
@@ -10,6 +13,7 @@ interface Props {
 }
 
 const Lobby = ({ connection, roomId }: Props) => {
+	let navigate = useNavigate()
 	const [lobbyData, setLobbyData] = useState<ILobby>()
 	const [myPlayerName, setMyPlayerName] = useState<string>('Player')
 	const [connectionId, setConnectionId] = useState<string>('')
@@ -57,15 +61,13 @@ const Lobby = ({ connection, roomId }: Props) => {
 	}
 
 	return (
-		<div>
-			<h2>Lobby</h2>
+		<Popup onBackButton={() => navigate(`/`)}>
+			<Header2>Lobby</Header2>
 			<div>
 				<div>
 					<p>Invite link:</p>
 					<input value={window.location.href} disabled={true} />
-					<button onClick={() => navigator.clipboard.writeText(window.location.href)}>
-						<img width={10} alt="Copy" src={copyIcon} />
-					</button>
+					<HiOutlineDocumentDuplicate onClick={() => navigator.clipboard.writeText(window.location.href)} />
 				</div>
 				<div>
 					<h4>Players</h4>
@@ -81,11 +83,16 @@ const Lobby = ({ connection, roomId }: Props) => {
 					Start Game
 				</button>
 			</div>
-		</div>
+		</Popup>
 	)
 }
 
 export default Lobby
+
+const Header2 = styled.h2`
+	margin-top: -20px;
+	width: 250px;
+`
 
 const LobbyPlayer = (
 	connectionId: string,
