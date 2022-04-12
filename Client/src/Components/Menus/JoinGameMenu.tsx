@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import styled from 'styled-components'
 import MenuHeader from './MenuHeader'
 import Popup from './Popup'
 
@@ -21,13 +22,23 @@ const JoinGameMenu = () => {
 		<Popup onBackButton={() => navigate('/')}>
 			<MenuHeader />
 			<form onSubmit={(e) => onSubmit(e)}>
-				<input placeholder={'Game1234'} onChange={(e) => setGameId(e.target.value)} />
-				<button disabled={gameId.length < 3} type={'submit'}>
+				<StyledInput placeholder={'Game1234'} onChange={(e) => setGameId(e.target.value)} />
+				<StyledButton disabled={gameId.length < 3} type={'submit'}>
 					Join Game
-				</button>
+				</StyledButton>
 			</form>
 		</Popup>
 	)
 }
+
+const StyledInput = styled.input`
+	margin: 5px;
+	height: 25px;
+`
+
+const StyledButton = styled.button`
+	height: 31px;
+`
+
 
 export default JoinGameMenu

@@ -5,7 +5,7 @@ export interface IGameState {
     Players: IPlayer[]
     CenterPiles: CenterPile[]
     LastMove: string
-	WinnerId?: number
+	WinnerId?: string
 }
 
 export interface CenterPile {

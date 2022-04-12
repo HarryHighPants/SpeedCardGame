@@ -18,6 +18,7 @@ const Lobby = ({ connection, roomId }: Props) => {
 	const [myPlayerName, setMyPlayerName] = useState<string>('Player')
 	const [connectionId, setConnectionId] = useState<string>('')
 	const [searchParams, setSearchParams] = useSearchParams()
+	const [waitingForPlayers, setWaitingForPlayers] = useState(true)
 
 	useEffect(() => {
 		if (!connection) return
@@ -48,6 +49,10 @@ const Lobby = ({ connection, roomId }: Props) => {
 		}
 	}
 
+	useEffect(() => {
+		setWaitingForPlayers(lobbyData == null || lobbyData.Connections?.length < 2)
+	}, [lobbyData])
+
 	const onStartGame = (botGame: boolean = false, botDifficulty: number = 0) => {
 		connection?.invoke('StartGame', botGame, botDifficulty)
 	}
@@ -67,7 +72,7 @@ const Lobby = ({ connection, roomId }: Props) => {
 				<div>
 					<p>Invite link:</p>
 					<input value={window.location.href} disabled={true} />
-					<HiOutlineDocumentDuplicate onClick={() => navigator.clipboard.writeText(window.location.href)} />
+					<CopyButton onClick={() => navigator.clipboard.writeText(window.location.href)} />
 				</div>
 				<div>
 					<h4>Players</h4>
@@ -76,10 +81,11 @@ const Lobby = ({ connection, roomId }: Props) => {
 							{lobbyData?.Connections?.map((p) => LobbyPlayer(connectionId, myPlayerName, p, UpdateName))}
 						</ul>
 					) : (
-						<div>Loading</div>
+						<div>Connecting to room</div>
 					)}
 				</div>
-				<button disabled={lobbyData == null || lobbyData.Connections?.length < 2} onClick={() => onStartGame()}>
+				{waitingForPlayers && !!lobbyData && <p>Waiting for another player to join..</p>}
+				<button disabled={waitingForPlayers} onClick={() => onStartGame()}>
 					Start Game
 				</button>
 			</div>
@@ -88,6 +94,17 @@ const Lobby = ({ connection, roomId }: Props) => {
 }
 
 export default Lobby
+
+const CopyButton = styled(HiOutlineDocumentDuplicate)`
+	width: 25px;
+	height: 25px;
+	color: white;
+	cursor: pointer;
+
+	&:hover {
+		color: #bebebe;
+	}
+`
 
 const Header2 = styled.h2`
 	margin-top: -20px;

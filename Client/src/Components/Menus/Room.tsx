@@ -1,11 +1,12 @@
 import * as signalR from '@microsoft/signalr'
 import { HubConnection, HubConnectionState } from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { IGameState } from '../../Interfaces/IGameState'
 import Game from '../../Components/Game'
 import TestData from '../../Assets/TestData.js'
 import Lobby from './Lobby'
+import Popup from './Popup'
 
 interface Props {
 	onGameStarted: () => void
@@ -14,6 +15,7 @@ interface Props {
 const testing: boolean = false
 const Room = ({ onGameStarted }: Props) => {
 	let urlParams = useParams()
+	let navigate = useNavigate()
 	const [connection, setConnection] = useState<HubConnection>()
 	const [roomId, setRoomId] = useState<string | undefined>(urlParams.roomId)
 	const [gameState, setGameState] = useState<IGameState>(testing ? JSON.parse(TestData) : undefined) // Local debugging
@@ -82,12 +84,19 @@ const Room = ({ onGameStarted }: Props) => {
 	}
 
 	return gameState!! ? (
-		<Game
-			connection={connection}
-			connectionId={testing ? 'CUqUsFYm1zVoW-WcGr6sUQ' : connection?.connectionId}
-			gameState={gameState}
-			invertedCenterPiles={invertedCenterPiles}
-		/>
+		<>
+			<Game
+				connection={connection}
+				connectionId={testing ? 'CUqUsFYm1zVoW-WcGr6sUQ' : connection?.connectionId}
+				gameState={gameState}
+				invertedCenterPiles={invertedCenterPiles}
+			/>
+			{gameState.WinnerId !== undefined && (
+				<Popup onHomeButton={() => navigate('/')}>
+					<h3>Winner is {gameState.Players.find((p) => p.Id === gameState.WinnerId)?.Name}</h3>
+				</Popup>
+			)}
+		</>
 	) : (
 		<Lobby roomId={roomId} connection={connection} />
 	)

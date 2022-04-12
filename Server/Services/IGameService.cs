@@ -83,7 +83,7 @@ public class GameStateDto
 	public List<PlayerDto> Players;
 	public List<CenterPile> CenterPiles;
 	public string LastMove;
-	public int? WinnerId;
+	public string? WinnerId;
 
 	public GameStateDto(GameState gameState, ConcurrentDictionary<string, Connection> connections, GameEngine gameEngine)
 	{
@@ -106,7 +106,10 @@ public class GameStateDto
 		LastMove = gameState.LastMove;
 
 		var winnerResult = gameEngine.Checks.TryGetWinner(gameState);
-		WinnerId = gameEngine.Checks.TryGetWinner(gameState).Map<int?>(x => x, _ => null);
+		WinnerId = gameEngine.Checks.TryGetWinner(gameState).Map(x =>
+		{
+			return connections.FirstOrDefault(c => c.Value.PlayerId == x).Value.ConnectionId;
+		}, _ => null);
 	}
 }
 
