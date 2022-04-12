@@ -10,6 +10,7 @@ import { LayoutGroup, PanInfo } from 'framer-motion'
 import { clamp } from '../Helpers/Utilities'
 import GameBoard from './GameBoard'
 import backgroundImg from '../Assets/felt-tiling.jpg'
+import { debounce } from 'lodash'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
@@ -108,9 +109,9 @@ const Game = ({ connection, connectionId, gameState, invertedCenterPiles }: Prop
 		// Show any messages (Move to a warnings component)
 	}
 
-	const OnDraggingCardUpdated = (draggingCard: IMovedCardPos | undefined) => {
+	const OnDraggingCardUpdated = debounce((draggingCard: IMovedCardPos | undefined) => {
 		connection?.invoke('UpdateMovingCard', draggingCard).catch((e) => console.log(e))
-	}
+	}, 100, {leading: true, trailing: true, maxWait: 100})
 
 	return (
 		<GameContainer>
