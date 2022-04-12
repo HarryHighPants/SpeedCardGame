@@ -26,7 +26,7 @@ const Room = ({ onGameStarted }: Props) => {
 	useEffect(() => {
 		// Builds the SignalR connection, mapping it to /server
 		let signalRConnection = new signalR.HubConnectionBuilder()
-			.withUrl('https://localhost:7067/server')
+			.withUrl('http://192.168.20.35:5169/server')
 			.withAutomaticReconnect()
 			.configureLogging(signalR.LogLevel.Information)
 			.build()
