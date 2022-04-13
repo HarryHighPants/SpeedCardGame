@@ -8,7 +8,7 @@ import GameBoardLayoutAreas from "./GameBoardLayoutAreas";
 
 class GameBoardLayout {
 	public static maxWidth = 750
-	public static dropDistance = 50
+	public static dropDistance = 100
 	public static cardWidth = 80
 	public static cardHeight = GameBoardLayout.cardWidth * 1.45
 	public static maxHandCardCount = 5

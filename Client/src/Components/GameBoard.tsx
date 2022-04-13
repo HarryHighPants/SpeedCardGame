@@ -35,7 +35,6 @@ const GameBoard = ({
 	const [handAreaHighlighted, setHandAreaHighlighted] = useState<boolean>(false)
 	const [gameBoardLayout, setGameBoardLayout] = useState<GameBoardLayout>()
 
-
 	useEffect(() => {
 		UpdateRenderableCards()
 	}, [gameBoardDimensions])
@@ -51,7 +50,7 @@ const GameBoard = ({
 	const UpdateRenderableCards = () => {
 		let gameBoardLayout = new GameBoardLayout(gameBoardDimensions, movedCard, renderableCards)
 		setRenderableCards(gameBoardLayout.GetRenderableCards(playerId, gameState))
-		setGameBoardLayout(gameBoardLayout);
+		setGameBoardLayout(gameBoardLayout)
 	}
 
 	const DraggingCardUpdated = (draggingCard: IRenderableCard | undefined) => {
@@ -84,7 +83,8 @@ const GameBoard = ({
 	const UpdateCardsHoverStates = (draggingCard: IRenderableCard | undefined) => {
 		for (let i = 0; i < renderableCards.length; i++) {
 			let card = renderableCards[i]
-			if (draggingCard?.Id === card.Id) return
+
+			if (draggingCard?.Id === card.Id) continue
 
 			let draggingCardRect = draggingCard?.ref.current?.getBoundingClientRect()
 			let ourRect = card.ref?.current?.getBoundingClientRect()
@@ -94,23 +94,24 @@ const GameBoard = ({
 				// Reset states
 				if (!card.highlighted) {
 					card.highlighted = false
-					card.forceUpdate();
+					card.forceUpdate()
 				}
 				if (card.horizontalOffset !== 0) {
 					card.horizontalOffset = 0
-					card.forceUpdate();
+					card.forceUpdate()
 				}
-				return
+				continue
 			}
 
 			// Check if we are a center card that can be dropped onto
-			let droppingOntoCenter =
-				card.location === CardLocationType.Center && draggingCard?.location === CardLocationType.Hand
+			let droppingOntoCenter = card.location === CardLocationType.Center && draggingCard?.location === CardLocationType.Hand
 			if (droppingOntoCenter) {
+				// console.log(card.Id, offsetInfo.distance < GameBoardLayout.dropDistance)
 				let shouldBeHighlighted = offsetInfo.distance < GameBoardLayout.dropDistance
 				if (card.highlighted !== shouldBeHighlighted) {
+					// console.log(card.Id, 'Updating highlighting',shouldBeHighlighted )
 					card.highlighted = shouldBeHighlighted
-					card.forceUpdate();
+					card.forceUpdate()
 				}
 			}
 
@@ -124,7 +125,7 @@ const GameBoard = ({
 				let horizontalOffset = (!!offsetInfo.delta && offsetInfo.delta?.X < 0 ? 1 : 0) * 50
 				if (horizontalOffset !== card.horizontalOffset) {
 					card.horizontalOffset = horizontalOffset
-					card.forceUpdate();
+					card.forceUpdate()
 				}
 			}
 		}
@@ -164,7 +165,7 @@ const GameBoard = ({
 		}
 	}
 
-	const GetBottomCard = (topCard:IRenderableCard) => {
+	const GetBottomCard = (topCard: IRenderableCard) => {
 		let cardDistances = renderableCards.map((c) => {
 			return {
 				card: c,
@@ -187,18 +188,16 @@ const GameBoard = ({
 				gameState={gameState}
 				setHandAreaHighlighted={setHandAreaHighlighted}
 			/>
-			<div>
-				<AnimatePresence>
-					{renderableCards.map((c) => (
-						<Card
-							key={`card-${c.Id}`}
-							card={c}
-							draggingCardUpdated={DraggingCardUpdated}
-							onDragEnd={OnEndDrag}
-						/>
-					))}
-				</AnimatePresence>
-			</div>
+			<AnimatePresence>
+				{renderableCards.map((c) => (
+					<Card
+						key={`card-${c.Id}`}
+						card={c}
+						draggingCardUpdated={DraggingCardUpdated}
+						onDragEnd={OnEndDrag}
+					/>
+				))}
+			</AnimatePresence>
 		</GameBoardContainer>
 	)
 }

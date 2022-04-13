@@ -1,10 +1,7 @@
 import { memo, useCallback, useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { CardLocationType, CardValue, ICard, IPos, IRenderableCard, Suit } from '../Interfaces/ICard'
-import GameBoardLayout from '../Helpers/GameBoardLayout'
-import { usePrevious } from '../Helpers/UsePrevious'
-import Droppable from './Droppable'
-import { GetDistance, GetDistanceRect, Overlaps } from '../Helpers/Utilities'
+import { CardLocationType, CardValue, ICard, IRenderableCard, Suit } from '../Interfaces/ICard'
+import { GetDistance } from '../Helpers/Utilities'
 import { motion, PanInfo, Variants } from 'framer-motion'
 import { AnimationDefinition } from 'framer-motion/types/render/utils/animation'
 
@@ -15,7 +12,6 @@ export interface Props {
 }
 
 const Card = memo(({ card, onDragEnd, draggingCardUpdated}: Props) => {
-	const [disablePointerEvents, setDisablePointerEvents] = useState(false)
 	const [dragPosDelta, setDragPosDelta] = useState(0)
 	const [transitionDelay, setTransitionDelay] = useState(card.animateInDelay)
 	const [, updateState] = useState({});
@@ -23,6 +19,9 @@ const Card = memo(({ card, onDragEnd, draggingCardUpdated}: Props) => {
 
 	useEffect(()=>{
 		card.forceUpdate = forceUpdate;
+		if( card.location === CardLocationType.Center){
+			console.log(card.Id)
+		}
 	}, [])
 
 	const OnStartDrag = (panInfo: PanInfo) => {
@@ -37,7 +36,6 @@ const Card = memo(({ card, onDragEnd, draggingCardUpdated}: Props) => {
 	}
 
 	const OnEndDrag = (panInfo: PanInfo) => {
-		setDisablePointerEvents(false)
 		onDragEnd({ ...card })
 	}
 
