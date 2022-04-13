@@ -1,16 +1,16 @@
-import {CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard} from '../Interfaces/ICard'
-import {IGameState} from '../Interfaces/IGameState'
+import { CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard } from '../Interfaces/ICard'
+import { IGameState } from '../Interfaces/IGameState'
 import React from 'react'
-import {AreaDimensions} from '../Components/GameBoardAreas/BaseArea'
-import {clamp} from './Utilities'
-import GameBoardLayout from "./GameBoardLayout";
-import gameBoardLayout from "./GameBoardLayout";
+import { AreaDimensions } from '../Components/GameBoardAreas/BaseArea'
+import { clamp } from './Utilities'
+import GameBoardLayout from './GameBoardLayout'
+import gameBoardLayout from './GameBoardLayout'
 
 class GameBoardLayoutCards {
-	private gameBoardLayout: GameBoardLayout;
+	private gameBoardLayout: GameBoardLayout
 
 	constructor(gameBoardLayout: GameBoardLayout) {
-		this.gameBoardLayout = gameBoardLayout;
+		this.gameBoardLayout = gameBoardLayout
 	}
 
 	public GetRenderableCards = (ourId: string | null | undefined, gameState: IGameState): IRenderableCard[] => {
@@ -105,7 +105,11 @@ class GameBoardLayoutCards {
 	}
 
 	GetRenderableCard = (card: ICard, index: number, ourPlayer: boolean, location: CardLocationType) => {
-		let movedCard = ourPlayer ? null : this.gameBoardLayout.movedCard?.CardId === card.Id ? this.gameBoardLayout.movedCard : null
+		let movedCard = ourPlayer
+			? null
+			: this.gameBoardLayout.movedCard?.CardId === card.Id
+			? this.gameBoardLayout.movedCard
+			: null
 		let defaultPos = this.GetCardDefaultPosition(ourPlayer, location, index)
 		let pos = this.gameBoardLayout.getCardPosPixels(
 			movedCard?.Pos !== undefined ? GameBoardLayout.FlipPosition(movedCard.Pos) : defaultPos
@@ -121,16 +125,20 @@ class GameBoardLayoutCards {
 		let animateInHorizontalOffset = previousCard?.animateInHorizontalOffset ?? 0
 		let animateInDelay = previousCard?.animateInDelay ?? 0
 		let animateInZIndex = previousCard?.animateInZIndex ?? zIndex
-		let startTransparent = false;
+		let startTransparent = false
 		if (location === CardLocationType.Center) {
 			animateInHorizontalOffset =
-				GameBoardLayout.GetRelativeAsPixels(0.6, this.gameBoardLayout.gameBoardDimensions.X) * (index === 0 ? -1 : 1)
-			animateInDelay = this.gameBoardLayout.renderableCards.filter(c=>c.location === CardLocationType.Center).length <= 2 ? 3 : 0
-			startTransparent = true;
+				GameBoardLayout.GetRelativeAsPixels(0.6, this.gameBoardLayout.gameBoardDimensions.X) *
+				(index === 0 ? -1 : 1)
+			animateInDelay =
+				this.gameBoardLayout.renderableCards.filter((c) => c.location === CardLocationType.Center).length <= 2
+					? 3
+					: 0
+			startTransparent = true
 		}
 		// Setup the original cards with the correct transition in settings
 		if (this.gameBoardLayout.renderableCards.length <= 0) {
-			 if (location === CardLocationType.Hand) {
+			if (location === CardLocationType.Hand) {
 				animateInHorizontalOffset = GameBoardLayout.GetRelativeAsPixels(
 					this.GetKittyCardPosition(ourPlayer).X - defaultPos.X,
 					this.gameBoardLayout.gameBoardDimensions.X
@@ -153,7 +161,7 @@ class GameBoardLayoutCards {
 				startTransparent: startTransparent,
 				horizontalOffset: 0,
 				highlighted: false,
-				forceUpdate: previousCard?.forceUpdate ?? undefined
+				forceUpdate: previousCard?.forceUpdate ?? undefined,
 			},
 		} as IRenderableCard
 	}

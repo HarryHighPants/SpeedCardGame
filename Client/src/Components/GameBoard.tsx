@@ -84,7 +84,7 @@ const GameBoard = ({
 		for (let i = 0; i < renderableCards.length; i++) {
 			let card = renderableCards[i]
 
-			if (draggingCard?.Id === card.Id) continue
+			if (draggingCard?.Id === card.Id || !card) continue
 
 			let draggingCardRect = draggingCard?.ref.current?.getBoundingClientRect()
 			let ourRect = card.ref?.current?.getBoundingClientRect()
@@ -94,11 +94,15 @@ const GameBoard = ({
 				// Reset states
 				if (!card.highlighted) {
 					card.highlighted = false
-					card.forceUpdate()
+					if(!!card.forceUpdate){
+						card.forceUpdate()
+					}
 				}
 				if (card.horizontalOffset !== 0) {
 					card.horizontalOffset = 0
-					card.forceUpdate()
+					if(!!card.forceUpdate){
+						card.forceUpdate()
+					}
 				}
 				continue
 			}
@@ -111,7 +115,9 @@ const GameBoard = ({
 				if (card.highlighted !== shouldBeHighlighted) {
 					// console.log(card.Id, 'Updating highlighting',shouldBeHighlighted )
 					card.highlighted = shouldBeHighlighted
-					card.forceUpdate()
+					if(!!card.forceUpdate){
+						card.forceUpdate()
+					}
 				}
 			}
 
@@ -125,7 +131,9 @@ const GameBoard = ({
 				let horizontalOffset = (!!offsetInfo.delta && offsetInfo.delta?.X < 0 ? 1 : 0) * 50
 				if (horizontalOffset !== card.horizontalOffset) {
 					card.horizontalOffset = horizontalOffset
-					card.forceUpdate()
+					if(!!card.forceUpdate){
+						card.forceUpdate()
+					}
 				}
 			}
 		}

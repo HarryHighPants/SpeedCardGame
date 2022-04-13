@@ -19,9 +19,6 @@ const Card = memo(({ card, onDragEnd, draggingCardUpdated}: Props) => {
 
 	useEffect(()=>{
 		card.forceUpdate = forceUpdate;
-		if( card.location === CardLocationType.Center){
-			console.log(card.Id)
-		}
 	}, [])
 
 	const OnStartDrag = (panInfo: PanInfo) => {
