@@ -33,6 +33,8 @@ const GameBoard = ({
 }: Props) => {
 	const [renderableCards, setRenderableCards] = useState<IRenderableCard[]>([] as IRenderableCard[])
 	const [handAreaHighlighted, setHandAreaHighlighted] = useState<boolean>(false)
+	const [gameBoardLayout, setGameBoardLayout] = useState<GameBoardLayout>()
+
 
 	useEffect(() => {
 		UpdateRenderableCards()
@@ -49,6 +51,7 @@ const GameBoard = ({
 	const UpdateRenderableCards = () => {
 		let gameBoardLayout = new GameBoardLayout(gameBoardDimensions, movedCard, renderableCards)
 		setRenderableCards(gameBoardLayout.GetRenderableCards(playerId, gameState))
+		setGameBoardLayout(gameBoardLayout);
 	}
 
 	const DraggingCardUpdated = (draggingCard: IRenderableCard | undefined) => {
@@ -172,7 +175,7 @@ const GameBoard = ({
 			}
 		})
 		cardDistances = cardDistances.sort((a, b) => a.distance - b.distance)
-		if (cardDistances[1].distance > gameBoardLayout.dropDistance) return
+		if (cardDistances[1].distance > GameBoardLayout.dropDistance) return
 		return cardDistances[1].card
 	}
 
@@ -180,7 +183,7 @@ const GameBoard = ({
 		<GameBoardContainer>
 			<GameBoardAreas
 				ourId={playerId}
-				gameBoardDimensions={gameBoardDimensions}
+				gameBoardLayout={gameBoardLayout}
 				gameState={gameState}
 				setHandAreaHighlighted={setHandAreaHighlighted}
 			/>
