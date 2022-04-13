@@ -110,7 +110,7 @@ const Game = ({ connection, connectionId, gameState, invertedCenterPiles }: Prop
 	}
 
 	const OnDraggingCardUpdated = debounce((draggingCard: IMovedCardPos | undefined) => {
-		connection?.invoke('UpdateMovingCard', draggingCard).catch((e) => console.log(e))
+		// connection?.invoke('UpdateMovingCard', draggingCard).catch((e) => console.log(e))
 	}, 100, {leading: true, trailing: true, maxWait: 100})
 
 	return (

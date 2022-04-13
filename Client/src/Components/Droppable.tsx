@@ -15,7 +15,7 @@ export interface Props {
 }
 
 const Droppable = ({ cardBeingDragged, ourRef, id = GetRandomId() + 1000, children, onDistanceUpdated }: Props) => {
-	// cardBeingDragged updated
+
 	useEffect(() => {
 		if (cardBeingDragged?.Id === id) return
 

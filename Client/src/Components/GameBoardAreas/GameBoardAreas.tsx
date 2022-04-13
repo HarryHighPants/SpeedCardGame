@@ -9,10 +9,9 @@ interface Props {
 	ourId: string | null | undefined
 	setHandAreaHighlighted: (higlighted: boolean) => void
 	gameBoardDimensions: IPos
-	cardBeingDragged: IRenderableCard | undefined
 }
 
-const GameBoardAreas = ({ ourId, setHandAreaHighlighted, gameState, gameBoardDimensions, cardBeingDragged }: Props) => {
+const GameBoardAreas = ({ ourId, setHandAreaHighlighted, gameState, gameBoardDimensions }: Props) => {
 	return (
 		<>
 			{gameState.Players.map((p, i) => {
@@ -27,7 +26,7 @@ const GameBoardAreas = ({ ourId, setHandAreaHighlighted, gameState, gameBoardDim
 									CardLocationType.Hand,
 									gameBoardDimensions
 								)}
-								cardBeingDragged={cardBeingDragged?.location === CardLocationType.Kitty ? cardBeingDragged : undefined}
+								// cardBeingDragged={cardBeingDragged?.location === CardLocationType.Kitty ? cardBeingDragged : undefined}
 								setIsHighlighted={setHandAreaHighlighted}
 							/>
 						) : (

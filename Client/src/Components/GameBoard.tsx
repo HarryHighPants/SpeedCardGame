@@ -7,7 +7,7 @@ import Player from './Player'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import Card from './Card'
 import { AnimatePresence, LayoutGroup, PanInfo } from 'framer-motion'
-import { clamp, GetDistanceRect } from '../Helpers/Utilities'
+import { clamp, GetDistanceRect, Overlaps } from '../Helpers/Utilities'
 import { IPlayer } from '../Interfaces/IPlayer'
 import gameBoardLayout from '../Helpers/GameBoardLayout'
 import GameBoardAreas from './GameBoardAreas/GameBoardAreas'
@@ -32,7 +32,6 @@ const GameBoard = ({
 	onDraggingCardUpdated,
 }: Props) => {
 	const [renderableCards, setRenderableCards] = useState<IRenderableCard[]>([] as IRenderableCard[])
-	const [cardBeingDragged, setCardBeingDragged] = useState<IRenderableCard>()
 	const [handAreaHighlighted, setHandAreaHighlighted] = useState<boolean>(false)
 
 	useEffect(() => {
@@ -54,11 +53,11 @@ const GameBoard = ({
 
 	const DraggingCardUpdated = (draggingCard: IRenderableCard | undefined) => {
 		let newDraggingCard = draggingCard !== undefined ? { ...draggingCard } : undefined
-		setCardBeingDragged(newDraggingCard)
 
-		let rect = newDraggingCard?.ref?.current?.getBoundingClientRect()
+		UpdateCardsHoverStates(draggingCard)
 
 		// Send the event to the other player
+		let rect = newDraggingCard?.ref?.current?.getBoundingClientRect()
 		let movedCard =
 			newDraggingCard !== undefined && rect !== undefined
 				? ({
@@ -69,8 +68,67 @@ const GameBoard = ({
 		onDraggingCardUpdated(movedCard)
 	}
 
+	const GetOffsetInfo = (ourRect: DOMRect | undefined, draggingCardRect: DOMRect | undefined) => {
+		let distance = GetDistanceRect(draggingCardRect, ourRect)
+		let overlaps = Overlaps(ourRect, draggingCardRect)
+		let delta =
+			!draggingCardRect || !ourRect
+				? undefined
+				: { X: draggingCardRect.x - ourRect.x, Y: draggingCardRect.y - ourRect.y }
+		return { distance, overlaps, delta }
+	}
+
+	const UpdateCardsHoverStates = (draggingCard: IRenderableCard | undefined) => {
+		for (let i = 0; i < renderableCards.length; i++) {
+			let card = renderableCards[i]
+			if (draggingCard?.Id === card.Id) return
+
+			let draggingCardRect = draggingCard?.ref.current?.getBoundingClientRect()
+			let ourRect = card.ref?.current?.getBoundingClientRect()
+			let offsetInfo = GetOffsetInfo(ourRect, draggingCardRect)
+
+			if (offsetInfo.distance === Infinity) {
+				// Reset states
+				if (!card.highlighted) {
+					card.highlighted = false
+					card.forceUpdate();
+				}
+				if (card.horizontalOffset !== 0) {
+					card.horizontalOffset = 0
+					card.forceUpdate();
+				}
+				return
+			}
+
+			// Check if we are a center card that can be dropped onto
+			let droppingOntoCenter =
+				card.location === CardLocationType.Center && draggingCard?.location === CardLocationType.Hand
+			if (droppingOntoCenter) {
+				let shouldBeHighlighted = offsetInfo.distance < GameBoardLayout.dropDistance
+				if (card.highlighted !== shouldBeHighlighted) {
+					card.highlighted = shouldBeHighlighted
+					card.forceUpdate();
+				}
+			}
+
+			// Check if we are a hand card that can be dragged onto
+			let droppingOntoHandCard =
+				card.ourCard &&
+				card.location === CardLocationType.Hand &&
+				draggingCard?.location === CardLocationType.Kitty
+			if (droppingOntoHandCard) {
+				// We want to animate to either the left or the right on the dragged kitty card
+				let horizontalOffset = (!!offsetInfo.delta && offsetInfo.delta?.X < 0 ? 1 : 0) * 50
+				if (horizontalOffset !== card.horizontalOffset) {
+					card.horizontalOffset = horizontalOffset
+					card.forceUpdate();
+				}
+			}
+		}
+	}
+
 	const OnEndDrag = (topCard: IRenderableCard) => {
-		let bottomCard = GetBottomCard()
+		let bottomCard = GetBottomCard(topCard)
 		DetectMove(topCard, bottomCard)
 		DraggingCardUpdated(undefined)
 	}
@@ -103,12 +161,12 @@ const GameBoard = ({
 		}
 	}
 
-	const GetBottomCard = () => {
+	const GetBottomCard = (topCard:IRenderableCard) => {
 		let cardDistances = renderableCards.map((c) => {
 			return {
 				card: c,
 				distance: GetDistanceRect(
-					cardBeingDragged?.ref.current?.getBoundingClientRect(),
+					topCard?.ref.current?.getBoundingClientRect(),
 					c.ref.current?.getBoundingClientRect()
 				),
 			}
@@ -121,7 +179,6 @@ const GameBoard = ({
 	return (
 		<GameBoardContainer>
 			<GameBoardAreas
-				cardBeingDragged={cardBeingDragged}
 				ourId={playerId}
 				gameBoardDimensions={gameBoardDimensions}
 				gameState={gameState}
@@ -135,7 +192,6 @@ const GameBoard = ({
 							card={c}
 							draggingCardUpdated={DraggingCardUpdated}
 							onDragEnd={OnEndDrag}
-							cardBeingDragged={cardBeingDragged}
 						/>
 					))}
 				</AnimatePresence>

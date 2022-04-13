@@ -1,7 +1,7 @@
 import * as signalR from '@microsoft/signalr'
 import { HubConnection, HubConnectionState } from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { IGameState } from '../../Interfaces/IGameState'
 import Game from '../../Components/Game'
 import TestData from '../../Assets/TestData.js'
@@ -21,12 +21,12 @@ const Room = ({ onGameStarted }: Props) => {
 	const [gameState, setGameState] = useState<IGameState>(testing ? JSON.parse(TestData) : undefined) // Local debugging
 	const [invertedCenterPiles, setInvertedCenterPiles] = useState(false)
 
-	const [rawGameStateHistory, setRawGameStateHistory] = useState<any[]>([])
+	// const [rawGameStateHistory, setRawGameStateHistory] = useState<any[]>([])
 
 	useEffect(() => {
 		// Builds the SignalR connection, mapping it to /server
 		let signalRConnection = new signalR.HubConnectionBuilder()
-			.withUrl('http://192.168.20.35:5169/server')
+			.withUrl(`http://${window.location.hostname}:5169/server`)
 			.withAutomaticReconnect()
 			.configureLogging(signalR.LogLevel.Information)
 			.build()
@@ -76,9 +76,9 @@ const Room = ({ onGameStarted }: Props) => {
 			onGameStarted()
 		}
 
-		rawGameStateHistory.push(data)
-		setRawGameStateHistory(rawGameStateHistory)
-		console.log(JSON.stringify(rawGameStateHistory))
+		// rawGameStateHistory.push(data)
+		// setRawGameStateHistory(rawGameStateHistory)
+		// console.log(JSON.stringify(rawGameStateHistory))
 
 		setGameState({ ...parsedData })
 	}
@@ -91,7 +91,7 @@ const Room = ({ onGameStarted }: Props) => {
 				gameState={gameState}
 				invertedCenterPiles={invertedCenterPiles}
 			/>
-			{gameState.WinnerId !== undefined && (
+			{!!gameState.WinnerId && (
 				<Popup onHomeButton={() => navigate('/')}>
 					<h3>Winner is {gameState.Players.find((p) => p.Id === gameState.WinnerId)?.Name}</h3>
 				</Popup>

@@ -289,7 +289,10 @@ class GameBoardLayout {
 				animateInHorizontalOffset: animateInHorizontalOffset,
 				animateInDelay: animateInDelay,
 				animateInZIndex: animateInZIndex,
-				startTransparent: startTransparent
+				startTransparent: startTransparent,
+				horizontalOffset: 0,
+				highlighted: false,
+				forceUpdate: previousCard?.forceUpdate ?? undefined
 			},
 		} as IRenderableCard
 	}
