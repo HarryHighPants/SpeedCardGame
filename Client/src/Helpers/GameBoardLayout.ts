@@ -1,10 +1,10 @@
-import {CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard} from '../Interfaces/ICard'
-import {IGameState} from '../Interfaces/IGameState'
+import { CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard } from '../Interfaces/ICard'
+import { IGameState } from '../Interfaces/IGameState'
 import React from 'react'
-import {AreaDimensions} from '../Components/GameBoardAreas/BaseArea'
-import {clamp} from './Utilities'
-import GameBoardLayoutCards from "./GameBoardLayoutCards";
-import GameBoardLayoutAreas from "./GameBoardLayoutAreas";
+import { AreaDimensions } from '../Components/GameBoardAreas/BaseArea'
+import { clamp } from './Utilities'
+import GameBoardLayoutCards from './GameBoardLayoutCards'
+import GameBoardLayoutAreas from './GameBoardLayoutAreas'
 
 class GameBoardLayout {
 	public static maxWidth = 750
@@ -22,30 +22,35 @@ class GameBoardLayout {
 	public static centerPilesPadding = 0.1
 
 	public gameBoardDimensions: IPos
-	public movedCard: IMovedCardPos | undefined
-	public renderableCards: IRenderableCard[]
 
-	constructor(gameBoardDimensions: IPos, movedCard: IMovedCardPos | undefined, renderableCards: IRenderableCard[]) {
+	constructor(gameBoardDimensions: IPos) {
 		this.gameBoardDimensions = gameBoardDimensions
-		this.movedCard = movedCard
-		this.renderableCards = renderableCards
 	}
 
-	public GetRenderableCards = (ourId: string | null | undefined, gameState: IGameState): IRenderableCard[] => {
-		let layoutCards = new GameBoardLayoutCards(this);
-		return layoutCards.GetRenderableCards(ourId, gameState);
+	public GetRenderableCards = (
+		ourId: string | null | undefined,
+		gameState: IGameState,
+		renderableCards: IRenderableCard[],
+		movedCard: IMovedCardPos | undefined
+	): IRenderableCard[] => {
+		let layoutCards = new GameBoardLayoutCards(this)
+		return layoutCards.GetRenderableCards(ourId, gameState, renderableCards, movedCard)
 	}
+
+	public GetCardDefaultPosition(ourPlayer: boolean, location: CardLocationType, index: number): IPos {
+		let layoutCards = new GameBoardLayoutCards(this)
+		return layoutCards.GetCardDefaultPosition(ourPlayer, location, index)
+	}
+
 
 	public GetAreaDimensions = (
 		ourPlayer: boolean,
 		location: CardLocationType,
 		centerIndex: number = 0
 	): AreaDimensions => {
-		let layoutAreas = new GameBoardLayoutAreas(this, new GameBoardLayoutCards(this));
+		let layoutAreas = new GameBoardLayoutAreas(this, new GameBoardLayoutCards(this))
 		return layoutAreas.GetAreaDimensions(ourPlayer, location, centerIndex)
 	}
-
-
 
 	public static FlipPosition(pos: IPos): IPos {
 		return { X: Math.abs(pos.X - 1), Y: Math.abs(pos.Y - 1) } as IPos

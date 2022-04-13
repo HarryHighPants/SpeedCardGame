@@ -1,23 +1,30 @@
-import { CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard } from '../Interfaces/ICard'
-import { IGameState } from '../Interfaces/IGameState'
+import {CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard} from '../Interfaces/ICard'
+import {IGameState} from '../Interfaces/IGameState'
 import React from 'react'
-import { AreaDimensions } from '../Components/GameBoardAreas/BaseArea'
-import { clamp } from './Utilities'
+import {AreaDimensions} from '../Components/GameBoardAreas/BaseArea'
+import {clamp} from './Utilities'
 import GameBoardLayout from './GameBoardLayout'
 import gameBoardLayout from './GameBoardLayout'
 
 class GameBoardLayoutCards {
 	private gameBoardLayout: GameBoardLayout
+	private gameState: IGameState = {} as IGameState;
+	private renderableCards: IRenderableCard[] = [];
+	private movedCard: IMovedCardPos | undefined;
 
 	constructor(gameBoardLayout: GameBoardLayout) {
 		this.gameBoardLayout = gameBoardLayout
 	}
 
-	public GetRenderableCards = (ourId: string | null | undefined, gameState: IGameState): IRenderableCard[] => {
+	public GetRenderableCards = (ourId: string | null | undefined, gameState: IGameState, renderableCards: IRenderableCard[], movedCard: IMovedCardPos | undefined): IRenderableCard[] => {
+		this.gameState = gameState
+		this.renderableCards = renderableCards
+		this.movedCard = movedCard
+
 		let newRenderableCards = [] as IRenderableCard[]
 
 		// Add players cards
-		gameState.Players.map((p, i) => {
+		this.gameState.Players.map((p, i) => {
 			let ourPlayer = p.Id == ourId
 
 			// Add the players hand cards
@@ -29,7 +36,7 @@ class GameBoardLayoutCards {
 			// Add the players Kitty card
 			if (p.TopKittyCardId != undefined && p.TopKittyCardId != -1) {
 				let kittyCard = this.GetRenderableCard(
-					{ Id: p.TopKittyCardId } as ICard,
+					{Id: p.TopKittyCardId} as ICard,
 					-1,
 					ourPlayer,
 					CardLocationType.Kitty
@@ -38,7 +45,7 @@ class GameBoardLayoutCards {
 			}
 			if (p.KittyCardsCount > 1 && p.TopKittyCardId) {
 				let kittyCard = this.GetRenderableCard(
-					{ Id: p.TopKittyCardId + 100 } as ICard,
+					{Id: p.TopKittyCardId + 100} as ICard,
 					-5,
 					ourPlayer,
 					CardLocationType.Kitty
@@ -48,7 +55,7 @@ class GameBoardLayoutCards {
 		})
 
 		// Add the center pile cards
-		let centerPiles = gameState.CenterPiles.reduce<IRenderableCard[]>((result, cp, cpIndex) => {
+		let centerPiles = this.gameState.CenterPiles.reduce<IRenderableCard[]>((result, cp, cpIndex) => {
 			cp.Cards.map((c) => result.push(this.GetRenderableCard(c, cpIndex, false, CardLocationType.Center)))
 			return result
 		}, [] as IRenderableCard[])
@@ -88,7 +95,7 @@ class GameBoardLayoutCards {
 	}
 
 	public GetKittyCardPosition(ourPlayer: boolean): IPos {
-		let cardPosition = { X: GameBoardLayout.playerKittyCenterX, Y: 1 - GameBoardLayout.playerHeightPadding } as IPos
+		let cardPosition = {X: GameBoardLayout.playerKittyCenterX, Y: 1 - GameBoardLayout.playerHeightPadding} as IPos
 
 		if (!ourPlayer) {
 			cardPosition = GameBoardLayout.FlipPosition(cardPosition)
@@ -100,16 +107,16 @@ class GameBoardLayoutCards {
 		return Array(2)
 			.fill(0)
 			.map((e, i) => {
-				return { X: 0.5 + GameBoardLayout.centerPilesPadding * (i === 0 ? -1 : 1), Y: 0.5 } as IPos
+				return {X: 0.5 + GameBoardLayout.centerPilesPadding * (i === 0 ? -1 : 1), Y: 0.5} as IPos
 			})
 	}
 
 	GetRenderableCard = (card: ICard, index: number, ourPlayer: boolean, location: CardLocationType) => {
 		let movedCard = ourPlayer
 			? null
-			: this.gameBoardLayout.movedCard?.CardId === card.Id
-			? this.gameBoardLayout.movedCard
-			: null
+			: this.movedCard?.CardId === card.Id
+				? this.movedCard
+				: null
 		let defaultPos = this.GetCardDefaultPosition(ourPlayer, location, index)
 		let pos = this.gameBoardLayout.getCardPosPixels(
 			movedCard?.Pos !== undefined ? GameBoardLayout.FlipPosition(movedCard.Pos) : defaultPos
@@ -117,9 +124,9 @@ class GameBoardLayoutCards {
 		let zIndex =
 			(!ourPlayer ? Math.abs(index - GameBoardLayout.maxHandCardCount - 1) : index) +
 			(location != CardLocationType.Center ? GameBoardLayout.maxHandCardCount : 0)
-		let ref = this.gameBoardLayout.renderableCards.find((c) => c.Id === card.Id)?.ref
+		let ref = this.renderableCards.find((c) => c.Id === card.Id)?.ref
 
-		let previousCard = this.gameBoardLayout.renderableCards.find((c) => c.Id === card.Id)
+		let previousCard = this.renderableCards.find((c) => c.Id === card.Id)
 
 		// Animate in any new center cards from the left or right
 		let animateInHorizontalOffset = previousCard?.animateInHorizontalOffset ?? 0
@@ -131,13 +138,13 @@ class GameBoardLayoutCards {
 				GameBoardLayout.GetRelativeAsPixels(0.6, this.gameBoardLayout.gameBoardDimensions.X) *
 				(index === 0 ? -1 : 1)
 			animateInDelay =
-				this.gameBoardLayout.renderableCards.filter((c) => c.location === CardLocationType.Center).length <= 2
+				this.renderableCards.filter((c) => c.location === CardLocationType.Center).length <= 2
 					? 3
 					: 0
 			startTransparent = true
 		}
 		// Setup the original cards with the correct transition in settings
-		if (this.gameBoardLayout.renderableCards.length <= 0) {
+		if (this.renderableCards.length <= 0) {
 			if (location === CardLocationType.Hand) {
 				animateInHorizontalOffset = GameBoardLayout.GetRelativeAsPixels(
 					this.GetKittyCardPosition(ourPlayer).X - defaultPos.X,

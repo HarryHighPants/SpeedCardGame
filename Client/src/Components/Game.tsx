@@ -16,7 +16,6 @@ interface Props {
 	connection: signalR.HubConnection | undefined
 	connectionId: string | undefined | null
 	gameState: IGameState
-	invertedCenterPiles: boolean
 }
 
 const getGameBoardDimensions = () => {
@@ -26,14 +25,34 @@ const getGameBoardDimensions = () => {
 	} as IPos
 }
 
-const Game = ({ connection, connectionId, gameState, invertedCenterPiles }: Props) => {
-	const [movedCard, setMovedCard] = useState<IMovedCardPos>()
+const Game = ({ connection, connectionId, gameState }: Props) => {
 	const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>(getGameBoardDimensions())
+	const [gameBoardLayout, setGameBoardLayout] = useState<GameBoardLayout>()
+	const [invertedCenterPiles, setInvertedCenterPiles] = useState(false)
 	const [localGameState, setLocalGameState] = useState<IGameState>(gameState)
 
 	useEffect(() => {
-		setLocalGameState(gameState)
+		let newGameState = gameState
+		if (gameState.Players[0].Id === connection?.connectionId) {
+			// We need to invert the center piles so that 0 is on the right
+			// This way we will have a perfectly mirrored board simplifying sending card IPos to the other player
+			setInvertedCenterPiles(true)
+			newGameState.CenterPiles = gameState.CenterPiles.reverse()
+
+			// Order the players so that we are the last player so we get shown at the bottom of the screen
+			newGameState.Players = gameState.Players.reverse()
+		}
+		setLocalGameState(newGameState)
 	}, [gameState])
+
+	useEffect(() => {
+		UpdateGameBoardLayout()
+	}, [gameBoardDimensions])
+
+	const UpdateGameBoardLayout = () => {
+		let gameBoardLayout = new GameBoardLayout(gameBoardDimensions)
+		setGameBoardLayout(gameBoardLayout)
+	}
 
 	useLayoutEffect(() => {
 		function UpdateGameBoardDimensions() {
@@ -45,22 +64,7 @@ const Game = ({ connection, connectionId, gameState, invertedCenterPiles }: Prop
 		return () => window.removeEventListener('resize', UpdateGameBoardDimensions)
 	}, [])
 
-	useEffect(() => {
-		if (!connection) return
-		connection.on('MovingCardUpdated', UpdateMovingCard)
-
-		return () => {
-			connection.off('MovingCardUpdated', UpdateMovingCard)
-		}
-	}, [connection])
-
-	const UpdateMovingCard = (data: any) => {
-		let parsedData: IMovedCardPos = JSON.parse(data)
-		console.log(data)
-		setMovedCard(parsedData)
-	}
-
-	const OnPlayCard = (topCard: ICard, centerPileIndex: number) => {
+	const SendPlayCard = (topCard: ICard, centerPileIndex: number) => {
 		// Call the event
 		let correctedCenterPileIndex = invertedCenterPiles ? (centerPileIndex + 1) % 2 : centerPileIndex
 		connection?.invoke('TryPlayCard', topCard.Id, correctedCenterPileIndex).catch((e) => console.log(e))
@@ -68,65 +72,41 @@ const Game = ({ connection, connectionId, gameState, invertedCenterPiles }: Prop
 		// Show any messages (Move to a warnings component)
 
 		// assume the server will return success and update the gamestate
-		UpdateGameStatePlayCard(topCard, centerPileIndex)
-	}
-	const UpdateGameStatePlayCard = (topCard: ICard, centerPileIndex: number) => {
-		let player = gameState.Players.find((p) => p.Id === connectionId)
-		if (player == null) {
-			return
-		}
-
-		let playerIndex = gameState.Players.indexOf(player)
-		gameState.Players[playerIndex].HandCards = player.HandCards.filter((c) => c.Id != topCard.Id)
-		gameState.CenterPiles[centerPileIndex].Cards.push(topCard)
-		setLocalGameState({ ...gameState })
-		console.log('UpdateGameStatePlayCard')
 	}
 
-	const OnPickupFromKitty = () => {
-		// Call the event
+	const SendPickupFromKitty = () => {
 		connection?.invoke('TryPickupFromKitty').catch((e) => console.log(e))
 		// Show any messages (Move to a warnings component)
 		// assume the server will return success and update the gamestate
-		UpdateGameStatePickupFromKitty()
-	}
-	const UpdateGameStatePickupFromKitty = () => {
-		let player = gameState.Players.find((p) => p.Id === connectionId)
-		if (player == null) {
-			return
-		}
-
-		let playerIndex = gameState.Players.indexOf(player)
-		gameState.Players[playerIndex].HandCards.push({ Id: player.TopKittyCardId } as ICard)
-		gameState.Players[playerIndex].TopKittyCardId = -1
-		setLocalGameState({ ...gameState })
-		console.log('UpdateGameStatePickupFromKitty')
 	}
 
-	const OnRequestTopUp = () => {
-		// Call the event
+	const SendRequestTopUp = () => {
 		connection?.invoke('TryRequestTopUp').catch((e) => console.log(e))
 		// Show any messages (Move to a warnings component)
 	}
 
-	const OnDraggingCardUpdated = debounce((draggingCard: IMovedCardPos | undefined) => {
-		// connection?.invoke('UpdateMovingCard', draggingCard).catch((e) => console.log(e))
-	}, 100, {leading: true, trailing: true, maxWait: 100})
+	const SendMovedCard = (movedCard: IMovedCardPos | undefined) => {
+		connection?.invoke('UpdateMovingCard', movedCard).catch((e) => console.log(e))
+		// Show any messages (Move to a warnings component)
+	}
 
 	return (
 		<GameContainer>
 			<Player key={`player-${localGameState.Players[0].Id}`} player={localGameState.Players[0]} onTop={true} />
-			<GameBoard
-				playerId={connectionId}
-				gameState={localGameState}
-				movedCard={movedCard}
-				gameBoardDimensions={gameBoardDimensions}
-				onPlayCard={OnPlayCard}
-				onPickupFromKitty={OnPickupFromKitty}
-				onDraggingCardUpdated={OnDraggingCardUpdated}
-			/>
+			{!!gameBoardLayout && (
+				<GameBoard
+					sendMovingCard={SendMovedCard}
+					connection={connection}
+					playerId={connectionId}
+					gameState={localGameState}
+					gameBoardLayout={gameBoardLayout}
+					sendPlayCard={SendPlayCard}
+					sendPickupFromKitty={SendPickupFromKitty}
+				/>
+			)}
+
 			<Player
-				onRequestTopUp={OnRequestTopUp}
+				onRequestTopUp={SendRequestTopUp}
 				key={`player-${localGameState.Players[1].Id}`}
 				player={localGameState.Players[1]}
 				onTop={false}

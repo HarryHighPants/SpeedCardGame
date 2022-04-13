@@ -2,16 +2,15 @@ import {IGameState} from '../../Interfaces/IGameState'
 import BaseArea from './BaseArea'
 import GameBoardLayout from '../../Helpers/GameBoardLayout'
 import {CardLocationType, IPos, IRenderableCard} from '../../Interfaces/ICard'
-import DroppableArea from './DroppableArea'
 
 interface Props {
 	gameState: IGameState
 	ourId: string | null | undefined
-	setHandAreaHighlighted: (higlighted: boolean) => void
+	// setHandAreaHighlighted: (higlighted: boolean) => void
 	gameBoardLayout: GameBoardLayout | undefined
 }
 
-const GameBoardAreas = ({ ourId, setHandAreaHighlighted, gameState, gameBoardLayout }: Props) => {
+const GameBoardAreas = ({ ourId, gameState, gameBoardLayout }: Props) => {
 	if(!gameBoardLayout){
 		return <></>
 	}
@@ -21,25 +20,13 @@ const GameBoardAreas = ({ ourId, setHandAreaHighlighted, gameState, gameBoardLay
 				let ourPlayer = p.Id === ourId
 				return (
 					<div key={`player-${i}`}>
-						{ourPlayer ? (
-							<DroppableArea
-								key={`area-${CardLocationType.Hand}-${i}`}
-								dimensions={gameBoardLayout.GetAreaDimensions(
-									ourPlayer,
-									CardLocationType.Hand,
-								)}
-								// cardBeingDragged={cardBeingDragged?.location === CardLocationType.Kitty ? cardBeingDragged : undefined}
-								setIsHighlighted={setHandAreaHighlighted}
-							/>
-						) : (
-							<BaseArea
-								key={`area-${CardLocationType.Hand}-${i}`}
-								dimensions={gameBoardLayout.GetAreaDimensions(
-									ourPlayer,
-									CardLocationType.Hand,
-								)}
-							/>
-						)}
+						<BaseArea
+							key={`area-${CardLocationType.Hand}-${i}`}
+							dimensions={gameBoardLayout.GetAreaDimensions(
+								ourPlayer,
+								CardLocationType.Hand,
+							)}
+						/>
 						<BaseArea
 							key={`area-${CardLocationType.Kitty}-${i}`}
 							dimensions={gameBoardLayout.GetAreaDimensions(

@@ -39,7 +39,6 @@ const AutomatedGame = () => {
 			connection={undefined}
 			connectionId={bottomPlayerId}
 			gameState={currentGameState}
-			invertedCenterPiles={false}
 		/>
 	)
 }

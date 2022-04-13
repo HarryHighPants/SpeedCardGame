@@ -4,6 +4,16 @@ import { IPos } from '../Interfaces/ICard'
 // Clamp number between two values with the following line:
 export const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max)
 
+export const GetOffsetInfo = (ourRect: DOMRect | undefined, draggingCardRect: DOMRect | undefined) => {
+	let distance = GetDistanceRect(draggingCardRect, ourRect)
+	let overlaps = Overlaps(ourRect, draggingCardRect)
+	let delta =
+		!draggingCardRect || !ourRect
+			? undefined
+			: { X: draggingCardRect.x - ourRect.x, Y: draggingCardRect.y - ourRect.y }
+	return { distance, overlaps, delta }
+}
+
 export const GetDistance = (pos1: IPos | undefined, pos2: IPos | undefined) => {
 	if (!pos1 || !pos2) return Infinity
 	let a = pos1.X - pos2.X
