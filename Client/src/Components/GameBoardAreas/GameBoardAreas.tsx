@@ -8,11 +8,13 @@ interface Props {
 	gameState: IGameState
 	ourId: string | null | undefined
 	setHandAreaHighlighted: (higlighted: boolean) => void
-	gameBoardDimensions: IPos
-	cardBeingDragged: IRenderableCard | undefined
+	gameBoardLayout: GameBoardLayout | undefined
 }
 
-const GameBoardAreas = ({ ourId, setHandAreaHighlighted, gameState, gameBoardDimensions, cardBeingDragged }: Props) => {
+const GameBoardAreas = ({ ourId, setHandAreaHighlighted, gameState, gameBoardLayout }: Props) => {
+	if(!gameBoardLayout){
+		return <></>
+	}
 	return (
 		<>
 			{gameState.Players.map((p, i) => {
@@ -22,39 +24,35 @@ const GameBoardAreas = ({ ourId, setHandAreaHighlighted, gameState, gameBoardDim
 						{ourPlayer ? (
 							<DroppableArea
 								key={`area-${CardLocationType.Hand}-${i}`}
-								dimensions={GameBoardLayout.GetAreaDimensions(
+								dimensions={gameBoardLayout.GetAreaDimensions(
 									ourPlayer,
 									CardLocationType.Hand,
-									gameBoardDimensions
 								)}
-								cardBeingDragged={cardBeingDragged?.location === CardLocationType.Kitty ? cardBeingDragged : undefined}
+								// cardBeingDragged={cardBeingDragged?.location === CardLocationType.Kitty ? cardBeingDragged : undefined}
 								setIsHighlighted={setHandAreaHighlighted}
 							/>
 						) : (
 							<BaseArea
 								key={`area-${CardLocationType.Hand}-${i}`}
-								dimensions={GameBoardLayout.GetAreaDimensions(
+								dimensions={gameBoardLayout.GetAreaDimensions(
 									ourPlayer,
 									CardLocationType.Hand,
-									gameBoardDimensions
 								)}
 							/>
 						)}
 						<BaseArea
 							key={`area-${CardLocationType.Kitty}-${i}`}
-							dimensions={GameBoardLayout.GetAreaDimensions(
+							dimensions={gameBoardLayout.GetAreaDimensions(
 								ourPlayer,
 								CardLocationType.Kitty,
-								gameBoardDimensions
 							)}
 							text={`remaining: ${p.KittyCardsCount}`}
 						/>
 						<BaseArea
 							key={`area-${CardLocationType.Center}-${i}`}
-							dimensions={GameBoardLayout.GetAreaDimensions(
+							dimensions={gameBoardLayout.GetAreaDimensions(
 								false,
 								CardLocationType.Center,
-								gameBoardDimensions,
 								i
 							)}
 						/>

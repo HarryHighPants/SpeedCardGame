@@ -1,9 +1,6 @@
-import { useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { CardLocationType, CardValue, ICard, IPos, IRenderableCard, Suit } from '../Interfaces/ICard'
-import GameBoardLayout from '../Helpers/GameBoardLayout'
-import { usePrevious } from '../Helpers/UsePrevious'
-import Droppable from './Droppable'
+import { CardLocationType, CardValue, ICard, IRenderableCard, Suit } from '../Interfaces/ICard'
 import { GetDistance } from '../Helpers/Utilities'
 import { motion, PanInfo, Variants } from 'framer-motion'
 import { AnimationDefinition } from 'framer-motion/types/render/utils/animation'
@@ -12,41 +9,17 @@ export interface Props {
 	card: IRenderableCard
 	draggingCardUpdated: (card: IRenderableCard) => void
 	onDragEnd: (card: IRenderableCard) => void
-	cardBeingDragged: IRenderableCard | undefined
 }
 
-const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props) => {
-	const [disablePointerEvents, setDisablePointerEvents] = useState(false)
+const Card = memo(({ card, onDragEnd, draggingCardUpdated}: Props) => {
 	const [dragPosDelta, setDragPosDelta] = useState(0)
-	const [highlighted, setHighlighted] = useState(false)
-	const [horizontalOffset, setHorizontalOffset] = useState(0)
 	const [transitionDelay, setTransitionDelay] = useState(card.animateInDelay)
+	const [, updateState] = useState({});
+	const forceUpdate = useCallback(() => updateState({}), []);
 
-	const UpdateAnimationStates = (distance: number, overlaps?: boolean, delta?: IPos) => {
-		if (distance === Infinity) {
-			// Reset states
-			setHighlighted(false)
-			setHorizontalOffset(0)
-			return
-		}
-
-		// Check if we are a center card that can be dropped onto
-		let droppingOntoCenter =
-			card.location === CardLocationType.Center && cardBeingDragged?.location === CardLocationType.Hand
-		if (droppingOntoCenter) {
-			setHighlighted(distance < GameBoardLayout.dropDistance)
-		}
-
-		// Check if we are a hand card that can be dragged onto
-		let droppingOntoHandCard =
-			card.ourCard &&
-			card.location === CardLocationType.Hand &&
-			cardBeingDragged?.location === CardLocationType.Kitty
-		if (droppingOntoHandCard) {
-			// We want to animate to either the left or the right on the dragged kitty card
-			setHorizontalOffset((!!delta && delta?.X < 0 ? 1 : 0) * 50)
-		}
-	}
+	useEffect(()=>{
+		card.forceUpdate = forceUpdate;
+	}, [])
 
 	const OnStartDrag = (panInfo: PanInfo) => {
 		draggingCardUpdated({ ...card })
@@ -60,7 +33,6 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 	}
 
 	const OnEndDrag = (panInfo: PanInfo) => {
-		setDisablePointerEvents(false)
 		onDragEnd({ ...card })
 	}
 
@@ -76,37 +48,38 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 			opacity: card.startTransparent ? 0 : 1,
 			zIndex: card.animateInZIndex,
 			top: card.pos.Y,
-			left: card.pos.X + horizontalOffset + (card.animateInHorizontalOffset ?? 0),
+			left: card.pos.X + card.horizontalOffset + (card.animateInHorizontalOffset ?? 0),
 			transition: {
 				type: defaultTransition.type,
 				ease: defaultTransition.ease,
 				duration: defaultTransition.duration,
-				delay: transitionDelay
+				delay: transitionDelay,
 			},
 		},
 		animate: {
 			opacity: 1,
 			zIndex: card.zIndex,
 			top: card.pos.Y,
-			left: card.pos.X + horizontalOffset,
+			left: card.pos.X + card.horizontalOffset,
+			boxShadow: '0px 0px 10px rgba(0,0,0,0.3)',
 			transition: {
 				type: defaultTransition.type,
 				ease: defaultTransition.ease,
 				duration: defaultTransition.duration,
-				delay: transitionDelay
+				delay: transitionDelay,
 			},
 		},
 		hovered: card.ourCard
 			? {
 					scale: 1.03,
 					top: card.pos.Y - 20,
-					boxShadow: '0px 7px 15px rgba(0,0,0,0.3)',
+					boxShadow: '0px 0px 20px rgba(0,0,0,0.4)',
 					transition: defaultTransition,
 			  }
 			: {},
 		dragging: {
 			scale: 1.12,
-			boxShadow: '0px 15px 30px rgba(0,0,0,0.5)',
+			boxShadow: '0px 30px 30px rgba(0,0,0,0.6)',
 			cursor: 'grabbing',
 			zIndex: 20,
 			top: card.pos.Y - 20,
@@ -125,58 +98,51 @@ const Card = ({ card, onDragEnd, draggingCardUpdated, cardBeingDragged }: Props)
 		},
 	}
 
-	const AnimEnd = (anim:  AnimationDefinition) => {
-		if(card.animateInDelay === transitionDelay){
+	const AnimEnd = (anim: AnimationDefinition) => {
+		if (card.animateInDelay === transitionDelay) {
 			setTransitionDelay(0)
-			// setTransitionZIndex(card.zIndex)
 		}
 	}
 
 	return (
-		<Droppable
-			id={card.Id}
-			cardBeingDragged={cardBeingDragged}
-			ourRef={card.ref}
-			onDistanceUpdated={UpdateAnimationStates}
+		<CardParent
+			ref={card.ref}
+			key={`card-${card.Id}`}
+			variants={cardVariants}
+			initial="initial"
+			animate="animate"
+			whileHover="hovered"
+			whileDrag="dragging"
+			exit="exit"
+			onAnimationComplete={(a) => AnimEnd(a)}
+			$grabCursor={card.ourCard}
+			drag={card.ourCard}
+			onDrag={(e: any, info: PanInfo) => OnDrag(info)}
+			onDragStart={(e: any, info: PanInfo) => OnStartDrag(info)}
+			onDragEnd={(e: any, info: PanInfo) => OnEndDrag(info)}
+			dragSnapToOrigin={true}
+			dragMomentum={false}
+			dragElastic={1}
+			dragTransition={defaultTransition}
 		>
-			<CardParent
-				ref={card.ref}
-				key={`card-${card.Id}`}
-				// layoutId={`card-${card.Id}`}
-				variants={cardVariants}
-				initial="initial"
-				animate="animate"
-				whileHover="hovered"
-				whileDrag="dragging"
-				exit="exit"
-				onAnimationComplete={(a)=>AnimEnd(a)}
-				$grabCursor={card.ourCard}
-				drag={card.ourCard}
-				onDrag={(e: any, info: PanInfo) => OnDrag(info)}
-				onDragStart={(e: any, info: PanInfo) => OnStartDrag(info)}
-				onDragEnd={(e: any, info: PanInfo) => OnEndDrag(info)}
-				dragSnapToOrigin={true}
-				dragMomentum={false}
-				dragElastic={1}
-				dragTransition={defaultTransition}
-			>
-				<CardImg
-					highlighted={highlighted}
-					draggable="false"
-					width={80}
-					key={card.Id}
-					src={CardImgSrc(card)}
-					alt={CardImgName(card)}
-				/>
-			</CardParent>
-		</Droppable>
+			<CardImg
+				highlighted={card.highlighted}
+				draggable="false"
+				width={80}
+				height={116.1}
+				key={card.Id}
+				src={CardImgSrc(card)}
+				alt={CardImgName(card)}
+			/>
+		</CardParent>
 	)
-}
+})
 
 const CardParent = styled(motion.div)<{ $grabCursor: boolean }>`
 	width: 80px;
 	cursor: ${(p) => (p.$grabCursor ? 'grab' : 'default')};
 	position: absolute;
+	display: flex;
 `
 
 const CardImg = styled.img<{ highlighted: boolean }>`

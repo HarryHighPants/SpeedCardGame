@@ -1,26 +1,32 @@
 import * as signalR from '@microsoft/signalr'
 import { HubConnection, HubConnectionState } from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import Lobby from '../../Components/Lobby'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { IGameState } from '../../Interfaces/IGameState'
 import Game from '../../Components/Game'
 import TestData from '../../Assets/TestData.js'
+import Lobby from './Lobby'
+import Popup from './Popup'
 
-interface Props {}
+interface Props {
+	onGameStarted: () => void
+}
 
 const testing: boolean = false
-const Room = (props: Props) => {
+const Room = ({ onGameStarted }: Props) => {
 	let urlParams = useParams()
+	let navigate = useNavigate()
 	const [connection, setConnection] = useState<HubConnection>()
 	const [roomId, setRoomId] = useState<string | undefined>(urlParams.roomId)
 	const [gameState, setGameState] = useState<IGameState>(testing ? JSON.parse(TestData) : undefined) // Local debugging
 	const [invertedCenterPiles, setInvertedCenterPiles] = useState(false)
 
+	// const [rawGameStateHistory, setRawGameStateHistory] = useState<any[]>([])
+
 	useEffect(() => {
 		// Builds the SignalR connection, mapping it to /server
 		let signalRConnection = new signalR.HubConnectionBuilder()
-			.withUrl('https://localhost:7067/server')
+			.withUrl(`http://${window.location.hostname}:5169/server`)
 			.withAutomaticReconnect()
 			.configureLogging(signalR.LogLevel.Information)
 			.build()
@@ -41,6 +47,7 @@ const Room = (props: Props) => {
 	}, [connection])
 
 	useEffect(() => {
+		console.log(urlParams.roomId)
 		setRoomId(urlParams.roomId)
 		if (connection?.state == HubConnectionState.Connected) {
 			JoinRoom()
@@ -65,16 +72,31 @@ const Room = (props: Props) => {
 			parsedData.Players = parsedData.Players.reverse()
 		}
 
+		if (!gameState) {
+			onGameStarted()
+		}
+
+		// rawGameStateHistory.push(data)
+		// setRawGameStateHistory(rawGameStateHistory)
+		// console.log(JSON.stringify(rawGameStateHistory))
+
 		setGameState({ ...parsedData })
 	}
 
 	return gameState!! ? (
-		<Game
-			connection={connection}
-			connectionId={testing ? 'CUqUsFYm1zVoW-WcGr6sUQ' : connection?.connectionId}
-			gameState={gameState}
-			invertedCenterPiles={invertedCenterPiles}
-		/>
+		<>
+			<Game
+				connection={connection}
+				connectionId={testing ? 'CUqUsFYm1zVoW-WcGr6sUQ' : connection?.connectionId}
+				gameState={gameState}
+				invertedCenterPiles={invertedCenterPiles}
+			/>
+			{!!gameState.WinnerId && (
+				<Popup onHomeButton={() => navigate('/')}>
+					<h3>Winner is {gameState.Players.find((p) => p.Id === gameState.WinnerId)?.Name}</h3>
+				</Popup>
+			)}
+		</>
 	) : (
 		<Lobby roomId={roomId} connection={connection} />
 	)

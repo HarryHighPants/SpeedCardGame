@@ -44,6 +44,7 @@ const BaseAreaDiv = styled.div<{ highlight: boolean | undefined; dimensions: Are
 const AreaText = styled.p<{}>`
 	z-index: 50;
 	font-size: x-small;
+	font-weight: bolder;
 	color: #fff4f0;
 	margin: 0 0 -40px;
 	height: 25px;

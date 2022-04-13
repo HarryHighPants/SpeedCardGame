@@ -9,11 +9,13 @@ import Card from './Card'
 import { LayoutGroup, PanInfo } from 'framer-motion'
 import { clamp } from '../Helpers/Utilities'
 import GameBoard from './GameBoard'
+import backgroundImg from '../Assets/felt-tiling.jpg'
+import { debounce } from 'lodash'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
 	connectionId: string | undefined | null
-	gameState: IGameState,
+	gameState: IGameState
 	invertedCenterPiles: boolean
 }
 
@@ -60,7 +62,7 @@ const Game = ({ connection, connectionId, gameState, invertedCenterPiles }: Prop
 
 	const OnPlayCard = (topCard: ICard, centerPileIndex: number) => {
 		// Call the event
-		let correctedCenterPileIndex = invertedCenterPiles ? ((centerPileIndex + 1) % 2) : centerPileIndex
+		let correctedCenterPileIndex = invertedCenterPiles ? (centerPileIndex + 1) % 2 : centerPileIndex
 		connection?.invoke('TryPlayCard', topCard.Id, correctedCenterPileIndex).catch((e) => console.log(e))
 
 		// Show any messages (Move to a warnings component)
@@ -107,10 +109,9 @@ const Game = ({ connection, connectionId, gameState, invertedCenterPiles }: Prop
 		// Show any messages (Move to a warnings component)
 	}
 
-	const OnDraggingCardUpdated = (draggingCard: IMovedCardPos | undefined) => {
-		console.log("OnDraggingCardUpdated", draggingCard?.Pos?.X, draggingCard?.Pos?.Y)
-		connection?.invoke('UpdateMovingCard', draggingCard).catch((e) => console.log(e))
-	}
+	const OnDraggingCardUpdated = debounce((draggingCard: IMovedCardPos | undefined) => {
+		// connection?.invoke('UpdateMovingCard', draggingCard).catch((e) => console.log(e))
+	}, 100, {leading: true, trailing: true, maxWait: 100})
 
 	return (
 		<GameContainer>
@@ -130,7 +131,7 @@ const Game = ({ connection, connectionId, gameState, invertedCenterPiles }: Prop
 				player={localGameState.Players[1]}
 				onTop={false}
 			/>
-			<Background key={'bg'} />
+			<Background key={'bg'} style={{ backgroundImage: `url(${backgroundImg})` }} />
 		</GameContainer>
 	)
 }
@@ -142,12 +143,14 @@ const GameContainer = styled.div`
 	height: 100%;
 	max-width: 100%;
 	max-height: 100%;
-	//overflow: hidden;
+	overflow: hidden;
 	overscroll-behavior: none;
 `
 
 const Background = styled.div`
-	background-color: #4d6947;
+	background-color: #52704b;
+	background-size: 150px;
+	background-blend-mode: soft-light;
 	position: absolute;
 	top: 0;
 	left: 0;

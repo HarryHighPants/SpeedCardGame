@@ -3,7 +3,8 @@ import { Route, Routes, useNavigate } from 'react-router-dom'
 import { uniqueNamesGenerator } from 'unique-names-generator'
 import animals from '../../Assets/Animals.json'
 import adjectives from '../../Assets/Adjectives.json'
-import MenuHeader from '../../Components/MenuHeader'
+import MenuHeader from "./MenuHeader";
+import Popup from './Popup'
 
 interface Props {}
 
@@ -23,7 +24,7 @@ const MainMenu = (props: Props) => {
 	}
 
 	return (
-		<div>
+		<Popup>
 			<MenuHeader />
 			<div>
 				<h4>Play against a friend</h4>
@@ -37,7 +38,7 @@ const MainMenu = (props: Props) => {
 					<button onClick={() => OnCreateGame(true, 3)}>Impossible</button>
 				</div>
 			</div>
-		</div>
+		</Popup>
 	)
 }
 
