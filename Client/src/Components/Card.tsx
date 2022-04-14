@@ -36,17 +36,13 @@ const Card = memo(({ card, onDragEnd, draggingCardUpdated }: Props) => {
 		onDragEnd({ ...card })
 	}
 
-	const transitionDuration = 0.5
+	const transitionDuration = 0.35
 	const defaultEase = 'easeOut'
 	const defaultTransition = {
 		type: 'tween',
 		ease: defaultEase,
 		duration: transitionDuration,
 	}
-	if(card.Id === 21){
-		console.log(card.pos, Date.now())
-	}
-
 	const cardVariants: Variants = {
 		initial: {
 			opacity: card.startTransparent ? 0 : 1,

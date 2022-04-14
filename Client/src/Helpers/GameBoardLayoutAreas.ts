@@ -105,8 +105,8 @@ class GameBoardLayoutArea {
 				Math.abs(
 					this.cardsLayout.GetHandCardPosition(ourPlayer, 0).X -
 						this.cardsLayout.GetHandCardPosition(ourPlayer, GameBoardLayout.maxHandCardCount - 1).X
-				) + GameBoardLayout.PixelsToPercent(GameBoardLayout.cardWidth, this.layout.gameBoardDimensions.X),
-			Y: GameBoardLayout.PixelsToPercent(GameBoardLayout.cardHeight, this.layout.gameBoardDimensions.Y),
+				) + GameBoardLayout.GetPixelsToPercent(GameBoardLayout.cardWidth, this.layout.gameBoardDimensions.X),
+			Y: GameBoardLayout.GetPixelsToPercent(GameBoardLayout.cardHeight, this.layout.gameBoardDimensions.Y),
 		}
 
 		return this.AreaDimensionsToPixels(areaDimensions)
@@ -116,8 +116,8 @@ class GameBoardLayoutArea {
 		let areaDimensions = {} as AreaDimensions
 		areaDimensions.pos = this.cardsLayout.GetKittyCardPosition(ourPlayer)
 		areaDimensions.size = {
-			X: GameBoardLayout.PixelsToPercent(GameBoardLayout.cardWidth, this.layout.gameBoardDimensions.X),
-			Y: GameBoardLayout.PixelsToPercent(GameBoardLayout.cardHeight, this.layout.gameBoardDimensions.Y),
+			X: GameBoardLayout.GetPixelsToPercent(GameBoardLayout.cardWidth, this.layout.gameBoardDimensions.X),
+			Y: GameBoardLayout.GetPixelsToPercent(GameBoardLayout.cardHeight, this.layout.gameBoardDimensions.Y),
 		}
 
 		return this.AreaDimensionsToPixels(areaDimensions)
@@ -127,8 +127,8 @@ class GameBoardLayoutArea {
 		let areaDimensions = {} as AreaDimensions
 		areaDimensions.pos = this.cardsLayout.GetCenterCardPositions()[centerIndex]
 		areaDimensions.size = {
-			X: GameBoardLayout.PixelsToPercent(gameBoardLayout.cardWidth, this.layout.gameBoardDimensions.X),
-			Y: GameBoardLayout.PixelsToPercent(gameBoardLayout.cardHeight, this.layout.gameBoardDimensions.Y),
+			X: GameBoardLayout.GetPixelsToPercent(gameBoardLayout.cardWidth, this.layout.gameBoardDimensions.X),
+			Y: GameBoardLayout.GetPixelsToPercent(gameBoardLayout.cardHeight, this.layout.gameBoardDimensions.Y),
 		}
 
 		return this.AreaDimensionsToPixels(areaDimensions)

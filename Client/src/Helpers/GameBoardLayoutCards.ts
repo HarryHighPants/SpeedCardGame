@@ -4,6 +4,7 @@ import React from 'react'
 import { clamp } from './Utilities'
 import GameBoardLayout from './GameBoardLayout'
 import gameBoardLayout from './GameBoardLayout'
+import game from "../Components/Game";
 
 class GameBoardLayoutCards {
 	private gameBoardLayout: GameBoardLayout
@@ -108,10 +109,11 @@ class GameBoardLayoutCards {
 	}
 
 	public GetCenterCardPositions(): IPos[] {
+		let centerPadding = Math.max(gameBoardLayout.GetPixelsToPercent(gameBoardLayout.minCenterPilesPaddingPixels, this.gameBoardLayout.gameBoardDimensions.X), gameBoardLayout.centerPilesPadding)
 		return Array(2)
 			.fill(0)
 			.map((e, i) => {
-				return { X: 0.5 + GameBoardLayout.centerPilesPadding * (i === 0 ? -1 : 1), Y: 0.5 } as IPos
+				return { X: 0.5 + centerPadding * (i === 0 ? -1 : 1), Y: 0.5 } as IPos
 			})
 	}
 
@@ -134,7 +136,7 @@ class GameBoardLayoutCards {
 		let startTransparent = false
 		if (location === CardLocationType.Center) {
 			animateInHorizontalOffset =
-				GameBoardLayout.GetRelativeAsPixels(0.6, this.gameBoardLayout.gameBoardDimensions.X) *
+				GameBoardLayout.GetPercentAsPixels(0.6, this.gameBoardLayout.gameBoardDimensions.X) *
 				(index === 0 ? -1 : 1)
 			animateInDelay =
 				this.renderableCards.filter((c) => c.location === CardLocationType.Center).length <= 2 ? 3 : 0
@@ -143,7 +145,7 @@ class GameBoardLayoutCards {
 		// Setup the original cards with the correct transition in settings
 		if (this.renderableCards.length <= 0) {
 			if (location === CardLocationType.Hand) {
-				animateInHorizontalOffset = GameBoardLayout.GetRelativeAsPixels(
+				animateInHorizontalOffset = GameBoardLayout.GetPercentAsPixels(
 					this.GetKittyCardPosition(ourPlayer).X - defaultPos.X,
 					this.gameBoardLayout.gameBoardDimensions.X
 				)

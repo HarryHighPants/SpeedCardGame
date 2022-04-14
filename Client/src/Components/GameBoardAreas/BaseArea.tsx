@@ -59,6 +59,7 @@ const AreaText = styled.p<{}>`
 	margin: 0 0 -40px;
 	height: 25px;
 	text-transform: uppercase;
+	user-select: none;
 `
 
 export default BaseArea

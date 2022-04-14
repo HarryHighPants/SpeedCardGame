@@ -3,8 +3,8 @@ import { IGameState } from '../Interfaces/IGameState'
 import React from 'react'
 import { clamp } from './Utilities'
 import GameBoardLayoutCards from './GameBoardLayoutCards'
-import {IRenderableArea} from "../Interfaces/IBoardArea";
-import GameBoardLayoutAreas from "./GameBoardLayoutAreas";
+import { IRenderableArea } from '../Interfaces/IBoardArea'
+import GameBoardLayoutAreas from './GameBoardLayoutAreas'
 
 class GameBoardLayout {
 	public static maxWidth = 750
@@ -19,7 +19,8 @@ class GameBoardLayout {
 
 	public static playerKittyCenterX = 0.8
 
-	public static centerPilesPadding = 0.1
+	public static centerPilesPadding = 0.11
+	public static minCenterPilesPaddingPixels = 75
 
 	public gameBoardDimensions: IPos
 
@@ -30,7 +31,7 @@ class GameBoardLayout {
 	public GetRenderableCards = (
 		ourId: string | null | undefined,
 		gameState: IGameState,
-		renderableCards: IRenderableCard[],
+		renderableCards: IRenderableCard[]
 	): IRenderableCard[] => {
 		let layoutCards = new GameBoardLayoutCards(this)
 		return layoutCards.GetRenderableCards(ourId, gameState, renderableCards, undefined)
@@ -56,23 +57,23 @@ class GameBoardLayout {
 		})
 	}
 
-	public static CardRectToPercent = (rect: DOMRect, gameBoardDimensions: IPos) => {
+	public static GetCardRectToPercent = (rect: DOMRect, gameBoardDimensions: IPos) => {
 		// Need to subtract half of the size of the screen over the actual size of the screen from x
 		let excessWidth = clamp(window.innerWidth - gameBoardDimensions.X, 0, Infinity)
 		return {
-			X: this.PixelsToPercent(rect.x - excessWidth / 2 + this.cardWidth / 2, gameBoardDimensions.X),
-			Y: this.PixelsToPercent(rect.y + this.cardHeight / 2, gameBoardDimensions.Y),
+			X: this.GetPixelsToPercent(rect.x - excessWidth / 2 + this.cardWidth / 2, gameBoardDimensions.X),
+			Y: this.GetPixelsToPercent(rect.y + this.cardHeight / 2, gameBoardDimensions.Y),
 		} as IPos
 	}
 
-	public static PosPixelsToPercent = (posPixels: IPos, gameBoardDimensions: IPos) => {
+	public static GetPosPixelsToPercent = (posPixels: IPos, gameBoardDimensions: IPos) => {
 		return {
-			X: this.PixelsToPercent(posPixels.X, gameBoardDimensions.X),
-			Y: this.PixelsToPercent(posPixels.Y, gameBoardDimensions.Y),
+			X: this.GetPixelsToPercent(posPixels.X, gameBoardDimensions.X),
+			Y: this.GetPixelsToPercent(posPixels.Y, gameBoardDimensions.Y),
 		} as IPos
 	}
 
-	public static PixelsToPercent = (pixels: number, gameBoardLength: number) => {
+	public static GetPixelsToPercent = (pixels: number, gameBoardLength: number) => {
 		return 1 / (gameBoardLength / pixels)
 	}
 
@@ -86,12 +87,12 @@ class GameBoardLayout {
 
 	public static GetPosPixels = (pos: IPos, gameBoardDimensions: IPos): IPos => {
 		return {
-			X: this.GetRelativeAsPixels(pos.X, gameBoardDimensions.X),
-			Y: this.GetRelativeAsPixels(pos.Y, gameBoardDimensions.Y),
+			X: this.GetPercentAsPixels(pos.X, gameBoardDimensions.X),
+			Y: this.GetPercentAsPixels(pos.Y, gameBoardDimensions.Y),
 		}
 	}
 
-	public static GetRelativeAsPixels = (x: number | undefined, gameBoardLength: number): number => {
+	public static GetPercentAsPixels = (x: number | undefined, gameBoardLength: number): number => {
 		return x!! ? x * gameBoardLength : 0
 	}
 

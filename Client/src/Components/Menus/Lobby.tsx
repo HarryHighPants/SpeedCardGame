@@ -71,15 +71,15 @@ const Lobby = ({ connection, roomId }: Props) => {
 			<div>
 				<div>
 					<p>Invite link:</p>
-					<input value={window.location.href} disabled={true} />
+					<input value={roomId} disabled={true} />
 					<CopyButton onClick={() => navigator.clipboard.writeText(window.location.href)} />
 				</div>
 				<div>
 					<h4>Players</h4>
 					{lobbyData != null ? (
-						<ul>
+						<div>
 							{lobbyData?.Connections?.map((p) => LobbyPlayer(connectionId, myPlayerName, p, UpdateName))}
-						</ul>
+						</div>
 					) : (
 						<div>Connecting to room</div>
 					)}
@@ -118,12 +118,12 @@ const LobbyPlayer = (
 	onUpdateName: (newName: string) => void
 ) => {
 	return (
-		<li key={player.ConnectionId}>
+		<div key={player.ConnectionId}>
 			{player.ConnectionId == connectionId ? (
 				<input maxLength={20} value={myPlayerName} onChange={(e) => onUpdateName(e.target.value)} />
 			) : (
 				player.Name
 			)}
-		</li>
+		</div>
 	)
 }

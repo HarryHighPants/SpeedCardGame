@@ -77,6 +77,30 @@ const CardsContainer = ({
 		movingCard.forceUpdate()
 	}
 
+	const SendMovingCardToServer = (draggingCard: IRenderableCard, endDrag: boolean = false) => {
+		let rect = draggingCard?.ref?.current?.getBoundingClientRect()
+		let cardIndex = -1
+		if (draggingCard.location === CardLocationType.Hand) {
+			gameState.Players.forEach((p) => {
+				if (p.Id === playerId) {
+					cardIndex = p.HandCards.findIndex((c) => c.Id === draggingCard.Id)
+				}
+			})
+		}
+		let movedCard =
+			rect !== undefined
+				? ({
+						CardId: draggingCard.Id,
+						Pos: endDrag
+							? null
+							: GameBoardLayout.GetCardRectToPercent(rect, gameBoardLayout.gameBoardDimensions),
+						Location: draggingCard.location,
+						Index: cardIndex,
+				  } as IMovedCardPos)
+				: undefined
+		sendMovingCard(movedCard)
+	}
+
 	const DraggingCardUpdated = (draggingCard: IRenderableCard | undefined) => {
 		UpdateCardsHoverStates(draggingCard)
 		if (!!draggingCard) {
@@ -86,31 +110,6 @@ const CardsContainer = ({
 			SendMovingCardToServer(draggingCard)
 		}
 	}
-
-	const SendMovingCardToServer = (draggingCard: IRenderableCard, endDrag: boolean = false) => {
-			let rect = draggingCard?.ref?.current?.getBoundingClientRect()
-			let cardIndex = -1
-			if (draggingCard.location === CardLocationType.Hand) {
-				gameState.Players.forEach((p) => {
-					if (p.Id === playerId) {
-						cardIndex = p.HandCards.findIndex((c) => c.Id === draggingCard.Id)
-					}
-				})
-			}
-			let movedCard =
-				rect !== undefined
-					? ({
-							CardId: draggingCard.Id,
-							Pos: endDrag
-								? null
-								: GameBoardLayout.CardRectToPercent(rect, gameBoardLayout.gameBoardDimensions),
-							Location: draggingCard.location,
-							Index: cardIndex,
-					  } as IMovedCardPos)
-					: undefined
-			sendMovingCard(movedCard)
-		}
-
 
 	const UpdateCardsHoverStates = (draggingCard: IRenderableCard | undefined) => {
 		for (let i = 0; i < renderableCards.length; i++) {

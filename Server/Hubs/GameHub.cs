@@ -135,7 +135,7 @@ public class GameHub : Hub
     public async Task UpdateMovingCard(UpdateMovingCardData updateMovingCard)
     {
         // Check connection owns the card
-        if (!gameService.ConnectionOwnsCard(UserConnectionId, updateMovingCard.CardId))
+        if (updateMovingCard.Pos != null && !gameService.ConnectionOwnsCard(UserConnectionId, updateMovingCard.CardId))
         {
             throw new HubException("Connection can't move that card", new UnauthorizedAccessException());
         }
