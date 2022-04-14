@@ -51,20 +51,35 @@ const GameBoard = ({
 		dispatchGameState({ type: 'Play', topCard: topCard, centerPileIndex: centerPileIndex, playerId: playerId })
 	}
 
-	const DetectPickupFromKitty = (draggingCard: IRenderableCard) => {
-		if (
-			draggingCard.location === CardLocationType.Kitty &&
-			renderableAreas.find((a) => a.highlight && a.location.type === 'Hand')
-		) {
-			console.log('Attempt pickup from kitty', draggingCard)
-			sendPickupFromKitty()
-			dispatchGameState({ type: 'Pickup', playerId: playerId })
+	const DetectPlay = (draggingCard: IRenderableCard) => {
+		let draggingCardRect = draggingCard?.ref.current?.getBoundingClientRect()
+		let centerCardPlay = {index: -1, distance: Infinity}
+		for (let i = 0; i < renderableAreas.length; i++) {
+			let renderableArea = renderableAreas[i]
+			let ourRect = renderableArea.ref?.current?.getBoundingClientRect()
+			let offsetInfo = GetOffsetInfo(ourRect, draggingCardRect)
+			if(offsetInfo.overlaps){
+				if(renderableArea.location.type === "Center" && CanDropOntoCenter(renderableArea, draggingCard)){
+					//Get the closest center pile
+					if(centerCardPlay.distance > offsetInfo.distance)
+					centerCardPlay = {index: renderableArea.location.index, distance: offsetInfo.distance}
+				}
+
+				if(CanDropOntoHand(renderableArea, draggingCard)) {
+					console.log('Attempt pickup from kitty', draggingCard)
+					sendPickupFromKitty()
+					dispatchGameState({ type: 'Pickup', playerId: playerId })
+				}
+			}
+		}
+		if(centerCardPlay.index !== -1){
+			OnPlayCard(draggingCard, centerCardPlay.index);
 		}
 	}
 
 	const OnEndDrag = (draggingCard: IRenderableCard) => {
 		// Detect Pickup From Kitty
-		DetectPickupFromKitty(draggingCard)
+		DetectPlay(draggingCard)
 		OnDragUpdated(undefined)
 	}
 
@@ -74,36 +89,35 @@ const GameBoard = ({
 		// Detect hoverable areas
 		for (let i = 0; i < renderableAreas.length; i++) {
 			let renderableArea = renderableAreas[i]
-			let ourRect = renderableArea.ref?.current?.getBoundingClientRect()
-			let offsetInfo = GetOffsetInfo(ourRect, draggingCardRect)
 
-			if (offsetInfo.distance === Infinity) {
-				// Reset states
-				if (renderableArea.highlight) {
-					renderableArea.highlight = false
-					if (!!renderableArea.forceUpdate) {
-						renderableArea.forceUpdate()
-					}
-				}
+			if (!draggingCard?.ref) {
+				SetHighlight(renderableArea, false)
 				continue
 			}
 
-			// Check if a center area can be dropped onto
-			let droppingOntoCenter =
-				renderableArea.location.type === "Center" && draggingCard?.location === CardLocationType.Hand
-			// Check if our hand area is being dropped onto
-			let droppingOntoHand =
-				renderableArea.location.type === "Hand" && draggingCard?.location === CardLocationType.Kitty
-
-			if (droppingOntoCenter || droppingOntoHand) {
-				if (renderableArea.highlight !== offsetInfo.overlaps) {
-					renderableArea.highlight = offsetInfo.overlaps
-					if (!!renderableArea.forceUpdate) {
-						renderableArea.forceUpdate()
-					}
-				}
+			if (CanDropOntoCenter(renderableArea, draggingCard) || CanDropOntoHand(renderableArea, draggingCard)) {
+				let ourRect = renderableArea.ref?.current?.getBoundingClientRect()
+				let offsetInfo = GetOffsetInfo(ourRect, draggingCardRect)
+				SetHighlight(renderableArea, offsetInfo.overlaps)
 			}
 		}
+	}
+
+	const SetHighlight = (rArea: IRenderableArea, highlight: boolean) => {
+		if (rArea.highlight !== highlight) {
+			rArea.highlight = highlight
+			if (!!rArea.forceUpdate) {
+				rArea.forceUpdate()
+			}
+		}
+	}
+
+	const CanDropOntoCenter = (ra: IRenderableArea, c: IRenderableCard | undefined) => {
+		return ra.location.type === 'Center' && c?.location === CardLocationType.Hand
+	}
+
+	const CanDropOntoHand = (ra: IRenderableArea, c: IRenderableCard | undefined) => {
+		return ra.location.type === 'Hand' && c?.location === CardLocationType.Kitty
 	}
 
 	return (
@@ -120,7 +134,6 @@ const GameBoard = ({
 				playerId={playerId}
 				gameState={localGameState}
 				gameBoardLayout={gameBoardLayout}
-				onPlayCard={OnPlayCard}
 				onDraggingCardUpdated={OnDragUpdated}
 				onEndDrag={OnEndDrag}
 			/>

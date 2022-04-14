@@ -48,7 +48,6 @@ export interface IRenderableCard extends ICard {
 	animateInDelay: number
 	animateInZIndex: number
 	startTransparent: boolean
-	highlighted: boolean
 	horizontalOffset: number
 	forceUpdate: ()=>void
 }

@@ -7,6 +7,7 @@ export interface IRenderableArea {
 	dimensions: AreaDimensions
 	text?: string | undefined
 	highlight?: boolean
+	highlightZIndex: number
 	location: AreaLocation
 	ref: React.RefObject<HTMLDivElement>
 	forceUpdate: () => void

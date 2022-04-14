@@ -12,13 +12,13 @@ import { IPlayer } from '../Interfaces/IPlayer'
 import gameBoardLayout from '../Helpers/GameBoardLayout'
 import GameBoardAreas from './GameBoardAreas/GameBoardAreas'
 import { debounce } from 'lodash'
+import { IRenderableArea } from '../Interfaces/IBoardArea'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
 	playerId: string | undefined | null
 	gameState: IGameState
 	gameBoardLayout: GameBoardLayout
-	onPlayCard: (topCard: ICard, centerPileIndex: number) => void
 	onDraggingCardUpdated: (draggingCard: IRenderableCard) => void
 	onEndDrag: (draggingCard: IRenderableCard) => void
 	sendMovingCard: (movedCard: IMovedCardPos | undefined) => void
@@ -29,7 +29,6 @@ const CardsContainer = ({
 	gameBoardLayout,
 	playerId,
 	gameState,
-	onPlayCard,
 	onDraggingCardUpdated,
 	onEndDrag,
 	sendMovingCard,
@@ -108,35 +107,8 @@ const CardsContainer = ({
 			let offsetInfo = GetOffsetInfo(ourRect, draggingCardRect)
 
 			if (offsetInfo.distance === Infinity) {
-				// Reset states
-				if (card.highlighted) {
-					card.highlighted = false
-					if (!!card.forceUpdate) {
-						card.forceUpdate()
-					}
-				}
-				if (card.horizontalOffset !== 0) {
-					card.horizontalOffset = 0
-					if (!!card.forceUpdate) {
-						card.forceUpdate()
-					}
-				}
+				SetOffset(card, 0)
 				continue
-			}
-
-			// Check if we are a center card that can be dropped onto
-			let droppingOntoCenter =
-				card.location === CardLocationType.Center && draggingCard?.location === CardLocationType.Hand
-			if (droppingOntoCenter) {
-				// console.log(card.Id, offsetInfo.distance < GameBoardLayout.dropDistance)
-				let shouldBeHighlighted = offsetInfo.distance < GameBoardLayout.dropDistance
-				if (card.highlighted !== shouldBeHighlighted) {
-					// console.log(card.Id, 'Updating highlighting',shouldBeHighlighted )
-					card.highlighted = shouldBeHighlighted
-					if (!!card.forceUpdate) {
-						card.forceUpdate()
-					}
-				}
 			}
 
 			// Check if we are a hand card that can be dragged onto
@@ -147,51 +119,23 @@ const CardsContainer = ({
 			if (droppingOntoHandCard) {
 				// We want to animate to either the left or the right on the dragged kitty card
 				let horizontalOffset = (!!offsetInfo.delta && offsetInfo.delta?.X < 0 ? 1 : 0) * 50
-				if (horizontalOffset !== card.horizontalOffset) {
-					card.horizontalOffset = horizontalOffset
-					if (!!card.forceUpdate) {
-						card.forceUpdate()
-					}
-				}
+				SetOffset(card, horizontalOffset)
+			}
+		}
+	}
+
+	const SetOffset = (rCard: IRenderableCard, horizontalOffset: number) => {
+		if (rCard.horizontalOffset !== horizontalOffset) {
+			rCard.horizontalOffset = horizontalOffset
+			if (!!rCard.forceUpdate) {
+				rCard.forceUpdate()
 			}
 		}
 	}
 
 	const OnEndDrag = (topCard: IRenderableCard) => {
-		DetectPlayCard(topCard, GetBottomCard(topCard))
 		DraggingCardUpdated(undefined)
 		onEndDrag(topCard)
-	}
-
-	const DetectPlayCard = (topCard: IRenderableCard, bottomCard: IRenderableCard | undefined) => {
-		// If we are trying to play a card into the center
-		if (
-			topCard.location === CardLocationType.Hand &&
-			!!bottomCard &&
-			bottomCard.location === CardLocationType.Center
-		) {
-			let centerPileIndex: number = gameState.CenterPiles.findIndex(
-				(cp) => cp.Cards.find((c) => c.Id === bottomCard.Id) !== undefined
-			)
-			if (centerPileIndex === -1) return
-			console.log('Attempt play', topCard)
-			onPlayCard(topCard, centerPileIndex)
-		}
-	}
-
-	const GetBottomCard = (topCard: IRenderableCard) => {
-		let cardDistances = renderableCards.map((c) => {
-			return {
-				card: c,
-				distance: GetDistanceRect(
-					topCard?.ref.current?.getBoundingClientRect(),
-					c.ref.current?.getBoundingClientRect()
-				),
-			}
-		})
-		cardDistances = cardDistances.sort((a, b) => a.distance - b.distance)
-		if (cardDistances[1].distance > GameBoardLayout.dropDistance) return
-		return cardDistances[1].card
 	}
 
 	return (

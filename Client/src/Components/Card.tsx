@@ -126,7 +126,6 @@ const Card = memo(({ card, onDragEnd, draggingCardUpdated}: Props) => {
 			dragTransition={defaultTransition}
 		>
 			<CardImg
-				highlighted={card.highlighted}
 				draggable="false"
 				width={80}
 				height={116.1}
@@ -145,8 +144,7 @@ const CardParent = styled(motion.div)<{ $grabCursor: boolean }>`
 	display: flex;
 `
 
-const CardImg = styled.img<{ highlighted: boolean }>`
-	${(p) => (p.highlighted ? 'filter: brightness(0.85)' : '')};
+const CardImg = styled.img`
 `
 
 const CardImgSrc = (card: ICard) => {
