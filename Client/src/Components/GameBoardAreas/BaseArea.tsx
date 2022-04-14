@@ -42,7 +42,6 @@ const BaseAreaDiv = styled.div<{ dimensions: AreaDimensions }>`
 
 const AreaBg = styled.div<{ highlight: boolean | undefined; highlightZIndex: number }>`
 	${(p) => (p.highlight ? 'background-color: rgba(0, 0, 0, 0.15)' : '')};
-	//background-color: rgba(252, 162, 2, 0.28);
 	z-index: ${(p) => p.highlightZIndex};
 	width: 100%;
 	height: 100%;
@@ -53,7 +52,7 @@ const AreaBg = styled.div<{ highlight: boolean | undefined; highlightZIndex: num
 `
 
 const AreaText = styled.p<{}>`
-	z-index: 50;
+	z-index: 1;
 	font-size: x-small;
 	font-weight: bolder;
 	color: #fff4f0;

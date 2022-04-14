@@ -1,18 +1,13 @@
 import * as signalR from '@microsoft/signalr'
-import React, { useEffect, useLayoutEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { IGameState } from '../Interfaces/IGameState'
-import { CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard } from '../Interfaces/ICard'
-import styled from 'styled-components'
-import Player from './Player'
+import { CardLocationType, IMovedCardPos, IRenderableCard } from '../Interfaces/ICard'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import Card from './Card'
-import { AnimatePresence, LayoutGroup, PanInfo } from 'framer-motion'
-import { clamp, GetDistanceRect, GetOffsetInfo, Overlaps } from '../Helpers/Utilities'
-import { IPlayer } from '../Interfaces/IPlayer'
-import gameBoardLayout from '../Helpers/GameBoardLayout'
-import GameBoardAreas from './GameBoardAreas/GameBoardAreas'
+import { AnimatePresence } from 'framer-motion'
+import { GetOffsetInfo } from '../Helpers/Utilities'
 import { debounce } from 'lodash'
-import { IRenderableArea } from '../Interfaces/IBoardArea'
+import game from './Game'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
@@ -33,8 +28,10 @@ const CardsContainer = ({
 	onEndDrag,
 	sendMovingCard,
 }: Props) => {
-	const [movedCard, setMovedCard] = useState<IMovedCardPos>()
 	const [renderableCards, setRenderableCards] = useState<IRenderableCard[]>([] as IRenderableCard[])
+	const renderableCardsRef = useRef()
+	// @ts-ignore
+	renderableCardsRef.current = renderableCards
 
 	useEffect(() => {
 		UpdateRenderableCards()
@@ -48,13 +45,8 @@ const CardsContainer = ({
 		UpdateRenderableCards()
 	}, [playerId])
 
-	// todo: update just the moved card
-	useEffect(() => {
-		UpdateRenderableCards()
-	}, [movedCard])
-
 	const UpdateRenderableCards = () => {
-		setRenderableCards(gameBoardLayout.GetRenderableCards(playerId, gameState, renderableCards, movedCard))
+		setRenderableCards(gameBoardLayout.GetRenderableCards(playerId, gameState, renderableCards))
 	}
 
 	useEffect(() => {
@@ -68,33 +60,57 @@ const CardsContainer = ({
 
 	const UpdateMovingCard = (data: any) => {
 		let parsedData: IMovedCardPos = JSON.parse(data)
-		setMovedCard(parsedData)
+		// @ts-ignore
+		let movingCard = renderableCardsRef.current?.find((c) => c.Id === parsedData.CardId)
+		if (!movingCard) {
+			console.log('No moving card, likely no renderableCards')
+			return
+		}
+
+		movingCard.isCustomPos = parsedData?.Pos !== null
+		let updatedPos = gameBoardLayout.getCardPosPixels(
+			!!parsedData?.Pos
+				? GameBoardLayout.FlipPosition(parsedData?.Pos)
+				: gameBoardLayout.GetCardDefaultPosition(false, parsedData.Location, parsedData.Index)
+		)
+		movingCard.pos = updatedPos
+		movingCard.forceUpdate()
 	}
 
 	const DraggingCardUpdated = (draggingCard: IRenderableCard | undefined) => {
 		UpdateCardsHoverStates(draggingCard)
-		// Send the event to the other player
-		SendMovingCardToServer(draggingCard)
 		if (!!draggingCard) {
 			onDraggingCardUpdated(draggingCard)
+
+			// Send the event to the other player
+			SendMovingCardToServer(draggingCard)
 		}
 	}
 
-	const SendMovingCardToServer = debounce(
-		(draggingCard: IRenderableCard | undefined) => {
+	const SendMovingCardToServer = (draggingCard: IRenderableCard, endDrag: boolean = false) => {
 			let rect = draggingCard?.ref?.current?.getBoundingClientRect()
+			let cardIndex = -1
+			if (draggingCard.location === CardLocationType.Hand) {
+				gameState.Players.forEach((p) => {
+					if (p.Id === playerId) {
+						cardIndex = p.HandCards.findIndex((c) => c.Id === draggingCard.Id)
+					}
+				})
+			}
 			let movedCard =
-				draggingCard !== undefined && rect !== undefined
+				rect !== undefined
 					? ({
 							CardId: draggingCard.Id,
-							Pos: GameBoardLayout.CardRectToPercent(rect, gameBoardLayout.gameBoardDimensions),
+							Pos: endDrag
+								? null
+								: GameBoardLayout.CardRectToPercent(rect, gameBoardLayout.gameBoardDimensions),
+							Location: draggingCard.location,
+							Index: cardIndex,
 					  } as IMovedCardPos)
 					: undefined
 			sendMovingCard(movedCard)
-		},
-		100,
-		{ leading: true, trailing: true, maxWait: 100 }
-	)
+		}
+
 
 	const UpdateCardsHoverStates = (draggingCard: IRenderableCard | undefined) => {
 		for (let i = 0; i < renderableCards.length; i++) {
@@ -134,6 +150,7 @@ const CardsContainer = ({
 	}
 
 	const OnEndDrag = (topCard: IRenderableCard) => {
+		SendMovingCardToServer(topCard, true)
 		DraggingCardUpdated(undefined)
 		onEndDrag(topCard)
 	}

@@ -245,17 +245,6 @@ public class InMemoryGameService : IGameService
         }
     }
 
-    public Result TryMoveCard(string connectionId, UpdateMovingCardData movingCard)
-    {
-        // Check the connection owns the card
-        if (!ConnectionOwnsCard(connectionId, movingCard.CardId))
-        {
-            return Result.Error("Player doesn't own the card");
-        }
-
-        return Result.Successful();
-    }
-
     public bool ConnectionOwnsCard(string connectionId, int cardId)
     {
         var gameResult = GetConnectionsGame(connectionId);

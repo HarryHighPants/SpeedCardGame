@@ -132,18 +132,10 @@ public class GameHub : Hub
 	    }
     }
 
-    public async Task UpdateMovingCard(UpdateMovingCardData? updateMovingCard)
+    public async Task UpdateMovingCard(UpdateMovingCardData updateMovingCard)
     {
-	    if (updateMovingCard != null)
-	    {
-		    var a = 1;
-		    if (updateMovingCard.CardId != 0)
-		    {
-			    var b = 1;
-		    }
-	    }
         // Check connection owns the card
-        if (updateMovingCard != null && !gameService.ConnectionOwnsCard(UserConnectionId, updateMovingCard.CardId))
+        if (!gameService.ConnectionOwnsCard(UserConnectionId, updateMovingCard.CardId))
         {
             throw new HubException("Connection can't move that card", new UnauthorizedAccessException());
         }

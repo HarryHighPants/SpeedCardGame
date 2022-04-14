@@ -40,6 +40,7 @@ export enum CardLocationType {
 
 export interface IRenderableCard extends ICard {
 	pos: IPos
+	isCustomPos: boolean
 	zIndex: number
 	ref: React.RefObject<HTMLDivElement>
 	ourCard: boolean
@@ -49,10 +50,12 @@ export interface IRenderableCard extends ICard {
 	animateInZIndex: number
 	startTransparent: boolean
 	horizontalOffset: number
-	forceUpdate: ()=>void
+	forceUpdate: () => void
 }
 
 export interface IMovedCardPos {
 	CardId: number
-	Pos: IPos | undefined
+	Pos: IPos | null
+	Location: CardLocationType
+	Index: number
 }

@@ -82,7 +82,6 @@ const GameBoard = ({
 	const SetHighlight = (rArea: IRenderableArea, highlight: boolean) => {
 		if (rArea.highlight !== highlight) {
 			rArea.highlight = highlight
-			console.log(rArea.ref, highlight)
 			if (!!rArea.forceUpdate) {
 				rArea.forceUpdate()
 			}

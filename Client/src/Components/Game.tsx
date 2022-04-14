@@ -87,10 +87,10 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 		// Show any messages (Move to a warnings component)
 	}
 
-	const SendMovedCard = (movedCard: IMovedCardPos | undefined) => {
+	const SendMovedCard = debounce((movedCard: IMovedCardPos | undefined) => {
 		connection?.invoke('UpdateMovingCard', movedCard).catch((e) => console.log(e))
 		// Show any messages (Move to a warnings component)
-	}
+	}, 100, { leading: true, trailing: true, maxWait: 100 })
 
 	return (
 		<GameContainer>

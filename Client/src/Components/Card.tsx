@@ -11,14 +11,14 @@ export interface Props {
 	onDragEnd: (card: IRenderableCard) => void
 }
 
-const Card = memo(({ card, onDragEnd, draggingCardUpdated}: Props) => {
+const Card = memo(({ card, onDragEnd, draggingCardUpdated }: Props) => {
 	const [dragPosDelta, setDragPosDelta] = useState(0)
 	const [transitionDelay, setTransitionDelay] = useState(card.animateInDelay)
-	const [, updateState] = useState({});
-	const forceUpdate = useCallback(() => updateState({}), []);
+	const [, updateState] = useState({})
+	const forceUpdate = useCallback(() => updateState({}), [])
 
-	useEffect(()=>{
-		card.forceUpdate = forceUpdate;
+	useEffect(() => {
+		card.forceUpdate = forceUpdate
 	}, [])
 
 	const OnStartDrag = (panInfo: PanInfo) => {
@@ -43,6 +43,10 @@ const Card = memo(({ card, onDragEnd, draggingCardUpdated}: Props) => {
 		ease: defaultEase,
 		duration: transitionDuration,
 	}
+	if(card.Id === 21){
+		console.log(card.pos, Date.now())
+	}
+
 	const cardVariants: Variants = {
 		initial: {
 			opacity: card.startTransparent ? 0 : 1,
@@ -144,8 +148,7 @@ const CardParent = styled(motion.div)<{ $grabCursor: boolean }>`
 	display: flex;
 `
 
-const CardImg = styled.img`
-`
+const CardImg = styled.img``
 
 const CardImgSrc = (card: ICard) => {
 	return `/Cards/${CardImgName(card)}.png`

@@ -31,10 +31,9 @@ class GameBoardLayout {
 		ourId: string | null | undefined,
 		gameState: IGameState,
 		renderableCards: IRenderableCard[],
-		movedCard: IMovedCardPos | undefined
 	): IRenderableCard[] => {
 		let layoutCards = new GameBoardLayoutCards(this)
-		return layoutCards.GetRenderableCards(ourId, gameState, renderableCards, movedCard)
+		return layoutCards.GetRenderableCards(ourId, gameState, renderableCards, undefined)
 	}
 
 	public GetCardDefaultPosition(ourPlayer: boolean, location: CardLocationType, index: number): IPos {
