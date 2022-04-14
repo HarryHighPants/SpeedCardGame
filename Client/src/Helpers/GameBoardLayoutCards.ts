@@ -1,7 +1,6 @@
 import {CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard} from '../Interfaces/ICard'
 import {IGameState} from '../Interfaces/IGameState'
 import React from 'react'
-import {AreaDimensions} from '../Components/GameBoardAreas/BaseArea'
 import {clamp} from './Utilities'
 import GameBoardLayout from './GameBoardLayout'
 import gameBoardLayout from './GameBoardLayout'

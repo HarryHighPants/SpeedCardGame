@@ -109,7 +109,7 @@ const CardsContainer = ({
 
 			if (offsetInfo.distance === Infinity) {
 				// Reset states
-				if (!card.highlighted) {
+				if (card.highlighted) {
 					card.highlighted = false
 					if (!!card.forceUpdate) {
 						card.forceUpdate()

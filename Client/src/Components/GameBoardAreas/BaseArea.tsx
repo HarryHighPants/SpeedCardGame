@@ -1,29 +1,33 @@
-import { forwardRef } from 'react'
+import { forwardRef, useCallback, useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { IPos } from '../../Interfaces/ICard'
+import { CardLocationType, IPos } from '../../Interfaces/ICard'
+import { AreaDimensions, IRenderableArea } from '../../Interfaces/IBoardArea'
 
-export interface BaseAreaProps {
-	dimensions: AreaDimensions
-	text?: string | undefined
-	highlight?: boolean
+interface Props {
+	renderableArea: IRenderableArea
 }
 
-export interface AreaDimensions {
-	pos: IPos
-	size: IPos
-}
+const BaseArea = ({ renderableArea }: Props) => {
+	const [, updateState] = useState({})
+	const forceUpdate = useCallback(() => updateState({}), [])
 
-const BaseArea = forwardRef<HTMLDivElement, BaseAreaProps>(
-	({ dimensions, text, highlight }: BaseAreaProps, forwardRef) => {
-		return (
-			<BaseAreaDiv highlight={highlight} ref={forwardRef} padding={6} dimensions={dimensions}>
-				<AreaText>
-					<b>{text}</b>
-				</AreaText>
-			</BaseAreaDiv>
-		)
-	}
-)
+	useEffect(() => {
+		renderableArea.forceUpdate = forceUpdate
+	}, [])
+
+	return (
+		<BaseAreaDiv
+			highlight={renderableArea.highlight}
+			ref={renderableArea.ref}
+			padding={6}
+			dimensions={renderableArea.dimensions}
+		>
+			<AreaText>
+				<b>{renderableArea.text}</b>
+			</AreaText>
+		</BaseAreaDiv>
+	)
+}
 
 const BaseAreaDiv = styled.div<{ highlight: boolean | undefined; dimensions: AreaDimensions; padding: number }>`
 	${(p) => (p.highlight ? 'background-color: #00000047;' : '')}

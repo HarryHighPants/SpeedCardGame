@@ -74,6 +74,8 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 		// assume the server will return success and update the gamestate
 	}
 
+// todo: move to ConnectionManager Component that uses use contexts and renders children
+
 	const SendPickupFromKitty = () => {
 		connection?.invoke('TryPickupFromKitty').catch((e) => console.log(e))
 		// Show any messages (Move to a warnings component)

@@ -2,9 +2,9 @@ import { ICard } from './ICard'
 import { IPlayer } from './IPlayer'
 
 export interface IGameState {
-    Players: IPlayer[]
-    CenterPiles: CenterPile[]
-    LastMove: string
+	Players: IPlayer[]
+	CenterPiles: CenterPile[]
+	LastMove: string
 	WinnerId?: string
 }
 
@@ -14,19 +14,19 @@ export interface CenterPile {
 
 export type GameStateReducerAction =
 	| {
-	type: 'Play'
-	topCard: ICard
-	centerPileIndex: number
-	playerId: string | null | undefined
-}
+			type: 'Play'
+			topCard: ICard
+			centerPileIndex: number
+			playerId: string | null | undefined
+	  }
 	| {
-	type: 'Pickup'
-	playerId: string | null | undefined
-}
+			type: 'Pickup'
+			playerId: string | null | undefined
+	  }
 	| {
-	type: 'Replace'
-	gameState: IGameState
-}
+			type: 'Replace'
+			gameState: IGameState
+	  }
 export const gameStateReducer = (state: IGameState, action: GameStateReducerAction): IGameState => {
 	switch (action.type) {
 		case 'Pickup':
@@ -37,7 +37,7 @@ export const gameStateReducer = (state: IGameState, action: GameStateReducerActi
 			let pickupPlayerIndex = state.Players.indexOf(pickupPlayer)
 			state.Players[pickupPlayerIndex].HandCards.push({ Id: pickupPlayer.TopKittyCardId } as ICard)
 			state.Players[pickupPlayerIndex].TopKittyCardId = -1
-			return state
+			return {...state}
 
 		case 'Play':
 			let player = state.Players.find((p: IPlayer) => p.Id === action.playerId)
@@ -47,10 +47,10 @@ export const gameStateReducer = (state: IGameState, action: GameStateReducerActi
 			let playerIndex = state.Players.indexOf(player)
 			state.Players[playerIndex].HandCards = player.HandCards.filter((c) => c.Id != action.topCard.Id)
 			state.CenterPiles[action.centerPileIndex].Cards.push(action.topCard)
-			return state
+			return {...state}
 
 		case 'Replace':
-			return action.gameState
+			return {...action.gameState}
 
 		default:
 			return state

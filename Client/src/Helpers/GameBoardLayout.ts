@@ -1,10 +1,10 @@
 import { CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard } from '../Interfaces/ICard'
 import { IGameState } from '../Interfaces/IGameState'
 import React from 'react'
-import { AreaDimensions } from '../Components/GameBoardAreas/BaseArea'
 import { clamp } from './Utilities'
 import GameBoardLayoutCards from './GameBoardLayoutCards'
-import GameBoardLayoutAreas from './GameBoardLayoutAreas'
+import {IRenderableArea} from "../Interfaces/IBoardArea";
+import GameBoardLayoutAreas from "./GameBoardLayoutAreas";
 
 class GameBoardLayout {
 	public static maxWidth = 750
@@ -42,14 +42,9 @@ class GameBoardLayout {
 		return layoutCards.GetCardDefaultPosition(ourPlayer, location, index)
 	}
 
-
-	public GetAreaDimensions = (
-		ourPlayer: boolean,
-		location: CardLocationType,
-		centerIndex: number = 0
-	): AreaDimensions => {
+	public GetBoardAreas = (): IRenderableArea[] => {
 		let layoutAreas = new GameBoardLayoutAreas(this, new GameBoardLayoutCards(this))
-		return layoutAreas.GetAreaDimensions(ourPlayer, location, centerIndex)
+		return layoutAreas.GetBoardAreas()
 	}
 
 	public static FlipPosition(pos: IPos): IPos {
