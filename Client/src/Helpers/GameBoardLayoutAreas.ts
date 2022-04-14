@@ -1,7 +1,7 @@
 import { CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard } from '../Interfaces/ICard'
 import { IGameState } from '../Interfaces/IGameState'
 import React from 'react'
-import { clamp } from './Utilities'
+import { clamp, GetOffsetInfo } from './Utilities'
 import gameBoardLayout from './GameBoardLayout'
 import GameBoardLayoutCards from './GameBoardLayoutCards'
 import GameBoardLayout from './GameBoardLayout'
@@ -13,10 +13,16 @@ class GameBoardLayoutArea {
 
 	layout: GameBoardLayout
 	private cardsLayout: GameBoardLayoutCards
+	private previousRenderableAreas: IRenderableArea[]
 
-	constructor(gameBoardLayout: GameBoardLayout, gameBoardLayoutCards: GameBoardLayoutCards) {
+	constructor(
+		gameBoardLayout: GameBoardLayout,
+		gameBoardLayoutCards: GameBoardLayoutCards,
+		previousRenderableAreas: IRenderableArea[]
+	) {
 		this.layout = gameBoardLayout
 		this.cardsLayout = gameBoardLayoutCards
+		this.previousRenderableAreas = previousRenderableAreas
 	}
 
 	public GetBoardAreas = (): IRenderableArea[] => {
@@ -32,6 +38,46 @@ class GameBoardLayoutArea {
 			renderableAreas.push(this.GetRenderableArea(loc, this.GetAreaDimensions(loc)))
 		}
 		return renderableAreas
+	}
+
+	public static GetPlayableAreas = (
+		renderableAreas: IRenderableArea[],
+		draggingCard: IRenderableCard | undefined
+	): IRenderableArea[] => {
+		let draggingCardRect = draggingCard?.ref.current?.getBoundingClientRect()
+		if (!draggingCardRect) {
+			return []
+		}
+
+		let playableAreas = [] as IRenderableArea[]
+		let closestCenterArea = { area: {} as IRenderableArea, distance: Infinity }
+		for (let i = 0; i < renderableAreas.length; i++) {
+			let renderableArea = renderableAreas[i]
+			let ourRect = renderableArea.ref?.current?.getBoundingClientRect()
+			let offsetInfo = GetOffsetInfo(ourRect, draggingCardRect)
+			if (offsetInfo.overlaps) {
+				if (renderableArea.location.type === 'Center' && this.CanDropOntoCenter(renderableArea, draggingCard)) {
+					//Get the closest center pile
+					if (closestCenterArea.distance > offsetInfo.distance)
+						closestCenterArea = { area: renderableArea, distance: offsetInfo.distance }
+				}
+				if (this.CanDropOntoHand(renderableArea, draggingCard)) {
+					playableAreas.push(renderableArea)
+				}
+			}
+		}
+		if (closestCenterArea.distance !== Infinity) {
+			playableAreas.push(closestCenterArea.area)
+		}
+		return playableAreas
+	}
+
+	static CanDropOntoCenter = (ra: IRenderableArea, c: IRenderableCard | undefined) => {
+		return ra.location.type === 'Center' && c?.location === CardLocationType.Hand
+	}
+
+	static CanDropOntoHand = (ra: IRenderableArea, c: IRenderableCard | undefined) => {
+		return ra.location.type === 'Hand' && c?.location === CardLocationType.Kitty
 	}
 
 	public GetAreaDimensions = (areaLocation: AreaLocation): AreaDimensions => {
@@ -96,11 +142,15 @@ class GameBoardLayoutArea {
 	}
 
 	GetRenderableArea = (areaLocation: AreaLocation, areaDimensions: AreaDimensions): IRenderableArea => {
+		let previousArea = this.previousRenderableAreas.find((area) => area.key === JSON.stringify(areaLocation))
 		return {
 			key: JSON.stringify(areaLocation),
 			location: areaLocation,
-			ref: React.createRef<HTMLDivElement>(),
+			ref: previousArea?.ref ?? React.createRef<HTMLDivElement>(),
 			dimensions: areaDimensions,
+			highlight: previousArea?.highlight ?? false,
+			highlightZIndex: areaLocation.type === 'Center' ? 40 : 1,
+			forceUpdate: previousArea?.forceUpdate ?? undefined,
 		} as IRenderableArea
 	}
 }

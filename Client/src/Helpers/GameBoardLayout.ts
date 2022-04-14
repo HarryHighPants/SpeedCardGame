@@ -42,8 +42,8 @@ class GameBoardLayout {
 		return layoutCards.GetCardDefaultPosition(ourPlayer, location, index)
 	}
 
-	public GetBoardAreas = (): IRenderableArea[] => {
-		let layoutAreas = new GameBoardLayoutAreas(this, new GameBoardLayoutCards(this))
+	public GetBoardAreas = (renderAbleAreas: IRenderableArea[]): IRenderableArea[] => {
+		let layoutAreas = new GameBoardLayoutAreas(this, new GameBoardLayoutCards(this), renderAbleAreas)
 		return layoutAreas.GetBoardAreas()
 	}
 

@@ -8,11 +8,10 @@ import { useEffect, useState } from 'react'
 interface Props {
 	gameState: IGameState
 	ourId: string | null | undefined
-	gameBoardLayout: GameBoardLayout | undefined
 	renderableAreas: IRenderableArea[]
 }
 
-const GameBoardAreas = ({ ourId, gameState, gameBoardLayout, renderableAreas }: Props) => {
+const GameBoardAreas = ({ ourId, gameState, renderableAreas }: Props) => {
 	const [ourKittyCount, setOurKittyCount] = useState(25)
 	const [otherKittyCount, setOtherKittyCount] = useState(25)
 
@@ -22,9 +21,6 @@ const GameBoardAreas = ({ ourId, gameState, gameBoardLayout, renderableAreas }: 
 		})
 	}, [gameState.Players])
 
-	if (!gameBoardLayout) {
-		return <></>
-	}
 	return (
 		<>
 			{renderableAreas.map((area, i) => {

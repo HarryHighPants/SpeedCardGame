@@ -81,7 +81,7 @@ const Card = memo(({ card, onDragEnd, draggingCardUpdated}: Props) => {
 			scale: 1.12,
 			boxShadow: '0px 30px 30px rgba(0,0,0,0.6)',
 			cursor: 'grabbing',
-			zIndex: 20,
+			zIndex: 40,
 			top: card.pos.Y - 20,
 			transition: defaultTransition,
 		},

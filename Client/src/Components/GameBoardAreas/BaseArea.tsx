@@ -16,12 +16,8 @@ const BaseArea = ({ renderableArea }: Props) => {
 	}, [])
 
 	return (
-		<BaseAreaDiv
-			highlight={renderableArea.highlight}
-			ref={renderableArea.ref}
-			padding={6}
-			dimensions={renderableArea.dimensions}
-		>
+		<BaseAreaDiv ref={renderableArea.ref} dimensions={renderableArea.dimensions}>
+			<AreaBg highlight={renderableArea.highlight} highlightZIndex={renderableArea.highlightZIndex} />
 			<AreaText>
 				<b>{renderableArea.text}</b>
 			</AreaText>
@@ -29,8 +25,7 @@ const BaseArea = ({ renderableArea }: Props) => {
 	)
 }
 
-const BaseAreaDiv = styled.div<{ highlight: boolean | undefined; dimensions: AreaDimensions; padding: number }>`
-	${(p) => (p.highlight ? 'background-color: #00000047;' : '')}
+const BaseAreaDiv = styled.div<{ dimensions: AreaDimensions }>`
 	border: 3px solid white;
 	border-radius: 10px;
 	position: absolute;
@@ -38,11 +33,23 @@ const BaseAreaDiv = styled.div<{ highlight: boolean | undefined; dimensions: Are
 	flex-direction: column;
 	align-items: center;
 	justify-content: flex-end;
-	padding: ${(p) => p.padding}px;
+	padding: 6px;
 	left: ${(p) => p.dimensions.pos.X - 9}px;
 	top: ${(p) => p.dimensions.pos.Y - 9}px;
 	width: ${(p) => p.dimensions.size.X}px;
 	height: ${(p) => p.dimensions.size.Y}px;
+`
+
+const AreaBg = styled.div<{ highlight: boolean | undefined; highlightZIndex: number }>`
+	${(p) => (p.highlight ? 'background-color: rgba(0, 0, 0, 0.15)' : '')};
+	//background-color: rgba(252, 162, 2, 0.28);
+	z-index: ${(p) => p.highlightZIndex};
+	width: 100%;
+	height: 100%;
+	border-radius: 10px;
+	top: -3px;
+	padding: 3px;
+	position: absolute;
 `
 
 const AreaText = styled.p<{}>`
