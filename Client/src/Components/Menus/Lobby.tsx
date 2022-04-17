@@ -3,9 +3,9 @@ import * as signalR from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { GameType, ILobby, IPlayerConnection } from '../../Interfaces/ILobby'
-import Popup from './Popup'
 import styled from 'styled-components'
 import { HiOutlineDocumentDuplicate } from 'react-icons/hi'
+import Popup from '../Popup'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
@@ -68,32 +68,77 @@ const Lobby = ({ connection, roomId }: Props) => {
 	return (
 		<Popup onBackButton={() => navigate(`/`)}>
 			<Header2>Lobby</Header2>
-			<div>
-				<div>
-					<p>Invite link:</p>
-					<input value={roomId} disabled={true} />
-					<CopyButton onClick={() => navigator.clipboard.writeText(window.location.href)} />
-				</div>
-				<div>
-					<h4>Players</h4>
-					{lobbyData != null ? (
-						<div>
-							{lobbyData?.Connections?.map((p) => LobbyPlayer(connectionId, myPlayerName, p, UpdateName))}
-						</div>
-					) : (
-						<div>Connecting to room</div>
-					)}
-				</div>
+			<LobbyWrapper>
+				<Group>
+					<GameCodeTitle>Game Code:</GameCodeTitle>
+					<GameCodeWrapper>
+						<input value={roomId} disabled={true} />
+						<CopyButton onClick={() => navigator.clipboard.writeText(window.location.href)} />
+					</GameCodeWrapper>
+				</Group>
+				<Group>
+					<PlayersTitle>Players:</PlayersTitle>
+					<PlayersContainer>
+						{lobbyData != null ? (
+							<>
+								{lobbyData?.Connections?.map((p, i) =>
+									LobbyPlayer(connectionId, myPlayerName, p, UpdateName, i)
+								)}
+							</>
+						) : (
+							<div>Connecting to room</div>
+						)}
+					</PlayersContainer>
+				</Group>
 				{waitingForPlayers && !!lobbyData && <p>Waiting for another player to join..</p>}
-				<button disabled={waitingForPlayers} onClick={() => onStartGame()}>
+				<StartButton disabled={waitingForPlayers} onClick={() => onStartGame()}>
 					Start Game
-				</button>
-			</div>
+				</StartButton>
+			</LobbyWrapper>
 		</Popup>
 	)
 }
 
 export default Lobby
+
+const LobbyWrapper = styled.div`
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+`
+
+const StartButton = styled.button`
+	margin-top: 20px;
+`
+
+const Group = styled.div`
+	width: 175px;
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 30px;
+	align-items: flex-start;
+`
+
+const PlayersTitle = styled.h4`
+	margin-bottom: 10px;
+`
+const PlayersContainer = styled.div`
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+	gap: 10px;
+	width: 100%;
+`
+
+const GameCodeTitle = styled.p`
+	margin-bottom: 5px;
+`
+
+const GameCodeWrapper = styled.div`
+	display: flex;
+	justify-content: center;
+	width: 100%;
+`
 
 const CopyButton = styled(HiOutlineDocumentDuplicate)`
 	width: 25px;
@@ -107,23 +152,35 @@ const CopyButton = styled(HiOutlineDocumentDuplicate)`
 `
 
 const Header2 = styled.h2`
-	margin-top: -20px;
 	width: 250px;
+	margin-bottom: 0px;
 `
 
 const LobbyPlayer = (
 	connectionId: string,
 	myPlayerName: string,
 	player: IPlayerConnection,
-	onUpdateName: (newName: string) => void
+	onUpdateName: (newName: string) => void,
+	index: number
 ) => {
 	return (
-		<div key={player.ConnectionId}>
+		<div style={{ display: 'flex' }}>
+			<p style={{ margin: 0, paddingRight: 10 }}>{index + 1}. </p>
 			{player.ConnectionId == connectionId ? (
-				<input maxLength={20} value={myPlayerName} onChange={(e) => onUpdateName(e.target.value)} />
+				<input
+					key={player.ConnectionId}
+					maxLength={20}
+					value={myPlayerName}
+					onChange={(e) => onUpdateName(e.target.value)}
+				/>
 			) : (
-				player.Name
+				<PlayerName key={player.ConnectionId}>{player.Name}</PlayerName>
 			)}
 		</div>
 	)
 }
+
+const PlayerName = styled.p`
+	margin: 0;
+	text-align: left;
+`

@@ -8,7 +8,7 @@ const MenuHeader = () => {
 }
 
 const Header = styled.h1`
-	margin-top: 0;
+	//margin-top: 0;
 `
 
 export default MenuHeader;

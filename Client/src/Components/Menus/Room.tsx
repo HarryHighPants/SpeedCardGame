@@ -6,7 +6,10 @@ import { IGameState } from '../../Interfaces/IGameState'
 import Game from '../../Components/Game'
 import TestData from '../../Assets/TestData.js'
 import Lobby from './Lobby'
-import Popup from './Popup'
+import styled from 'styled-components'
+import { HiOutlineHome } from 'react-icons/hi'
+import Popup from "../Popup";
+import HomeButton from "../HomeButton";
 
 interface Props {
 	onGameStarted: () => void
@@ -19,8 +22,6 @@ const Room = ({ onGameStarted }: Props) => {
 	const [connection, setConnection] = useState<HubConnection>()
 	const [roomId, setRoomId] = useState<string | undefined>(urlParams.roomId)
 	const [gameState, setGameState] = useState<IGameState>(testing ? JSON.parse(TestData) : undefined) // Local debugging
-
-	// const [rawGameStateHistory, setRawGameStateHistory] = useState<any[]>([])
 
 	useEffect(() => {
 		// Builds the SignalR connection, mapping it to /server
@@ -60,17 +61,9 @@ const Room = ({ onGameStarted }: Props) => {
 
 	const UpdateGameState = (data: any) => {
 		let parsedData: IGameState = JSON.parse(data)
-
-
-
 		if (!gameState) {
 			onGameStarted()
 		}
-
-		// rawGameStateHistory.push(data)
-		// setRawGameStateHistory(rawGameStateHistory)
-		// console.log(JSON.stringify(rawGameStateHistory))
-
 		setGameState({ ...parsedData })
 	}
 
@@ -81,8 +74,9 @@ const Room = ({ onGameStarted }: Props) => {
 				connectionId={testing ? 'CUqUsFYm1zVoW-WcGr6sUQ' : connection?.connectionId}
 				gameState={gameState}
 			/>
+			<HomeButton/>
 			{!!gameState.WinnerId && (
-				<Popup onHomeButton={() => navigate('/')}>
+				<Popup onHomeButton={true}>
 					<h3>Winner is {gameState.Players.find((p) => p.Id === gameState.WinnerId)?.Name}</h3>
 				</Popup>
 			)}

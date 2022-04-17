@@ -3,8 +3,8 @@ import { Route, Routes, useNavigate } from 'react-router-dom'
 import { uniqueNamesGenerator } from 'unique-names-generator'
 import animals from '../../Assets/Animals.json'
 import adjectives from '../../Assets/Adjectives.json'
-import MenuHeader from "./MenuHeader";
-import Popup from './Popup'
+import MenuHeader from './MenuHeader'
+import Popup from '../Popup'
 
 interface Props {}
 
@@ -20,7 +20,9 @@ const MainMenu = (props: Props) => {
 		})
 
 		// Set the game url param
-		navigate(`/${gameId}${bot !== undefined ? '?type=bot' : ''}${bot !== undefined ? '&difficulty=' + difficulty : ''}`)
+		navigate(
+			`/${gameId}${bot !== undefined ? '?type=bot' : ''}${bot !== undefined ? '&difficulty=' + difficulty : ''}`
+		)
 	}
 
 	return (
