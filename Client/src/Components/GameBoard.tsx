@@ -24,6 +24,7 @@ interface Props {
 	sendPlayCard: (topCard: ICard, centerPileIndex: number) => void
 	sendPickupFromKitty: () => void
 	sendMovingCard: (movedCard: IMovedCardPos | undefined) => void
+	flippedCenterPiles: boolean
 }
 
 const GameBoard = ({
@@ -34,6 +35,7 @@ const GameBoard = ({
 	sendPlayCard,
 	sendPickupFromKitty,
 	sendMovingCard,
+	flippedCenterPiles,
 }: Props) => {
 	const [localGameState, dispatchLocalGameState] = useReducer(gameStateReducer, gameState)
 	const [renderableAreas, setRenderableAreas] = useState([] as IRenderableArea[])
@@ -99,6 +101,7 @@ const GameBoard = ({
 				gameBoardLayout={gameBoardLayout}
 				onDraggingCardUpdated={OnDragUpdated}
 				onEndDrag={OnEndDrag}
+				flippedCenterPiles={flippedCenterPiles}
 			/>
 		</GameBoardContainer>
 	)

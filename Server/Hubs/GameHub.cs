@@ -1,6 +1,7 @@
 namespace Server.Hubs;
 
 using Engine.Helpers;
+using Engine.Models;
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 using Services;
@@ -134,15 +135,26 @@ public class GameHub : Hub
 
     public async Task UpdateMovingCard(UpdateMovingCardData updateMovingCard)
     {
-        // Check connection owns the card
-        if (updateMovingCard.Pos != null && !gameService.ConnectionOwnsCard(UserConnectionId, updateMovingCard.CardId))
-        {
-            throw new HubException("Connection can't move that card", new UnauthorizedAccessException());
-        }
+	    // Check connection owns the card
+	    var cardLocation = gameService.GetCardLocation(UserConnectionId, updateMovingCard.CardId);
+	    if (cardLocation == null)
+	    {
+		    throw new HubException("No card found with that Id", new UnauthorizedAccessException("No card found with that Id"));
+	    }
+
+	    var authorisedUpdate = updateMovingCard;
+	    var authorised = gameService.ConnectionOwnsCard(UserConnectionId, updateMovingCard.CardId);
+	    if (!authorised)
+	    {
+		    authorisedUpdate = authorisedUpdate with {Pos = null};
+	    }
+
+	    authorisedUpdate.Location = (int)cardLocation.Value.PileName;
+	    authorisedUpdate.Index = cardLocation.Value.PileName == CardPileName.Hand ? cardLocation.Value.PileIndex ?? -1 : cardLocation.Value.CenterIndex ?? -1;
 
         // Send update to the others in the group
         var roomId = gameService.GetConnectionsRoomId(UserConnectionId);
-        var jsonData = JsonConvert.SerializeObject(updateMovingCard);
+        var jsonData = JsonConvert.SerializeObject(authorisedUpdate);
         await Clients.OthersInGroup(roomId).SendAsync("MovingCardUpdated", jsonData);
     }
 

@@ -5,9 +5,7 @@ import { CardLocationType, IMovedCardPos, IRenderableCard } from '../Interfaces/
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import Card from './Card'
 import { AnimatePresence } from 'framer-motion'
-import { GetOffsetInfo } from '../Helpers/Utilities'
-import { debounce } from 'lodash'
-import game from './Game'
+import {delay, GetOffsetInfo} from '../Helpers/Utilities'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
@@ -17,6 +15,7 @@ interface Props {
 	onDraggingCardUpdated: (draggingCard: IRenderableCard) => void
 	onEndDrag: (draggingCard: IRenderableCard) => void
 	sendMovingCard: (movedCard: IMovedCardPos | undefined) => void
+	flippedCenterPiles: boolean
 }
 
 const CardsContainer = ({
@@ -27,6 +26,7 @@ const CardsContainer = ({
 	onDraggingCardUpdated,
 	onEndDrag,
 	sendMovingCard,
+	flippedCenterPiles,
 }: Props) => {
 	const [renderableCards, setRenderableCards] = useState<IRenderableCard[]>([] as IRenderableCard[])
 	const renderableCardsRef = useRef()
@@ -62,22 +62,26 @@ const CardsContainer = ({
 		let parsedData: IMovedCardPos = JSON.parse(data)
 		// @ts-ignore
 		let movingCard = renderableCardsRef.current?.find((c) => c.Id === parsedData.CardId)
-		if (!movingCard) {
-			console.log('No moving card, likely no renderableCards')
-			return
-		}
 
 		movingCard.isCustomPos = parsedData?.Pos !== null
 		let updatedPos = gameBoardLayout.getCardPosPixels(
 			!!parsedData?.Pos
 				? GameBoardLayout.FlipPosition(parsedData?.Pos)
-				: gameBoardLayout.GetCardDefaultPosition(false, parsedData.Location, parsedData.Index)
+				: gameBoardLayout.GetCardDefaultPosition(
+						false,
+						parsedData.Location,
+						parsedData.Location === CardLocationType.Center && flippedCenterPiles
+							? parsedData.Index === 0
+								? 1
+								: 0
+							: parsedData.Index
+				  )
 		)
 		movingCard.pos = updatedPos
 		movingCard.forceUpdate()
 	}
 
-	const SendMovingCardToServer = (draggingCard: IRenderableCard, endDrag: boolean = false) => {
+	const SendMovingCardToServer = async (draggingCard: IRenderableCard, endDrag: boolean = false) => {
 		let rect = draggingCard?.ref?.current?.getBoundingClientRect()
 		let cardIndex = -1
 		if (draggingCard.location === CardLocationType.Hand) {

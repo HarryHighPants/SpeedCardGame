@@ -4,6 +4,8 @@ import { IPos } from '../Interfaces/ICard'
 // Clamp number between two values with the following line:
 export const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max)
 
+export const delay = (ms:number) => new Promise(res => setTimeout(res, ms));
+
 export const GetOffsetInfo = (ourRect: DOMRect | undefined, draggingCardRect: DOMRect | undefined) => {
 	let distance = GetDistanceRect(draggingCardRect, ourRect)
 	let overlaps = Overlaps(ourRect, draggingCardRect)

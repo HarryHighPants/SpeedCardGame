@@ -33,8 +33,10 @@ export enum Suit {
 }
 
 export enum CardLocationType {
+	Undefined,
 	Hand,
 	Kitty,
+	TopUp,
 	Center,
 }
 

@@ -35,9 +35,11 @@ public interface IGameService
 	public Result<LobbyStateDto> GetLobbyStateDto(string roomId);
 	public bool GameStarted(string roomId);
 	public bool ConnectionOwnsCard(string connectionId, int cardId);
+	public CardLocation? GetCardLocation(string connectionId, int cardId);
+
 }
 
-public class UpdateMovingCardData
+public record UpdateMovingCardData
 {
 	public int CardId {get; set;}
 	public Pos? Pos {get; set;}
@@ -45,7 +47,7 @@ public class UpdateMovingCardData
 	public int Index { get; set; }
 }
 
-public class Pos
+public record Pos
 {
 	public float X {get; set;}
 	public float Y {get; set;}

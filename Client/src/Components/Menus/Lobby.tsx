@@ -164,7 +164,7 @@ const LobbyPlayer = (
 	index: number
 ) => {
 	return (
-		<div style={{ display: 'flex' }}>
+		<div key={`lobby-player-${player.ConnectionId}`} style={{ display: 'flex' }}>
 			<p style={{ margin: 0, paddingRight: 10 }}>{index + 1}. </p>
 			{player.ConnectionId == connectionId ? (
 				<input

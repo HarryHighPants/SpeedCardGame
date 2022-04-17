@@ -271,6 +271,13 @@ public class InMemoryGameService : IGameService
         }
         return false;
     }
+
+    public CardLocation? GetCardLocation(string connectionId, int cardId)
+    {
+	    var gameResult = GetConnectionsGame(connectionId);
+	    var card = gameResult.Data.State.GetCard(cardId);
+		return card?.Location(gameResult.Data.State);
+    }
 }
 
 

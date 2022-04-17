@@ -28,7 +28,7 @@ const getGameBoardDimensions = () => {
 const Game = ({ connection, connectionId, gameState }: Props) => {
 	const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>(getGameBoardDimensions())
 	const [gameBoardLayout, setGameBoardLayout] = useState<GameBoardLayout>()
-	const [invertedCenterPiles, setInvertedCenterPiles] = useState(false)
+	const [flippedCenterPiles, setflippedCenterPiles] = useState(false)
 	const [localGameState, setLocalGameState] = useState<IGameState>(gameState)
 
 	useEffect(() => {
@@ -36,7 +36,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 		if (gameState.Players[0].Id === connection?.connectionId) {
 			// We need to invert the center piles so that 0 is on the right
 			// This way we will have a perfectly mirrored board simplifying sending card IPos to the other player
-			setInvertedCenterPiles(true)
+			setflippedCenterPiles(true)
 			newGameState.CenterPiles = gameState.CenterPiles.reverse()
 
 			// Order the players so that we are the last player so we get shown at the bottom of the screen
@@ -66,7 +66,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 
 	const SendPlayCard = (topCard: ICard, centerPileIndex: number) => {
 		// Call the event
-		let correctedCenterPileIndex = invertedCenterPiles ? (centerPileIndex + 1) % 2 : centerPileIndex
+		let correctedCenterPileIndex = flippedCenterPiles ? (centerPileIndex + 1) % 2 : centerPileIndex
 		connection?.invoke('TryPlayCard', topCard.Id, correctedCenterPileIndex).catch((e) => console.log(e))
 
 		// Show any messages (Move to a warnings component)
@@ -104,6 +104,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 					gameBoardLayout={gameBoardLayout}
 					sendPlayCard={SendPlayCard}
 					sendPickupFromKitty={SendPickupFromKitty}
+					flippedCenterPiles={flippedCenterPiles}
 				/>
 			)}
 
