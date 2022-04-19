@@ -97,7 +97,7 @@ public class EngineChecks
         if (cardLocationResult.PlayerId != playerId)
         {
             return Result.Error<GameState>(
-                $"Player {gameState.GetPlayer(playerId)?.Name} does not have card {card.ToString(gameState.Settings)} in their hand");
+                $"Card {card.ToString(gameState.Settings)} not in players hand");
         }
 
         switch (cardLocationResult.PileName)
@@ -107,7 +107,7 @@ public class EngineChecks
                 if (!ValidPlay(card, gameState.CenterPiles[centerPileIndex].Cards.Last()))
                 {
                     return Result.Error<GameState>(
-                        $"Card with value {card.ToString(gameState.Settings)} can't be played onto {gameState.CenterPiles[centerPileIndex].Cards.Last().ToString(gameState.Settings)})");
+                        $"Can't play {card.ToString(gameState.Settings)} onto {gameState.CenterPiles[centerPileIndex].Cards.Last().ToString(gameState.Settings)}");
                 }
 
                 return Result.Successful();
@@ -170,13 +170,13 @@ public class EngineChecks
         // Check the player has room in their hand
         if (player?.HandCards.Count >= gameState.Settings.MaxHandCards)
         {
-            return Result.Error($"Player {player?.Name} hand is full");
+            return Result.Error($"Players hand is full");
         }
 
         // Check there is enough cards from players kitty
         if (player?.KittyCards.Count < 1)
         {
-            return Result.Error($"No cards left in {player.Name} kitty to pickup");
+            return Result.Error($"No cards left to pickup");
         }
 
         return new SuccessResult();

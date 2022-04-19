@@ -114,6 +114,7 @@ public class GameHub : Hub
         var startGameResult = gameService.StartGame(UserConnectionId);
         if (startGameResult is IErrorResult startGameError)
         {
+	        await SendConnectionMessage(startGameError.Message);
             throw new HubException(startGameError.Message, new UnauthorizedAccessException(startGameError.Message));
         }
 
@@ -128,6 +129,7 @@ public class GameHub : Hub
         await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
         if (tryPlayCardResult is IErrorResult tryPlayCardResultError)
         {
+	        await SendConnectionMessage(tryPlayCardResultError.Message);
 	        throw new HubException(tryPlayCardResultError.Message, new UnauthorizedAccessException(tryPlayCardResultError.Message));
         }
     }
@@ -138,6 +140,7 @@ public class GameHub : Hub
 	    await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
 	    if (pickupResult is IErrorResult pickupResultError)
 	    {
+		    await SendConnectionMessage(pickupResultError.Message);
 		    throw new HubException(pickupResultError.Message, new UnauthorizedAccessException(pickupResultError.Message));
 	    }
     }
@@ -148,6 +151,7 @@ public class GameHub : Hub
 	    await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
 	    if (topUpResult is IErrorResult topUpResultError)
 	    {
+	    	await SendConnectionMessage(topUpResultError.Message);
 		    throw new HubException(topUpResultError.Message, new UnauthorizedAccessException(topUpResultError.Message));
 	    }
     }
@@ -158,6 +162,7 @@ public class GameHub : Hub
 	    var cardLocation = gameService.GetCardLocation(UserConnectionId, updateMovingCard.CardId);
 	    if (cardLocation == null)
 	    {
+		    await SendConnectionMessage("No card found with that Id");
 		    throw new HubException("No card found with that Id", new UnauthorizedAccessException("No card found with that Id"));
 	    }
 
@@ -214,4 +219,6 @@ public class GameHub : Hub
         var jsonData = JsonConvert.SerializeObject(lobbyStateResult.Data);
         await Clients.Group(roomId).SendAsync("UpdateLobbyState", jsonData);
     }
+
+    private async Task SendConnectionMessage(string message) => await Clients.Client(UserConnectionId).SendAsync("Message", message);
 }

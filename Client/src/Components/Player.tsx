@@ -22,7 +22,7 @@ const Player = ({ player, onRequestTopUp, onTop, connection }: Props) => {
 
 	useEffect(() => {
 		if (!!player.LastMove) {
-			setAdditionalInfo({ message: player.LastMove, messageType: 'Move' })
+			setAdditionalInfo({id: uuid(), message: player.LastMove, messageType: 'Move' })
 		}
 	}, [player.LastMove])
 
@@ -33,22 +33,25 @@ const Player = ({ player, onRequestTopUp, onTop, connection }: Props) => {
 		if (connection?.state !== HubConnectionState.Connected) {
 			return
 		}
+		console.log("connection.on('Message', ReceivedMessaged)", player.Name)
 		connection.on('Message', ReceivedMessaged)
 
 		return () => {
+			console.log("connection.off('Message', ReceivedMessaged)", player.Name)
 			connection.off('Message', ReceivedMessaged)
 		}
-	}, [connection])
+	}, [connection, onTop])
 
 	const ReceivedMessaged = (message: string) => {
-		setAdditionalInfo({ message: message, messageType: 'Error' })
+		console.log("message reciveed", message)
+		setAdditionalInfo({ id: uuid(), message: message, messageType: 'Error' })
 	}
 
 	return (
 		<PlayerContainer style={{ backgroundImage: `url(${backgroundImg})` }}>
 			<AdditionalInfo id={'player-info-' + player.Id} key={'player-info-' + player.Id} topOfBoard={onTop}>
 				{!!additionalInfo && (
-					<PlayerInfo playerInfo={additionalInfo}/>
+					<PlayerInfo key={additionalInfo.id} playerInfo={additionalInfo}/>
 				)}
 			</AdditionalInfo>
 			<PlayerName>{player.Name}</PlayerName>

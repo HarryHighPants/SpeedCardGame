@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import styled from 'styled-components'
 
-export type IPlayerInfo = { message: string; messageType: 'Move' | 'Error' }
+export type IPlayerInfo = { id: string, message: string; messageType: 'Move' | 'Error' }
 
 interface Props {
 	playerInfo: IPlayerInfo
@@ -22,7 +22,7 @@ const PlayerInfo = ({ playerInfo }: Props) => {
 
 const StyledPlayerInfo = styled(motion.p)<{ messageType: 'Move' | 'Error' }>`
 	position: absolute;
-	color: ${(p) => (p.messageType === 'Move' ? '#fff' : '#f00')};
+	color: ${(p) => (p.messageType === 'Move' ? '#fff' : '#ff2b2b')};
 `
 
 export default PlayerInfo
