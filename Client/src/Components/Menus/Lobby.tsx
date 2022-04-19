@@ -6,41 +6,50 @@ import { GameType, ILobby, IPlayerConnection } from '../../Interfaces/ILobby'
 import styled from 'styled-components'
 import { HiOutlineDocumentDuplicate } from 'react-icons/hi'
 import Popup from '../Popup'
+import { IGameState } from '../../Interfaces/IGameState'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
 	roomId: string | undefined
+	gameState: IGameState | undefined
 }
 
-const Lobby = ({ connection, roomId }: Props) => {
+const Lobby = ({ connection, roomId, gameState }: Props) => {
 	let navigate = useNavigate()
 	const [lobbyData, setLobbyData] = useState<ILobby>()
 	const [myPlayerName, setMyPlayerName] = useState<string>('Player')
-	const [connectionId, setConnectionId] = useState<string>('')
 	const [searchParams, setSearchParams] = useSearchParams()
 	const [waitingForPlayers, setWaitingForPlayers] = useState(true)
+	const [activePlayers, setActivePlayers] = useState<string[]>([])
+	const [spectating, setSpectating] = useState<boolean>(false)
 
 	useEffect(() => {
+		console.log('lobby connection updated', connection)
 		if (!connection) return
 		connection.on('UpdateLobbyState', UpdateLobbyData)
 
-		if (connection.connectionId) {
-			setConnectionId(connection.connectionId)
-		}
 		return () => {
 			connection.off('UpdateLobbyState', UpdateLobbyData)
 		}
 	}, [connection])
 
+	useEffect(() => {
+		let activePlayers = (gameState?.Players.filter((p) => p.Id !== '0') ?? []).map((p) => p.Id)
+		setActivePlayers(activePlayers)
+		setSpectating(activePlayers.length >= 2 && !activePlayers.find((p) => p === connection?.connectionId))
+	}, [gameState])
+
 	const UpdateLobbyData = (data: any) => {
+		console.log('UpdateLobbyData', data)
 		let lobbyData: ILobby = JSON.parse(data)
 		setLobbyData(lobbyData)
-		let myPlayerInfo = lobbyData.Connections.find((c) => c.ConnectionId === connectionId)
+		let myPlayerInfo = lobbyData.Connections.find((c) => c.ConnectionId === connection?.connectionId)
 
 		let inputGameType = searchParams.get('type') as GameType
 		if (!!inputGameType && !lobbyData.GameStarted && !lobbyData.IsBotGame && inputGameType === 'bot') {
 			let inputDifficulty = searchParams.get('difficulty')
 			let botDifficulty = !!inputDifficulty ? +inputDifficulty : 0
+			console.log('onStartGame', true, botDifficulty, connection?.connectionId)
 			onStartGame(true, botDifficulty)
 		}
 
@@ -65,6 +74,13 @@ const Lobby = ({ connection, roomId }: Props) => {
 		setMyPlayerName(newName)
 	}
 
+	const ShowLobby = () => {
+		return !gameState || !connection || activePlayers.length < 2 || spectating || !lobbyData?.GameStarted
+	}
+
+	if (!ShowLobby()) {
+		return <></>
+	}
 	return (
 		<Popup onBackButton={() => navigate(`/`)}>
 			<Header2>Lobby</Header2>
@@ -79,21 +95,28 @@ const Lobby = ({ connection, roomId }: Props) => {
 				<Group>
 					<PlayersTitle>Players:</PlayersTitle>
 					<PlayersContainer>
-						{lobbyData != null ? (
+						{lobbyData != null && !!connection?.connectionId ? (
 							<>
 								{lobbyData?.Connections?.map((p, i) =>
-									LobbyPlayer(connectionId, myPlayerName, p, UpdateName, i)
+									LobbyPlayer(connection?.connectionId as string, myPlayerName, p, UpdateName, i)
 								)}
 							</>
 						) : (
-							<div>Connecting to room</div>
+							<div>Connecting to room..</div>
 						)}
 					</PlayersContainer>
 				</Group>
 				{waitingForPlayers && !!lobbyData && <p>Waiting for another player to join..</p>}
-				<StartButton disabled={waitingForPlayers} onClick={() => onStartGame()}>
-					Start Game
-				</StartButton>
+				{spectating ? (
+					<p>Game in progress</p>
+				) : (
+					lobbyData != null &&
+					!!connection?.connectionId && (
+						<StartButton disabled={waitingForPlayers} onClick={() => onStartGame()}>
+							Start Game
+						</StartButton>
+					)
+				)}
 			</LobbyWrapper>
 		</Popup>
 	)

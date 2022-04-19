@@ -1,5 +1,6 @@
 namespace Server.Hubs;
 
+using System.Dynamic;
 using Engine.Helpers;
 using Engine.Models;
 using Microsoft.AspNetCore.SignalR;
@@ -26,11 +27,14 @@ public class GameHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+	    Console.WriteLine($"{UserConnectionId} has disconnected");
         var roomId = gameService.GetConnectionsRoomId(UserConnectionId);
         if (!string.IsNullOrEmpty(roomId))
         {
             await LeaveRoom(roomId);
         }
+
+        Console.WriteLine($"{UserConnectionId} has disconnected");
 
         await base.OnDisconnectedAsync(exception);
     }
@@ -40,12 +44,16 @@ public class GameHub : Hub
     {
         // Remove the connection from any previous room
         var previousRoom = gameService.GetConnectionsRoomId(UserConnectionId);
+        Console.WriteLine($"Join room, {UserConnectionId}  room: {roomId}");
+
         if (roomId == previousRoom)
         {
+	        Console.WriteLine($"Already in room, {UserConnectionId}  room: {roomId}");
             return;
         }
         if (!string.IsNullOrEmpty(previousRoom))
         {
+	        Console.WriteLine($"leaving old room, {UserConnectionId}  room: {previousRoom}");
             await LeaveRoom(roomId);
         }
 
@@ -73,15 +81,25 @@ public class GameHub : Hub
 
         // Remove the connection from the room
         gameService.LeaveRoom(roomId, UserConnectionId);
+        Console.WriteLine($"They were in room id: {roomId}");
 
-        if (botService.BotsInRoomCount(roomId) == gameService.ConnectionsInRoomCount(roomId))
+        var connectionsInRoom = gameService.ConnectionsInRoomCount(roomId);
+        var botsInRoom = botService.BotsInRoomCount(roomId);
+        if (botsInRoom > 0 && botsInRoom == connectionsInRoom)
         {
+	        Console.WriteLine($"RemoveBotsFromRoom, {botService.BotsInRoomCount(roomId)} connections: {gameService.ConnectionsInRoomCount(roomId)}");
 	        botService.RemoveBotsFromRoom(roomId);
+	        return;
         }
 
-        // Send gameState for roomId
-        await SendGameState(roomId);
-        await SendLobbyState(roomId);
+        Console.WriteLine($"Bots, {botService.BotsInRoomCount(roomId)} connections: {gameService.ConnectionsInRoomCount(roomId)}");
+
+        if (connectionsInRoom > 0)
+        {
+	        // Send gameState for roomId
+	        await SendGameState(roomId);
+	        await SendLobbyState(roomId);
+        }
     }
 
     public async Task StartGame(bool botGame = false, BotDifficulty botDifficulty = 0)
@@ -100,6 +118,7 @@ public class GameHub : Hub
         }
 
         botService.RunBotsInRoom(roomId);
+        await SendLobbyState(roomId);
         await SendGameState(roomId);
     }
 

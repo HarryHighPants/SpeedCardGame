@@ -5,7 +5,11 @@ using Server.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services
-builder.Services.AddSignalR();
+builder.Services.AddSignalR().AddHubOptions<GameHub>(options =>
+{
+	options.ClientTimeoutInterval = TimeSpan.FromSeconds(15);
+	options.KeepAliveInterval = TimeSpan.FromSeconds(7.5);
+});
 builder.Services.AddSingleton<IGameService, InMemoryGameService>();
 builder.Services.AddSingleton<IBotService, BotService>();
 

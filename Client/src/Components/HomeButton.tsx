@@ -2,9 +2,22 @@ import { HiOutlineHome } from 'react-icons/hi'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-const HomeButton = () => {
+interface Props {
+	onClick?: () => void
+}
+
+const HomeButton = ({ onClick }: Props) => {
 	const navigate = useNavigate()
-	return <StyledHomeButton onClick={() => navigate('/')} />
+	return (
+		<StyledHomeButton
+			onClick={() => {
+				if (!!onClick) {
+					onClick()
+				}
+				navigate('/')
+			}}
+		/>
+	)
 }
 
 const StyledHomeButton = styled(HiOutlineHome)`

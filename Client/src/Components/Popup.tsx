@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import { HiOutlineChevronLeft, HiOutlineHome } from 'react-icons/hi'
-import HomeButton from "./HomeButton";
+import HomeButton from './HomeButton'
 
 interface Props {
 	children: JSX.Element | JSX.Element[]
@@ -13,7 +13,7 @@ const Popup = ({ children, onBackButton, onHomeButton }: Props) => {
 		<PopupContainer>
 			<PopupCenter>
 				{!!onBackButton && <BackButton onClick={onBackButton} />}
-				{!!onHomeButton && <HomeButton/>}
+				{!!onHomeButton && <HomeButton />}
 				{children}
 			</PopupCenter>
 		</PopupContainer>
@@ -26,13 +26,14 @@ const PopupCenter = styled.div`
 	border-radius: 12px;
 	color: whitesmoke;
 	padding: 10px 50px 50px 50px;
+	min-width: 300px;
+	min-height: 200px;
 `
 
 const PopupContainer = styled.div`
 	position: absolute;
 	top: 0;
 	width: 100%;
-	min-width: 300px;
 	height: 100%;
 	display: flex;
 	align-items: center;

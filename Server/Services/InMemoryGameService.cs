@@ -33,7 +33,7 @@ public class InMemoryGameService : IGameService
 
         if (GameStarted(roomId))
         {
-            UpdateConnectionsPlayerId(roomId);
+            UpdateRoomsPlayerIds(roomId);
         }
     }
 
@@ -41,7 +41,7 @@ public class InMemoryGameService : IGameService
     {
 	    if (!rooms.ContainsKey(roomId))
 	    {
-		    return -1;
+		    return 0;
 	    }
 
 	    return rooms[roomId].Connections.Count;
@@ -65,6 +65,10 @@ public class InMemoryGameService : IGameService
         if (room.Connections.IsEmpty)
         {
 	        rooms.TryRemove(roomId, out _);
+        }
+        else
+        {
+	        UpdateRoomsPlayerIds(roomId);
         }
     }
 
@@ -184,7 +188,7 @@ public class InMemoryGameService : IGameService
         // Check we have a room with that Id
         if (!rooms.ContainsKey(roomId))
         {
-            return Result.Error<GameStateDto>("Game not found in any room");
+            return Result.Error<GameStateDto>("Room not found");
         }
 
         // Check we have a game in the room
@@ -202,7 +206,7 @@ public class InMemoryGameService : IGameService
         // Check we have a room with that Id
         if (!rooms.ContainsKey(roomId))
         {
-            return Result.Error<LobbyStateDto>("Connection not found in any room");
+            return Result.Error<LobbyStateDto>("Room not found");
         }
 
         var room = rooms[roomId];
@@ -220,7 +224,7 @@ public class InMemoryGameService : IGameService
         return rooms[roomId].Game != null;
     }
 
-    private void UpdateConnectionsPlayerId(string roomId)
+    private void UpdateRoomsPlayerIds(string roomId)
     {
         var room = rooms[roomId];
         var assignedPlayers = room.Connections.Values.Where(c => c.PlayerId != null).ToList();

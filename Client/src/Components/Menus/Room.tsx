@@ -1,5 +1,5 @@
 import * as signalR from '@microsoft/signalr'
-import { HubConnection, HubConnectionState } from '@microsoft/signalr'
+import { HubConnection, HubConnectionState, ILogger, LogLevel } from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { IGameState } from '../../Interfaces/IGameState'
@@ -8,55 +8,74 @@ import TestData from '../../Assets/TestData.js'
 import Lobby from './Lobby'
 import styled from 'styled-components'
 import { HiOutlineHome } from 'react-icons/hi'
-import Popup from "../Popup";
-import HomeButton from "../HomeButton";
+import Popup from '../Popup'
+import HomeButton from '../HomeButton'
 
 interface Props {
 	onGameStarted: () => void
 }
 
-const testing: boolean = false
 const Room = ({ onGameStarted }: Props) => {
 	let urlParams = useParams()
 	let navigate = useNavigate()
 	const [connection, setConnection] = useState<HubConnection>()
-	const [roomId, setRoomId] = useState<string | undefined>(urlParams.roomId)
-	const [gameState, setGameState] = useState<IGameState>(testing ? JSON.parse(TestData) : undefined) // Local debugging
+	const [gameState, setGameState] = useState<IGameState>()
+	const [connectionStatus, setConnectionStatus] = useState<HubConnectionState | undefined>()
+	const [connectionId, setConnectionId] = useState<string | null>()
 
 	useEffect(() => {
+		CreateConnection()
+	}, [])
+
+	const CreateConnection = () => {
 		// Builds the SignalR connection, mapping it to /server
 		let signalRConnection = new signalR.HubConnectionBuilder()
 			.withUrl(`http://${window.location.hostname}:5169/server`)
-			.withAutomaticReconnect()
 			.configureLogging(signalR.LogLevel.Information)
 			.build()
 
+		signalRConnection.serverTimeoutInMilliseconds = 15000
+		signalRConnection.keepAliveIntervalInMilliseconds = 7500
+
 		signalRConnection?.start().then(() => {
 			setConnection(signalRConnection)
-			JoinRoom()
+			setConnectionId(signalRConnection.connectionId)
+			ConnectionStatusUpdated(signalRConnection)
 		})
-	}, [])
+	}
 
-	useEffect(() => {
-		if (connection?.state !== HubConnectionState.Connected) return
-		connection.on('UpdateGameState', UpdateGameState)
+	const ConnectionStatusUpdated = (hubConnection: HubConnection) => {
+		console.log('ConnectionStatusUpdated', hubConnection.state)
+		switch (hubConnection.state) {
+			case HubConnectionState.Connected:
+				hubConnection.onclose((error) => {
+					if (!!error) {
+						ConnectionStatusUpdated(hubConnection)
+						setConnection(undefined)
+						CreateConnection()
+					} else {
+						hubConnection.off('UpdateGameState', UpdateGameState)
+					}
+				})
+				console.log("hubConnection.on('UpdateGameState', UpdateGameState)")
+				hubConnection.on('UpdateGameState', UpdateGameState)
+				JoinRoom(hubConnection)
 
-		return () => {
-			connection.off('UpdateGameState', UpdateGameState)
+				break
+			case HubConnectionState.Disconnected:
+				console.log("hubConnection.off('UpdateGameState', UpdateGameState)")
+				hubConnection.off('UpdateGameState', UpdateGameState)
+				break
+			default:
+				break
 		}
-	}, [connection])
+		setConnectionStatus(hubConnection.state)
+	}
 
-	useEffect(() => {
-		console.log(urlParams.roomId)
-		setRoomId(urlParams.roomId)
-		if (connection?.state == HubConnectionState.Connected) {
-			JoinRoom()
-		}
-	}, [urlParams.roomId, connection])
-
-	const JoinRoom = () => {
-		if (!roomId) return
-		connection?.invoke('JoinRoom', roomId)
+	const JoinRoom = (hubConnection: HubConnection) => {
+		console.log('JoinRoom func', urlParams.roomId, hubConnection.connectionId)
+		if (!urlParams.roomId) return
+		hubConnection.invoke('JoinRoom', urlParams.roomId)
 	}
 
 	const UpdateGameState = (data: any) => {
@@ -64,25 +83,28 @@ const Room = ({ onGameStarted }: Props) => {
 		if (!gameState) {
 			onGameStarted()
 		}
+		console.log(
+			'gamestate',
+			parsedData.Players.map((p) => p.Id)
+		)
 		setGameState({ ...parsedData })
 	}
 
-	return gameState!! ? (
+	return (
 		<>
-			<Game
-				connection={connection}
-				connectionId={testing ? 'CUqUsFYm1zVoW-WcGr6sUQ' : connection?.connectionId}
-				gameState={gameState}
-			/>
-			<HomeButton/>
-			{!!gameState.WinnerId && (
-				<Popup onHomeButton={true}>
-					<h3>Winner is {gameState.Players.find((p) => p.Id === gameState.WinnerId)?.Name}</h3>
-				</Popup>
+			{!!gameState && (
+				<>
+					<Game key={connectionId} connection={connection} connectionId={connectionId} gameState={gameState} />
+					<HomeButton onClick={() => connection?.stop()} />
+					{!!gameState.WinnerId && (
+						<Popup onHomeButton={true}>
+							<h3>Winner is {gameState.Players.find((p) => p.Id === gameState.WinnerId)?.Name}</h3>
+						</Popup>
+					)}
+				</>
 			)}
+			<Lobby roomId={urlParams.roomId} connection={connection} gameState={gameState} />
 		</>
-	) : (
-		<Lobby roomId={roomId} connection={connection} />
 	)
 }
 
