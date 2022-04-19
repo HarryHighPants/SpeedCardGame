@@ -74,7 +74,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 		// assume the server will return success and update the gamestate
 	}
 
-// todo: move to ConnectionManager Component that uses use contexts and renders children
+	// todo: move to ConnectionManager Component that uses use contexts and renders children
 
 	const SendPickupFromKitty = () => {
 		connection?.invoke('TryPickupFromKitty').catch((e) => console.log(e))
@@ -87,14 +87,18 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 		// Show any messages (Move to a warnings component)
 	}
 
-	const SendMovedCard = debounce((movedCard: IMovedCardPos | undefined) => {
-		connection?.invoke('UpdateMovingCard', movedCard).catch((e) => console.log(e))
-		// Show any messages (Move to a warnings component)
-	}, 100, { leading: true, trailing: true, maxWait: 100 })
+	const SendMovedCard = debounce(
+		(movedCard: IMovedCardPos | undefined) => {
+			connection?.invoke('UpdateMovingCard', movedCard).catch((e) => console.log(e))
+			// Show any messages (Move to a warnings component)
+		},
+		100,
+		{ leading: true, trailing: true, maxWait: 100 }
+	)
 
 	return (
 		<GameContainer>
-			<Player key={`player-${localGameState.Players[0].Id}`} player={localGameState.Players[0]} onTop={true} />
+			<Player connection={connection} key={`player-${localGameState.Players[0].Id}`} player={localGameState.Players[0]} onTop={true} />
 			{!!gameBoardLayout && (
 				<GameBoard
 					sendMovingCard={SendMovedCard}
@@ -109,6 +113,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 			)}
 
 			<Player
+				connection={connection}
 				onRequestTopUp={SendRequestTopUp}
 				key={`player-${localGameState.Players[1].Id}`}
 				player={localGameState.Players[1]}

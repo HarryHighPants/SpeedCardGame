@@ -3,19 +3,53 @@ import { ICard, IPos } from '../Interfaces/ICard'
 import Card from './Card'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import styled from 'styled-components'
-import backgroundImg from "../Assets/wood-tiling.jpg";
+import backgroundImg from '../Assets/wood-tiling.jpg'
+import { useEffect, useState } from 'react'
+import { HubConnection, HubConnectionState } from '@microsoft/signalr'
+import PlayerInfo, { IPlayerInfo } from './PlayerInfo'
+import { AnimatePresence, AnimateSharedLayout } from 'framer-motion'
+import { uuid } from '../Helpers/Utilities'
 
 interface Props {
 	player: IPlayer
 	onRequestTopUp?: () => void
 	onTop: boolean
+	connection: HubConnection | undefined
 }
 
-const Player = ({ player, onRequestTopUp, onTop }: Props) => {
+const Player = ({ player, onRequestTopUp, onTop, connection }: Props) => {
+	const [additionalInfo, setAdditionalInfo] = useState<IPlayerInfo>()
+
+	useEffect(() => {
+		if (!!player.LastMove) {
+			setAdditionalInfo({ message: player.LastMove, messageType: 'Move' })
+		}
+	}, [player.LastMove])
+
+	useEffect(() => {
+		if (onTop) {
+			return
+		}
+		if (connection?.state !== HubConnectionState.Connected) {
+			return
+		}
+		connection.on('Message', ReceivedMessaged)
+
+		return () => {
+			connection.off('Message', ReceivedMessaged)
+		}
+	}, [connection])
+
+	const ReceivedMessaged = (message: string) => {
+		setAdditionalInfo({ message: message, messageType: 'Error' })
+	}
+
 	return (
 		<PlayerContainer style={{ backgroundImage: `url(${backgroundImg})` }}>
 			<AdditionalInfo id={'player-info-' + player.Id} key={'player-info-' + player.Id} topOfBoard={onTop}>
-				{!!player.LastMove && <p>{player.LastMove}</p>}
+				{!!additionalInfo && (
+					<PlayerInfo playerInfo={additionalInfo}/>
+				)}
 			</AdditionalInfo>
 			<PlayerName>{player.Name}</PlayerName>
 			{player.CanRequestTopUp && !player.RequestingTopUp && !!onRequestTopUp && (
@@ -40,6 +74,7 @@ const PlayerContainer = styled.div`
 	letter-spacing: 1px;
 	user-select: none;
 `
+
 const AdditionalInfo = styled.div<{ topOfBoard: boolean }>`
 	font-weight: 500;
 	font-family: 'Roboto Slab', serif;
@@ -48,10 +83,10 @@ const AdditionalInfo = styled.div<{ topOfBoard: boolean }>`
 	left: 50%;
 	width: 100%;
 	display: flex;
-	align-items: ${(p) => p.topOfBoard ? 'flex-start' : 'flex-end'};
+	align-items: ${(p) => (p.topOfBoard ? 'flex-start' : 'flex-end')};
 	justify-content: center;
 	height: 60px;
-	margin: ${(p) => p.topOfBoard ? '50' : '-60'}px 0 0 0;
+	margin: ${(p) => (p.topOfBoard ? '50' : '-60')}px 0 0 0;
 	user-select: none;
 
 	font-size: large;

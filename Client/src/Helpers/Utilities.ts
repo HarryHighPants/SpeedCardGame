@@ -6,6 +6,16 @@ export const clamp = (num: number, min: number, max: number) => Math.min(Math.ma
 
 export const delay = (ms:number) => new Promise(res => setTimeout(res, ms));
 
+export function uuid() {
+	var dt = new Date().getTime();
+	var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+		var r = (dt + Math.random() * 16) % 16 | 0;
+		dt = Math.floor(dt / 16);
+		return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+	});
+	return uuid;
+}
+
 export const GetOffsetInfo = (ourRect: DOMRect | undefined, draggingCardRect: DOMRect | undefined) => {
 	let distance = GetDistanceRect(draggingCardRect, ourRect)
 	let overlaps = Overlaps(ourRect, draggingCardRect)
