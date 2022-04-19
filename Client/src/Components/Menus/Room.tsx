@@ -97,13 +97,13 @@ const Room = ({ onGameStarted }: Props) => {
 					<Game key={connectionId} connection={connection} connectionId={connectionId} gameState={gameState} />
 					<HomeButton onClick={() => connection?.stop()} />
 					{!!gameState.WinnerId && (
-						<Popup onHomeButton={true}>
+						<Popup id={"WinnerPopup"} onHomeButton={true}>
 							<h3>Winner is {gameState.Players.find((p) => p.Id === gameState.WinnerId)?.Name}</h3>
 						</Popup>
 					)}
 				</>
 			)}
-			<Lobby roomId={urlParams.roomId} connection={connection} gameState={gameState} />
+			<Lobby roomId={urlParams.roomId} connection={connection} gameState={gameState} onBack={()=>connection?.stop()}/>
 		</>
 	)
 }

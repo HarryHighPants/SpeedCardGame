@@ -7,14 +7,16 @@ import styled from 'styled-components'
 import { HiOutlineDocumentDuplicate } from 'react-icons/hi'
 import Popup from '../Popup'
 import { IGameState } from '../../Interfaces/IGameState'
+import { AnimatePresence, motion } from 'framer-motion'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
 	roomId: string | undefined
 	gameState: IGameState | undefined
+	onBack: () => void
 }
 
-const Lobby = ({ connection, roomId, gameState }: Props) => {
+const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	let navigate = useNavigate()
 	const [lobbyData, setLobbyData] = useState<ILobby>()
 	const [myPlayerName, setMyPlayerName] = useState<string>('Player')
@@ -82,49 +84,56 @@ const Lobby = ({ connection, roomId, gameState }: Props) => {
 		return <></>
 	}
 	return (
-		<Popup onBackButton={() => navigate(`/`)}>
-			<Header2>Lobby</Header2>
-			<LobbyWrapper>
-				<Group>
-					<GameCodeTitle>Game Code:</GameCodeTitle>
-					<GameCodeWrapper>
-						<input value={roomId} disabled={true} />
-						<CopyButton onClick={() => navigator.clipboard.writeText(window.location.href)} />
-					</GameCodeWrapper>
-				</Group>
-				<Group>
-					<PlayersTitle>Players:</PlayersTitle>
-					<PlayersContainer>
-						{lobbyData != null && !!connection?.connectionId ? (
-							<>
-								{lobbyData?.Connections?.map((p, i) =>
-									LobbyPlayer(connection?.connectionId as string, myPlayerName, p, UpdateName, i)
-								)}
-							</>
-						) : (
-							<div>Connecting to room..</div>
-						)}
-					</PlayersContainer>
-				</Group>
-				{waitingForPlayers && !!lobbyData && <p>Waiting for another player to join..</p>}
-				{spectating ? (
-					<p>Game in progress</p>
-				) : (
-					lobbyData != null &&
-					!!connection?.connectionId && (
-						<StartButton disabled={waitingForPlayers} onClick={() => onStartGame()}>
-							Start Game
-						</StartButton>
-					)
-				)}
-			</LobbyWrapper>
+		<Popup id={"lobbyPopup"}
+			onBackButton={() => {
+				onBack()
+				navigate(`/`)
+			}}
+		>
+				<LobbyWrapper layoutId={'lobbyWrapper'}>
+					<Header2>Lobby</Header2>
+					<Group>
+						<GameCodeTitle>Game Code:</GameCodeTitle>
+						<GameCodeWrapper>
+							<input value={roomId} disabled={true} />
+							<CopyButton onClick={() => navigator.clipboard.writeText(window.location.href)} />
+						</GameCodeWrapper>
+					</Group>
+					<Group>
+						<PlayersTitle>Players:</PlayersTitle>
+						<PlayersContainer>
+							{lobbyData != null && !!connection?.connectionId ? (
+								<>
+									{lobbyData?.Connections?.map((p, i) =>
+										LobbyPlayer(connection?.connectionId as string, myPlayerName, p, UpdateName, i)
+									)}
+								</>
+							) : (
+								<div>Connecting to room..</div>
+							)}
+						</PlayersContainer>
+					</Group>
+					{waitingForPlayers && !!lobbyData && (
+						<p style={{ marginBottom: -5 }}>Waiting for another player to join..</p>
+					)}
+					{spectating ? (
+						<p>Game in progress</p>
+					) : (
+						lobbyData != null &&
+						!!connection?.connectionId && (
+							<StartButton disabled={waitingForPlayers} onClick={() => onStartGame()}>
+								Start Game
+							</StartButton>
+						)
+					)}
+				</LobbyWrapper>
 		</Popup>
 	)
 }
 
 export default Lobby
 
-const LobbyWrapper = styled.div`
+const LobbyWrapper = styled(motion.div)`
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -142,8 +151,8 @@ const Group = styled.div`
 	align-items: flex-start;
 `
 
-const PlayersTitle = styled.h4`
-	margin-bottom: 10px;
+const PlayersTitle = styled.p`
+	margin-bottom: 8px;
 `
 const PlayersContainer = styled.div`
 	display: flex;

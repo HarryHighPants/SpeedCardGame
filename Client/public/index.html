@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8"/>
-	<link href="%PUBLIC_URL%/favicon.ico" rel="icon"/>
+	<link href="%PUBLIC_URL%/favicon.png" rel="icon"/>
 	<meta content="width=device-width, initial-scale=1" name="viewport"/>
-	<meta content="#000000" name="theme-color"/>
+	<meta content="#dc903f" name="theme-color"/>
 	<meta
-		content="Web site created using create-react-app"
-		name="description"
+		content="Speed card game online"
+		name="Play against the computer players or invite your friends"
 	/>
 	<link href="%PUBLIC_URL%/logo192.png" rel="apple-touch-icon"/>
 	<!--
@@ -24,7 +24,7 @@
 	  work correctly both with client-side routing and a non-root public URL.
 	  Learn how to configure a non-root public URL by running `npm run build`.
 	-->
-	<title>React App</title>
+	<title>Speed Online</title>
 </head>
 <body>
 <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -41,27 +41,3 @@
 -->
 </body>
 </html>
-
-<% if (process.env.REACT_APP_DISABLE_LIVE_RELOAD === "true") { %>
-<!--
-  Live Reload was causing issues for us. Disable it by starting the app with
-  REACT_APP_DISABLE_LIVE_RELOAD=true
--->
-<script>
-	{
-		var WS = window.WebSocket;
-
-		function DevWebSocket(s) {
-			if (s === "ws://localhost:3000") {
-				console.info("[DEV NOTICE] Live Reload Has Been Disabled");
-				return {};
-			} else {
-				// Pass through other usage of sockets
-				return new WS(s);
-			}
-		}
-
-		window.WebSocket = DevWebSocket;
-	}
-</script>
-<% } %>

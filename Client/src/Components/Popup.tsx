@@ -1,18 +1,41 @@
 import styled from 'styled-components'
 import { HiOutlineChevronLeft, HiOutlineHome } from 'react-icons/hi'
 import HomeButton from './HomeButton'
+import { AnimatePresence, motion } from 'framer-motion'
+import { useState } from 'react'
 
 interface Props {
+	id: string
 	children: JSX.Element | JSX.Element[]
 	onBackButton?: () => void | undefined
 	onHomeButton?: boolean
 }
 
-const Popup = ({ children, onBackButton, onHomeButton }: Props) => {
+const Popup = ({ children, onBackButton, onHomeButton, id }: Props) => {
+	const [animatingBack, setAnimatingBack] = useState(false)
+
+	const backPressed= () => {
+		setAnimatingBack(true)
+		if(!!onBackButton){
+			onBackButton()
+		}
+	}
+
 	return (
-		<PopupContainer>
-			<PopupCenter>
-				{!!onBackButton && <BackButton onClick={onBackButton} />}
+		<PopupContainer
+			key={id}
+			transition={{ duration: 0.3 }}
+			initial={{ opacity: 0 }}
+			animate={{ opacity: 1 }}
+			exit={{ opacity: 0 }}
+		>
+			<PopupCenter
+				transition={{ duration: 0.3, type:"tween", ease:"easeOut" }}
+				initial={{ opacity: 0, marginLeft: !!onBackButton ? 1000 : -1000, scale: 0 }}
+				animate={{opacity: 1, marginLeft: 0, scale: 1 }}
+				exit={{transition:{ duration: 0.3, type:"tween", ease:"easeIn" }, opacity: 0, marginLeft: animatingBack ? 1000 : -1000, scale: 0 }}
+			>
+				{!!onBackButton && <BackButton onClick={backPressed} />}
 				{!!onHomeButton && <HomeButton />}
 				{children}
 			</PopupCenter>
@@ -20,17 +43,23 @@ const Popup = ({ children, onBackButton, onHomeButton }: Props) => {
 	)
 }
 
-const PopupCenter = styled.div`
+const PopupCenter = styled(motion.div)`
 	position: absolute;
 	background-color: #2e2e2e;
 	border-radius: 12px;
 	color: whitesmoke;
-	padding: 10px 50px 50px 50px;
-	min-width: 300px;
 	min-height: 200px;
+	max-width: 350px;
+
+	width: calc(100% - 140px);
+	padding: 10px 50px 50px 50px;
+	@media (max-width: 450px) {
+		width: calc(100% - 70px);
+		padding: 10px 20px 30px 20px;
+	}
 `
 
-const PopupContainer = styled.div`
+const PopupContainer = styled(motion.div)`
 	position: absolute;
 	top: 0;
 	width: 100%;

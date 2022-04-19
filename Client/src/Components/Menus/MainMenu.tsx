@@ -5,8 +5,11 @@ import animals from '../../Assets/Animals.json'
 import adjectives from '../../Assets/Adjectives.json'
 import MenuHeader from './MenuHeader'
 import Popup from '../Popup'
+import styled from 'styled-components'
 
 interface Props {}
+
+const botDifficulties = ['Easy', 'Medium', 'Hard', 'Impossible']
 
 const MainMenu = (props: Props) => {
 	let navigate = useNavigate()
@@ -26,22 +29,25 @@ const MainMenu = (props: Props) => {
 	}
 
 	return (
-		<Popup>
+		<Popup key={"mainMenuPopup"} id={"mainMenuPopup"}>
 			<MenuHeader />
 			<div>
-				<h4>Play against a friend</h4>
+				<MenuDescription>Play against a friend</MenuDescription>
 				<button onClick={() => navigate('/join')}>Join Game</button>
 				<button onClick={() => OnCreateGame()}>Create Game</button>
-				<h4>Play against a bot</h4>
+				<MenuDescription>Play against a bot</MenuDescription>
 				<div>
-					<button onClick={() => OnCreateGame(true, 0)}>Easy</button>
-					<button onClick={() => OnCreateGame(true, 1)}>Medium</button>
-					<button onClick={() => OnCreateGame(true, 2)}>Hard</button>
-					<button onClick={() => OnCreateGame(true, 3)}>Impossible</button>
+					{botDifficulties.map((bd, i) => (
+						<button key={`bot-${bd}`} onClick={() => OnCreateGame(true, i)}>{bd}</button>
+					))}
 				</div>
 			</div>
 		</Popup>
 	)
 }
+
+const MenuDescription = styled.h4`
+	margin-bottom: 5px;
+`
 
 export default MainMenu

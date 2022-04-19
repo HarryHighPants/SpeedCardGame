@@ -19,7 +19,7 @@ const JoinGameMenu = () => {
 	}
 
 	return (
-		<Popup onBackButton={() => navigate('/')}>
+		<Popup key={"JoinGamePopup"} id={"JoinGamePopup"} onBackButton={() => navigate('/')}>
 			<h2>Join Game</h2>
 			<form onSubmit={(e) => onSubmit(e)}>
 				<Instructions>Enter game code:</Instructions>

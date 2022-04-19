@@ -97,7 +97,7 @@ public class EngineChecks
         if (cardLocationResult.PlayerId != playerId)
         {
             return Result.Error<GameState>(
-                $"Card {card.ToString(gameState.Settings)} not in players hand");
+                $"{card.ToString(gameState.Settings)} not in players hand");
         }
 
         switch (cardLocationResult.PileName)

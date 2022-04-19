@@ -1,14 +1,15 @@
 import styled from 'styled-components'
+import heaaderImg from '../../Assets/header.png'
 
 const MenuHeader = () => {
-  return(
-    // Todo: add logo
-    <Header>Speed Card Game</Header>
-  )
+	return (
+		<HeaderImg src={heaaderImg} />
+	)
 }
 
-const Header = styled.h1`
-	//margin-top: 0;
+const HeaderImg = styled.img`
+	width: 100%;
+	margin: -20px 0;
 `
 
-export default MenuHeader;
+export default MenuHeader
