@@ -84,56 +84,57 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 		return <></>
 	}
 	return (
-		<Popup id={"lobbyPopup"}
+		<Popup
+			id={'lobbyPopup'}
 			onBackButton={() => {
 				onBack()
 				navigate(`/`)
 			}}
 		>
-				<LobbyWrapper layoutId={'lobbyWrapper'}>
-					<Header2>Lobby</Header2>
-					<Group>
-						<GameCodeTitle>Game Code:</GameCodeTitle>
-						<GameCodeWrapper>
-							<input value={roomId} disabled={true} />
-							<CopyButton onClick={() => navigator.clipboard.writeText(window.location.href)} />
-						</GameCodeWrapper>
-					</Group>
-					<Group>
-						<PlayersTitle>Players:</PlayersTitle>
-						<PlayersContainer>
-							{lobbyData != null && !!connection?.connectionId ? (
-								<>
-									{lobbyData?.Connections?.map((p, i) =>
-										LobbyPlayer(connection?.connectionId as string, myPlayerName, p, UpdateName, i)
-									)}
-								</>
-							) : (
-								<div>Connecting to room..</div>
-							)}
-						</PlayersContainer>
-					</Group>
-					{waitingForPlayers && !!lobbyData && (
-						<p style={{ marginBottom: -5 }}>Waiting for another player to join..</p>
-					)}
-					{spectating ? (
-						<p>Game in progress</p>
-					) : (
-						lobbyData != null &&
-						!!connection?.connectionId && (
-							<StartButton disabled={waitingForPlayers} onClick={() => onStartGame()}>
-								Start Game
-							</StartButton>
-						)
-					)}
-				</LobbyWrapper>
+			<LobbyWrapper>
+				<Header2>Lobby</Header2>
+				<Group>
+					<GameCodeTitle>Game Code:</GameCodeTitle>
+					<GameCodeWrapper>
+						<input value={roomId} disabled={true} />
+						<CopyButton onClick={() => navigator.clipboard.writeText(window.location.href)} />
+					</GameCodeWrapper>
+				</Group>
+				<Group>
+					<PlayersTitle>Players:</PlayersTitle>
+					<PlayersContainer>
+						{lobbyData != null && !!connection?.connectionId ? (
+							<>
+								{lobbyData?.Connections?.map((p, i) =>
+									LobbyPlayer(connection?.connectionId as string, myPlayerName, p, UpdateName, i)
+								)}
+							</>
+						) : (
+							<div>Connecting to room..</div>
+						)}
+					</PlayersContainer>
+				</Group>
+				{waitingForPlayers && !!lobbyData && (
+					<p style={{ marginTop: -10, height: 0 }}>Waiting for another player to join..</p>
+				)}
+				{spectating ? (
+					<p>Game in progress</p>
+				) : (
+					lobbyData != null &&
+					!!connection?.connectionId && (
+						<StartButton disabled={waitingForPlayers} onClick={() => onStartGame()}>
+							Start Game
+						</StartButton>
+					)
+				)}
+			</LobbyWrapper>
 		</Popup>
 	)
 }
 
 export default Lobby
 
-const LobbyWrapper = styled(motion.div)`
+const LobbyWrapper = styled.div`
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -155,11 +156,12 @@ const PlayersTitle = styled.p`
 	margin-bottom: 8px;
 `
 const PlayersContainer = styled.div`
+	justify-content: flex-start;
 	display: flex;
-	justify-content: center;
 	flex-direction: column;
 	gap: 10px;
 	width: 100%;
+	min-height: 65px;
 `
 
 const GameCodeTitle = styled.p`
@@ -197,9 +199,16 @@ const LobbyPlayer = (
 ) => {
 	return (
 		<div key={`lobby-player-${player.ConnectionId}`} style={{ display: 'flex' }}>
-			<p style={{ margin: 0, paddingRight: 10 }}>{index + 1}. </p>
+			<p style={{ margin: 0, paddingRight: 10, width: 13 }}>{index + 1}. </p>
 			{player.ConnectionId == connectionId ? (
 				<input
+					style={{
+						marginTop: -5,
+						height: 22,
+						fontSize: 'medium',
+						fontFamily: 'inherit',
+						width: "100%"
+					}}
 					key={player.ConnectionId}
 					maxLength={20}
 					value={myPlayerName}

@@ -50,6 +50,7 @@ const PopupCenter = styled(motion.div)`
 	color: whitesmoke;
 	min-height: 200px;
 	max-width: 350px;
+	box-shadow: rgba(0, 0, 0, 0.56) 0px 40px 200px;
 
 	width: calc(100% - 140px);
 	padding: 10px 50px 50px 50px;

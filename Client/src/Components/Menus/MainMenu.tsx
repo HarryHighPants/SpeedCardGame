@@ -32,6 +32,8 @@ const MainMenu = (props: Props) => {
 		<Popup key={"mainMenuPopup"} id={"mainMenuPopup"}>
 			<MenuHeader />
 			<div>
+				<MenuDescription>New to Speed?</MenuDescription>
+				<button onClick={() => navigate('/tutorial')}>How to play</button>
 				<MenuDescription>Play against a friend</MenuDescription>
 				<button onClick={() => navigate('/join')}>Join Game</button>
 				<button onClick={() => OnCreateGame()}>Create Game</button>
@@ -47,6 +49,7 @@ const MainMenu = (props: Props) => {
 }
 
 const MenuDescription = styled.h4`
+	margin-top: 50px;
 	margin-bottom: 5px;
 `
 

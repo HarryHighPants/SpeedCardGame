@@ -7,6 +7,7 @@ import GameBoard from '../GameBoard'
 import AutomatedGame from '../AutomatedGame'
 import { useParams } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
+import Tutorial from "./Tutorial";
 
 const RouteManager = () => {
 	const [gameStarted, setGameStarted] = useState(false)
@@ -14,17 +15,18 @@ const RouteManager = () => {
 	let location = useLocation()
 
 	useEffect(() => {
-		if (location.pathname === '/') {
+		if (location.pathname === '/' || location.pathname === "") {
 			setGameStarted(false)
 		}
-	}, [location])
+	}, [location.pathname])
 
 	return (
 		<>
 			<AnimatePresence>
 				{location.pathname === '/' && <MainMenu key={'main'} />}
 				{location.pathname === '/join' && <JoinGameMenu key={'JoinGameMenu'} />}
-				{location.pathname !== '/join' && location.pathname !== '/' && (
+				{location.pathname === '/tutorial' && <Tutorial key={'Tutorial'} />}
+				{location.pathname !== '/join' && location.pathname !== '/' && location.pathname !== '/tutorial' && (
 					<Room onGameStarted={() => setGameStarted(true)} />
 				)}
 			</AnimatePresence>

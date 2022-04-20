@@ -1,6 +1,6 @@
 import * as signalR from '@microsoft/signalr'
 import { HubConnection, HubConnectionState, ILogger, LogLevel } from '@microsoft/signalr'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { IGameState } from '../../Interfaces/IGameState'
 import Game from '../../Components/Game'
@@ -10,22 +10,27 @@ import styled from 'styled-components'
 import { HiOutlineHome } from 'react-icons/hi'
 import Popup from '../Popup'
 import HomeButton from '../HomeButton'
+import useState from 'react-usestateref'
 
 interface Props {
 	onGameStarted: () => void
 }
 
 const Room = ({ onGameStarted }: Props) => {
-	let urlParams = useParams()
 	let navigate = useNavigate()
-	const [connection, setConnection] = useState<HubConnection>()
+	const [connection, setConnection, connectionRef] = useState<HubConnection>()
 	const [gameState, setGameState] = useState<IGameState>()
+	const [roomId, setRoomId, roomIdRef] = useState('')
 	const [connectionStatus, setConnectionStatus] = useState<HubConnectionState | undefined>()
 	const [connectionId, setConnectionId] = useState<string | null>()
 
 	useEffect(() => {
 		CreateConnection()
 	}, [])
+
+	useEffect(() => {
+		setRoomId(window.location.pathname.replace('/', ''))
+	}, [window.location.pathname])
 
 	const CreateConnection = () => {
 		// Builds the SignalR connection, mapping it to /server
@@ -40,42 +45,42 @@ const Room = ({ onGameStarted }: Props) => {
 		signalRConnection?.start().then(() => {
 			setConnection(signalRConnection)
 			setConnectionId(signalRConnection.connectionId)
-			ConnectionStatusUpdated(signalRConnection)
+			ConnectionStatusUpdated()
 		})
 	}
 
-	const ConnectionStatusUpdated = (hubConnection: HubConnection) => {
-		console.log('ConnectionStatusUpdated', hubConnection.state)
-		switch (hubConnection.state) {
+	const ConnectionStatusUpdated = () => {
+		console.log('ConnectionStatusUpdated', connectionRef.current?.state)
+		switch (connectionRef.current?.state) {
 			case HubConnectionState.Connected:
-				hubConnection.onclose((error) => {
+				connectionRef.current?.onclose((error) => {
 					if (!!error) {
-						ConnectionStatusUpdated(hubConnection)
+						ConnectionStatusUpdated()
 						setConnection(undefined)
 						CreateConnection()
 					} else {
-						hubConnection.off('UpdateGameState', UpdateGameState)
+						connectionRef.current?.off('UpdateGameState', UpdateGameState)
 					}
 				})
 				console.log("hubConnection.on('UpdateGameState', UpdateGameState)")
-				hubConnection.on('UpdateGameState', UpdateGameState)
-				JoinRoom(hubConnection)
+				connectionRef.current?.on('UpdateGameState', UpdateGameState)
+				JoinRoom()
 
 				break
 			case HubConnectionState.Disconnected:
 				console.log("hubConnection.off('UpdateGameState', UpdateGameState)")
-				hubConnection.off('UpdateGameState', UpdateGameState)
+				connectionRef.current?.off('UpdateGameState', UpdateGameState)
 				break
 			default:
 				break
 		}
-		setConnectionStatus(hubConnection.state)
+		setConnectionStatus(connectionRef.current?.state)
 	}
 
-	const JoinRoom = (hubConnection: HubConnection) => {
-		console.log('JoinRoom func', urlParams.roomId, hubConnection.connectionId)
-		if (!urlParams.roomId) return
-		hubConnection.invoke('JoinRoom', urlParams.roomId)
+	const JoinRoom = () => {
+		console.log('JoinRoom func', roomIdRef?.current, connectionRef.current?.connectionId)
+		if (!roomIdRef?.current) return
+		connectionRef.current?.invoke('JoinRoom', roomIdRef?.current)
 	}
 
 	const UpdateGameState = (data: any) => {
@@ -94,16 +99,21 @@ const Room = ({ onGameStarted }: Props) => {
 		<>
 			{!!gameState && (
 				<>
-					<Game key={connectionId} connection={connection} connectionId={connectionId} gameState={gameState} />
+					<Game
+						key={connectionId}
+						connection={connection}
+						connectionId={connectionId}
+						gameState={gameState}
+					/>
 					<HomeButton onClick={() => connection?.stop()} />
 					{!!gameState.WinnerId && (
-						<Popup id={"WinnerPopup"} onHomeButton={true}>
+						<Popup id={'WinnerPopup'} onHomeButton={true}>
 							<h3>Winner is {gameState.Players.find((p) => p.Id === gameState.WinnerId)?.Name}</h3>
 						</Popup>
 					)}
 				</>
 			)}
-			<Lobby roomId={urlParams.roomId} connection={connection} gameState={gameState} onBack={()=>connection?.stop()}/>
+			<Lobby roomId={roomId} connection={connection} gameState={gameState} onBack={() => connection?.stop()} />
 		</>
 	)
 }
