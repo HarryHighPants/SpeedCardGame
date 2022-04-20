@@ -22,7 +22,7 @@ const Player = ({ player, onRequestTopUp, onTop, connection }: Props) => {
 
 	useEffect(() => {
 		if (!!player.LastMove) {
-			setAdditionalInfo({id: uuid(), message: player.LastMove, messageType: 'Move' })
+			setAdditionalInfo({ id: uuid(), message: player.LastMove, messageType: 'Move' })
 		}
 	}, [player.LastMove])
 
@@ -43,16 +43,14 @@ const Player = ({ player, onRequestTopUp, onTop, connection }: Props) => {
 	}, [connection, onTop])
 
 	const ReceivedMessaged = (message: string) => {
-		console.log("message reciveed", message)
+		console.log('message reciveed', message)
 		setAdditionalInfo({ id: uuid(), message: message, messageType: 'Error' })
 	}
 
 	return (
 		<PlayerContainer style={{ backgroundImage: `url(${backgroundImg})` }}>
 			<AdditionalInfo id={'player-info-' + player.Id} key={'player-info-' + player.Id} topOfBoard={onTop}>
-				{!!additionalInfo && (
-					<PlayerInfo key={additionalInfo.id} playerInfo={additionalInfo}/>
-				)}
+				{!!additionalInfo && <PlayerInfo key={additionalInfo.id} playerInfo={additionalInfo} />}
 			</AdditionalInfo>
 			<PlayerName>{player.Name}</PlayerName>
 			{player.CanRequestTopUp && !player.RequestingTopUp && !!onRequestTopUp && (
@@ -76,6 +74,12 @@ const PlayerContainer = styled.div`
 	font-size: large;
 	letter-spacing: 1px;
 	user-select: none;
+	z-index: 50;
+	pointer-events: none;
+
+	@media (max-height: 400px){
+		display: none;
+	}
 `
 
 const AdditionalInfo = styled.div<{ topOfBoard: boolean }>`
@@ -102,6 +106,9 @@ const RequestTopUpButton = styled.button`
 	margin: 15px;
 	position: absolute;
 	top: 58%;
+	height: 40px;
+	width: 135px;
+	z-index: 52;
 `
 
 const PlayerName = styled.p`

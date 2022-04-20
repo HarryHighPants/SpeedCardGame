@@ -7,6 +7,8 @@ import winImg from '../../Assets/tutorial/tutorial-win.png'
 import playImg from '../../Assets/tutorial/tutorial-play.png'
 import pickupImg from '../../Assets/tutorial/tutorial-pickup.png'
 import topupImg from '../../Assets/tutorial/tutorial-topup.png'
+import { motion, PanInfo, useMotionValue, useTransform } from 'framer-motion'
+import { map } from '../../Helpers/Utilities'
 
 interface ITutorialSlide {
 	title: string
@@ -51,21 +53,43 @@ const Tutorial = () => {
 	const [previousDisabled, setPreviousDisabled] = useState(true)
 	const [nextDisabled, setNextDisabled] = useState(false)
 	let navigate = useNavigate()
+	const offset = useMotionValue(0)
+	const scale = useTransform(offset, [-50, 0, 50], [0.8, 1, 0.8])
+	const opacity = useTransform(offset, [-50, 0, 50], [0.7, 1, 0.7])
 
-	useEffect(()=>{
+	useEffect(() => {
 		setPreviousDisabled(slideIndex === 0)
 		setNextDisabled(slideIndex === tutorialSlides.length - 1)
 	}, [slideIndex])
 
+	const onDragEnd = () => {
+		if (offset.get() < 49 && !nextDisabled) {
+			setSlideIndex((s) => s + 1)
+		}
+		if (offset.get() > -49 && !previousDisabled) {
+			setSlideIndex((s) => s - 1)
+		}
+		offset.set(0)
+	}
+
 	return (
 		<Popup key={'JoinGamePopup'} id={'JoinGamePopup'} onBackButton={() => navigate('/')}>
 			<h3>Tutorial</h3>
-			<SlideContainer>
+			<SlideContainer
+				drag={'x'}
+				dragConstraints={{ left: -50, right: 50 }}
+				dragElastic={0.1}
+				dragSnapToOrigin
+				onDrag={(e, info) => offset.set(info.offset.x)}
+				onDragEnd={() => onDragEnd()}
+				style={{ scale, opacity, cursor: 'pointer' }}
+				animate={{ transition: { type: 'ease' } }}
+			>
 				<h2>
 					{slideIndex + 1}. {tutorialSlides[slideIndex].title}
 				</h2>
 				<img
-					style={{ width: '100%' }}
+					style={{ width: '100%', pointerEvents: 'none' }}
 					src={tutorialSlides[slideIndex].imageSrc}
 					alt={tutorialSlides[slideIndex].title}
 				/>
@@ -77,14 +101,14 @@ const Tutorial = () => {
 			</SlideContainer>
 			<div>
 				<NavigateButton
-					style={{ cursor: previousDisabled ? 'default' : 'pointer'}}
+					style={{ cursor: previousDisabled ? 'default' : 'pointer' }}
 					disabled={previousDisabled}
 					onClick={() => setSlideIndex((s) => s - 1)}
 				>
 					Back
 				</NavigateButton>
 				<NavigateButton
-					style={{ cursor: nextDisabled ? 'default' : 'pointer'}}
+					style={{ cursor: nextDisabled ? 'default' : 'pointer' }}
 					disabled={nextDisabled}
 					onClick={() => setSlideIndex((s) => s + 1)}
 				>
@@ -101,7 +125,7 @@ const NavigateButton = styled.button`
 	width: 70px;
 `
 
-const SlideContainer = styled.div`
+const SlideContainer = styled(motion.div)`
 	min-height: 500px;
 	margin-top: 40px;
 	margin-bottom: 50px;

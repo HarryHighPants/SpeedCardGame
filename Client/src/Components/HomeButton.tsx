@@ -29,6 +29,7 @@ const StyledHomeButton = styled(HiOutlineHome)`
 	height: 25px;
 	color: #d5d5d5;
 	cursor: pointer;
+	z-index: 60;
 
 	&:hover {
 		color: #7e7e7e;

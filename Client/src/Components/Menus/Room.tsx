@@ -50,7 +50,6 @@ const Room = ({ onGameStarted }: Props) => {
 	}
 
 	const ConnectionStatusUpdated = () => {
-		console.log('ConnectionStatusUpdated', connectionRef.current?.state)
 		switch (connectionRef.current?.state) {
 			case HubConnectionState.Connected:
 				connectionRef.current?.onclose((error) => {
@@ -62,13 +61,11 @@ const Room = ({ onGameStarted }: Props) => {
 						connectionRef.current?.off('UpdateGameState', UpdateGameState)
 					}
 				})
-				console.log("hubConnection.on('UpdateGameState', UpdateGameState)")
 				connectionRef.current?.on('UpdateGameState', UpdateGameState)
 				JoinRoom()
 
 				break
 			case HubConnectionState.Disconnected:
-				console.log("hubConnection.off('UpdateGameState', UpdateGameState)")
 				connectionRef.current?.off('UpdateGameState', UpdateGameState)
 				break
 			default:
@@ -78,7 +75,6 @@ const Room = ({ onGameStarted }: Props) => {
 	}
 
 	const JoinRoom = () => {
-		console.log('JoinRoom func', roomIdRef?.current, connectionRef.current?.connectionId)
 		if (!roomIdRef?.current) return
 		connectionRef.current?.invoke('JoinRoom', roomIdRef?.current)
 	}
@@ -88,10 +84,6 @@ const Room = ({ onGameStarted }: Props) => {
 		if (!gameState) {
 			onGameStarted()
 		}
-		console.log(
-			'gamestate',
-			parsedData.Players.map((p) => p.Id)
-		)
 		setGameState({ ...parsedData })
 	}
 

@@ -26,7 +26,6 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	const [spectating, setSpectating] = useState<boolean>(false)
 
 	useEffect(() => {
-		console.log('lobby connection updated', connection)
 		if (!connection) return
 		connection.on('UpdateLobbyState', UpdateLobbyData)
 
@@ -42,7 +41,6 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	}, [gameState])
 
 	const UpdateLobbyData = (data: any) => {
-		console.log('UpdateLobbyData', data)
 		let lobbyData: ILobby = JSON.parse(data)
 		setLobbyData(lobbyData)
 		let myPlayerInfo = lobbyData.Connections.find((c) => c.ConnectionId === connection?.connectionId)
@@ -51,7 +49,6 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 		if (!!inputGameType && !lobbyData.GameStarted && !lobbyData.IsBotGame && inputGameType === 'bot') {
 			let inputDifficulty = searchParams.get('difficulty')
 			let botDifficulty = !!inputDifficulty ? +inputDifficulty : 0
-			console.log('onStartGame', true, botDifficulty, connection?.connectionId)
 			onStartGame(true, botDifficulty)
 		}
 
