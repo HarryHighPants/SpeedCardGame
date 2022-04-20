@@ -14,6 +14,9 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
 
+### Connecting to Server
+For local development for the clientside to communicate with the server it must be on the same ip address. This can be achieved by accessing the React app from `you_local_ip:3000` in the browser
+
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.\
