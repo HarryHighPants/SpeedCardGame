@@ -11,7 +11,7 @@ public struct BotData
 	public string? CustomLoseMessage;
 	public int QuickestResponseTimeMs;
 	public int SlowestResponseTimeMs;
-	public int? PickupIntervalMs;
+	public int PickupIntervalMs;
 }
 
 public static class BotRunner

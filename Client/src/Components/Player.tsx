@@ -75,7 +75,6 @@ const PlayerContainer = styled.div`
 	letter-spacing: 1px;
 	user-select: none;
 	z-index: 50;
-	pointer-events: none;
 
 	@media (max-height: 400px){
 		display: none;

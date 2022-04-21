@@ -68,11 +68,10 @@ public class BotService : IBotService
 
 		var checks = gameService.GetGame(bot.roomId).gameEngine.Checks;
 		var playerId = gameService.GetConnectionsPlayer(bot.ConnectionId).PlayerId;
+		// Wait for the cards to animate in
+		await Task.Delay(5000, cancellationToken);
 		while (!cancellationToken.IsCancellationRequested || gameService.GetGameStateDto(bot.roomId).Data.WinnerId == null)
 		{
-			// todo: make picking up faster for bots
-				await Task.Delay(random.Next(bot.Data.QuickestResponseTimeMs, bot.Data.SlowestResponseTimeMs));
-
 				if (playerId == null)
 				{
 					continue;
@@ -96,6 +95,12 @@ public class BotService : IBotService
 					throw new Exception(moveError.Message);
 				}
 				await SendGameState(bot.roomId);
+				var turnDelay = random.Next(bot.Data.QuickestResponseTimeMs, bot.Data.SlowestResponseTimeMs);
+				if (move.Data.Type == MoveType.PickupCard)
+				{
+					turnDelay = bot.Data.PickupIntervalMs;
+				}
+				await Task.Delay(turnDelay, cancellationToken);
 		}
 	}
 

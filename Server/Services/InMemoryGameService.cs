@@ -264,12 +264,13 @@ public class InMemoryGameService : IGameService
             return false;
         }
 
-        if (game.State.Players[connectionsPlayerId.Value].HandCards.Any(c => c.Id == cardId))
+        var player = game.State.Players[connectionsPlayerId.Value];
+        if (player.HandCards.Any(c => c.Id == cardId))
         {
             return true;
         }
 
-        if (game.State.Players[connectionsPlayerId.Value].KittyCards.Last().Id == cardId)
+        if (player.KittyCards.Count > 0 && player.KittyCards.Last().Id == cardId)
         {
             return true;
         }

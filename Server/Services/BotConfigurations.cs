@@ -21,8 +21,8 @@ public class BotConfigurations
                 CustomIntroMessage = "He can't jump far",
                 CustomLoseMessage = "Oh no",
                 CustomWinMessage = "Easy",
-                QuickestResponseTimeMs = 5000,
-                SlowestResponseTimeMs = 7000,
+                QuickestResponseTimeMs = 3000,
+                SlowestResponseTimeMs = 5000,
                 PickupIntervalMs = 2500
             }
         },
@@ -34,8 +34,8 @@ public class BotConfigurations
                 CustomIntroMessage = "He's a bit of a trickster so watch out",
                 CustomLoseMessage = "Damn, he's tricky",
                 CustomWinMessage = "Down goes the trickster",
-                QuickestResponseTimeMs = 4000,
-                SlowestResponseTimeMs = 6000,
+                QuickestResponseTimeMs = 2000,
+                SlowestResponseTimeMs = 3000,
                 PickupIntervalMs = 1500
             }
         },
@@ -47,8 +47,8 @@ public class BotConfigurations
                 CustomIntroMessage = "She can't be trusted",
                 CustomLoseMessage = "Oof, rough one",
                 CustomWinMessage = "Down falls Mikaela and her wicked ways",
-                QuickestResponseTimeMs = 3000,
-                SlowestResponseTimeMs = 5000,
+                QuickestResponseTimeMs = 1000,
+                SlowestResponseTimeMs = 3000,
                 PickupIntervalMs = 1000
             }
         },
@@ -60,8 +60,8 @@ public class BotConfigurations
                 CustomIntroMessage = "rip lol",
                 CustomLoseMessage = "No chance",
                 CustomWinMessage = "No one will ever see this message so it doesn't matter",
-                QuickestResponseTimeMs = 2000,
-                SlowestResponseTimeMs = 4000,
+                QuickestResponseTimeMs = 500,
+                SlowestResponseTimeMs = 2000,
                 PickupIntervalMs = 500
             }
         }
