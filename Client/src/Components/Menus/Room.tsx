@@ -14,6 +14,7 @@ import useState from 'react-usestateref'
 import { motion } from 'framer-motion'
 import CelebrateShaker from "../CelebrateShake";
 import WinnerPopup from "../WinnerPopup";
+import {ServerUrl} from "../../Config";
 
 interface Props {
 	onGameStarted: () => void
@@ -42,7 +43,7 @@ const Room = ({ onGameStarted }: Props) => {
 	const CreateConnection = () => {
 		// Builds the SignalR connection, mapping it to /server
 		let signalRConnection = new signalR.HubConnectionBuilder()
-			.withUrl(`http://${window.location.hostname}:5169/server`)
+			.withUrl(ServerUrl)
 			.configureLogging(signalR.LogLevel.Information)
 			.build()
 
