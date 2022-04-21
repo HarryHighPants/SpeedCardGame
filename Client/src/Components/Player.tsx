@@ -15,9 +15,10 @@ interface Props {
 	onRequestTopUp?: () => void
 	onTop: boolean
 	connection: HubConnection | undefined
+	mustTopUp: boolean
 }
 
-const Player = ({ player, onRequestTopUp, onTop, connection }: Props) => {
+const Player = ({ player, onRequestTopUp, onTop, connection, mustTopUp }: Props) => {
 	const [additionalInfo, setAdditionalInfo] = useState<IPlayerInfo>()
 
 	useEffect(() => {
@@ -53,7 +54,7 @@ const Player = ({ player, onRequestTopUp, onTop, connection }: Props) => {
 				{!!additionalInfo && <PlayerInfo key={additionalInfo.id} playerInfo={additionalInfo} />}
 			</AdditionalInfo>
 			<PlayerName>{player.Name}</PlayerName>
-			{player.CanRequestTopUp && !player.RequestingTopUp && !!onRequestTopUp && (
+			{mustTopUp && !player.RequestingTopUp && !!onRequestTopUp && (
 				<RequestTopUpButton onClick={onRequestTopUp}>Request top up</RequestTopUpButton>
 			)}
 		</PlayerContainer>

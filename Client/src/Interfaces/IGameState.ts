@@ -6,6 +6,7 @@ export interface IGameState {
 	CenterPiles: CenterPile[]
 	LastMove: string
 	WinnerId?: string
+	MustTopUp: boolean
 }
 
 export interface CenterPile {
@@ -37,7 +38,7 @@ export const gameStateReducer = (state: IGameState, action: GameStateReducerActi
 			let pickupPlayerIndex = state.Players.indexOf(pickupPlayer)
 			state.Players[pickupPlayerIndex].HandCards.push({ Id: pickupPlayer.TopKittyCardId } as ICard)
 			state.Players[pickupPlayerIndex].TopKittyCardId = -1
-			return {...state}
+			return { ...state }
 
 		case 'Play':
 			let player = state.Players.find((p: IPlayer) => p.Id === action.playerId)
@@ -47,10 +48,10 @@ export const gameStateReducer = (state: IGameState, action: GameStateReducerActi
 			let playerIndex = state.Players.indexOf(player)
 			state.Players[playerIndex].HandCards = player.HandCards.filter((c) => c.Id != action.topCard.Id)
 			state.CenterPiles[action.centerPileIndex].Cards.push(action.topCard)
-			return {...state}
+			return { ...state }
 
 		case 'Replace':
-			return {...action.gameState}
+			return { ...action.gameState }
 
 		default:
 			return state

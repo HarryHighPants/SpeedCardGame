@@ -98,7 +98,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 
 	return (
 		<GameContainer>
-			<Player connection={connection} key={`player-${localGameState.Players[0].Id}`} player={localGameState.Players[0]} onTop={true} />
+			<Player mustTopUp={gameState.MustTopUp} connection={connection} key={`player-${localGameState.Players[0].Id}`} player={localGameState.Players[0]} onTop={true} />
 			{!!gameBoardLayout && (
 				<GameBoard
 					sendMovingCard={SendMovedCard}
@@ -113,6 +113,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 			)}
 
 			<Player
+				mustTopUp={gameState.MustTopUp}
 				connection={connection}
 				onRequestTopUp={SendRequestTopUp}
 				key={`player-${localGameState.Players[1].Id}`}

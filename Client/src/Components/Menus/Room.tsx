@@ -11,6 +11,9 @@ import { HiOutlineHome } from 'react-icons/hi'
 import Popup from '../Popup'
 import HomeButton from '../HomeButton'
 import useState from 'react-usestateref'
+import { motion } from 'framer-motion'
+import CelebrateShaker from "../CelebrateShake";
+import WinnerPopup from "../WinnerPopup";
 
 interface Props {
 	onGameStarted: () => void
@@ -25,11 +28,15 @@ const Room = ({ onGameStarted }: Props) => {
 	const [connectionId, setConnectionId] = useState<string | null>()
 
 	useEffect(() => {
-		CreateConnection()
-	}, [])
+		let newRoomId = window.location.pathname.replace('/', '')
+		if(!!newRoomId){
+			if(connectionRef.current?.state === HubConnectionState.Connected){
+				connectionRef.current?.stop()
+			}
+			CreateConnection()
+		}
 
-	useEffect(() => {
-		setRoomId(window.location.pathname.replace('/', ''))
+		setRoomId(newRoomId)
 	}, [window.location.pathname])
 
 	const CreateConnection = () => {
@@ -92,16 +99,14 @@ const Room = ({ onGameStarted }: Props) => {
 			{!!gameState && (
 				<>
 					<Game
-						key={connectionId}
+						key={connectionId+roomId}
 						connection={connection}
 						connectionId={connectionId}
 						gameState={gameState}
 					/>
 					<HomeButton onClick={() => connection?.stop()} />
 					{!!gameState.WinnerId && (
-						<Popup id={'WinnerPopup'} onHomeButton={true}>
-							<h3>Winner is {gameState.Players.find((p) => p.Id === gameState.WinnerId)?.Name}</h3>
-						</Popup>
+						<WinnerPopup name={gameState.Players.find((p) => p.Id === gameState.WinnerId)?.Name}/>
 					)}
 				</>
 			)}

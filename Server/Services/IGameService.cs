@@ -88,12 +88,16 @@ public class GameStateDto
 	public List<CenterPile> CenterPiles;
 	public string LastMove;
 	public string? WinnerId;
+	public bool MustTopUp;
 
 	public GameStateDto(GameState gameState, ConcurrentDictionary<string, Connection> connections, GameEngine gameEngine)
 	{
 		Players = gameState.Players
 			.Select((p, i) => new PlayerDto(p, gameEngine.Checks.CanRequestTopUp(gameState, i).Success))
 			.ToList();
+
+		MustTopUp = Players.All(p => p.CanRequestTopUp || p.RequestingTopUp);
+
 
 		// Replace the playerId with the players connectionId
 		foreach (var player in Players)
