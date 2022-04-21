@@ -1,0 +1,8 @@
+CliGame
+Client
+.git
+.idea
+.run
+.vs
+**/obj/*
+**/bin/*
