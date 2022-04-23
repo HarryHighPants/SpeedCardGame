@@ -31,10 +31,9 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(
 //configure
 var app = builder.Build();
 app.UseRouting();
-
 app.UseCors();
 
-app.MapGet("/", () => "Hello World!");
+app.MapGet("/", () => "Speed Card Game Server root");
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapHub<GameHub>("/server");
