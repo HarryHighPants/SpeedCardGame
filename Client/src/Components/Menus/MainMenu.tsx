@@ -34,6 +34,8 @@ const MainMenu = (props: Props) => {
 			<div>
 				<MenuDescription>New to Speed?</MenuDescription>
 				<button onClick={() => navigate('/tutorial')}>How to play</button>
+				<MenuDescription>Daily Challenge</MenuDescription>
+				<button key={`bot-daily`} onClick={() => OnCreateGame(true, 4)}>Verse Daily Challenger</button>
 				<MenuDescription>Play against a friend</MenuDescription>
 				<button onClick={() => navigate('/join')}>Join Game</button>
 				<button onClick={() => OnCreateGame()}>Create Game</button>

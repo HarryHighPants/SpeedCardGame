@@ -1,33 +1,57 @@
 using Engine;
+using Server.Services;
 
-public enum BotDifficulty
+public enum BotType
 {
     Easy,
     Medium,
     Hard,
-    Impossible
+    Impossible,
+    Daily
 }
 
 public class BotConfigurations
 {
-	public static BotData GetBot(BotDifficulty difficulty) => BotConfigurations.Bots[difficulty];
-    private static readonly Dictionary<BotDifficulty, BotData> Bots = new()
+	private static BotData GetDailyBot()
+	{
+		var dayIndex = DateTime.Today.Subtract(DateTime.Parse("12-April-2022")).Days;
+		var botName = BotNameCreator.GetRandomBotName(dayIndex);
+		var random = new Random(dayIndex);
+		var difficultyMultiplier = random.Next(50, 150) * 0.01;
+		return new BotData
+		{
+			Name = botName,
+			QuickestResponseTimeMs = (int)(1500 * difficultyMultiplier),
+			SlowestResponseTimeMs = (int)(4000 * difficultyMultiplier),
+			PickupIntervalMs = (int)(1000 * difficultyMultiplier),
+		};
+	}
+
+
+	public static BotData GetBot(BotType type) =>
+		type switch
+		{
+			BotType.Daily => GetDailyBot(),
+			_ => BotConfigurations.Bots[type]
+		};
+
+	private static readonly Dictionary<BotType, BotData> Bots = new()
     {
         {
-            BotDifficulty.Easy,
+            BotType.Easy,
             new BotData
             {
                 Name = "Limping Liam",
                 CustomIntroMessage = "He can't jump far",
                 CustomLoseMessage = "Oh no",
                 CustomWinMessage = "Easy",
-                QuickestResponseTimeMs = 3000,
-                SlowestResponseTimeMs = 5000,
-                PickupIntervalMs = 2500
+                QuickestResponseTimeMs = 4000,
+                SlowestResponseTimeMs = 7000,
+                PickupIntervalMs = 1500
             }
         },
         {
-            BotDifficulty.Medium,
+            BotType.Medium,
             new BotData
             {
                 Name = "Harrowing Hayden",
@@ -35,12 +59,12 @@ public class BotConfigurations
                 CustomLoseMessage = "Damn, he's tricky",
                 CustomWinMessage = "Down goes the trickster",
                 QuickestResponseTimeMs = 2000,
-                SlowestResponseTimeMs = 3000,
-                PickupIntervalMs = 1500
+                SlowestResponseTimeMs = 5000,
+                PickupIntervalMs = 1000
             }
         },
         {
-            BotDifficulty.Hard,
+            BotType.Hard,
             new BotData
             {
                 Name = "Masterful Mikaela",
@@ -48,20 +72,20 @@ public class BotConfigurations
                 CustomLoseMessage = "Oof, rough one",
                 CustomWinMessage = "Down falls Mikaela and her wicked ways",
                 QuickestResponseTimeMs = 1000,
-                SlowestResponseTimeMs = 3000,
-                PickupIntervalMs = 1000
+                SlowestResponseTimeMs = 4000,
+                PickupIntervalMs = 750
             }
         },
         {
-            BotDifficulty.Impossible,
+            BotType.Impossible,
             new BotData
             {
                 Name = "Chaotic Kate",
                 CustomIntroMessage = "rip lol",
                 CustomLoseMessage = "No chance",
                 CustomWinMessage = "No one will ever see this message so it doesn't matter",
-                QuickestResponseTimeMs = 500,
-                SlowestResponseTimeMs = 2000,
+                QuickestResponseTimeMs = 1000,
+                SlowestResponseTimeMs = 2500,
                 PickupIntervalMs = 500
             }
         }

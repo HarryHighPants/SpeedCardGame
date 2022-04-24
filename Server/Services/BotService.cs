@@ -25,9 +25,9 @@ public class BotService : IBotService
 		this.hubContext = hubContext;
 	}
 
-	public void AddBotToRoom(string roomId, BotDifficulty difficulty)
+	public void AddBotToRoom(string roomId, BotType type)
 	{
-		var botData = BotConfigurations.GetBot(difficulty);
+		var botData = BotConfigurations.GetBot(type);
 		var botId = Guid.NewGuid().ToString();
 		var bot = new Bot(botId, botData, roomId);
 		gameService.JoinRoom(roomId, botId);

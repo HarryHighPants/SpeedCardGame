@@ -102,13 +102,13 @@ public class GameHub : Hub
         }
     }
 
-    public async Task StartGame(bool botGame = false, BotDifficulty botDifficulty = 0)
+    public async Task StartGame(bool botGame = false, BotType botType = 0)
     {
 	    var roomId = gameService.GetConnectionsRoomId(UserConnectionId);
 
 	    if (botGame)
 	    {
-		    botService.AddBotToRoom(roomId, botDifficulty);
+		    botService.AddBotToRoom(roomId, botType);
 	    }
 
         var startGameResult = gameService.StartGame(UserConnectionId);

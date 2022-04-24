@@ -18,7 +18,6 @@ builder.Services.AddSingleton<IBotService, BotService>();
 builder.Services.AddCors(options => options.AddDefaultPolicy(
     builder1 =>
     {
-	    // builder1.WithOrigins("http://192.168.20.35:3000")
         builder1
 	        .SetIsOriginAllowed(s=>true)
             .AllowAnyHeader()
