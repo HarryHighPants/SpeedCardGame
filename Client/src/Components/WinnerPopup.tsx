@@ -27,7 +27,7 @@ const WinnerPopup = ({ winnerName, loserName, cardsRemaining }: Props) => {
 	}, [])
 
 	const onShare = () => {
-		let shareText = `Speed Online ♦️\n🥇 ${winnerName}\n🥈 ${loserName}\nPlayer beat Chaotic Kate by ${cardsRemaining} cards`
+		let shareText = `Speed Online ♦️\n🥇 ${winnerName}\n🥈 ${loserName}\nPlayer beat ${loserName} by ${cardsRemaining} cards`
 		if (navigator['share']) {
 			navigator.share({ title: 'Speed Online', text: shareText })
 		} else {
