@@ -53,10 +53,13 @@ public class BotService : IBotService
 		var botsInRoom = GetBotsInRoom(roomId);
 		foreach (var bot in botsInRoom)
 		{
-			gameService.LeaveRoom(roomId, bot.ConnectionId);
-			BotRunners[bot.ConnectionId].Cancel();
-			BotRunners.Remove(bot.ConnectionId, out _);
-			Bots.Remove(bot.ConnectionId, out _);
+			if (BotRunners.ContainsKey(bot.ConnectionId))
+			{
+				gameService.LeaveRoom(roomId, bot.ConnectionId);
+				BotRunners[bot.ConnectionId].Cancel();
+				BotRunners.Remove(bot.ConnectionId, out _);
+				Bots.Remove(bot.ConnectionId, out _);
+			}
 		}
 	}
 

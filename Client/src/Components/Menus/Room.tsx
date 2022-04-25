@@ -1,7 +1,7 @@
 import * as signalR from '@microsoft/signalr'
 import { HubConnection, HubConnectionState, ILogger, LogLevel } from '@microsoft/signalr'
 import { useEffect } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { IGameState } from '../../Interfaces/IGameState'
 import Game from '../../Components/Game'
 import TestData from '../../Assets/TestData.js'
@@ -12,12 +12,13 @@ import Popup from '../Popup'
 import HomeButton from '../HomeButton'
 import useState from 'react-usestateref'
 import { motion } from 'framer-motion'
-import CelebrateShaker from "../CelebrateShake";
-import WinnerPopup from "../WinnerPopup";
-import {ServerUrl} from "../../Config";
-import useRoomId from "../../Hooks/useRoomId";
+import CelebrateShaker from '../CelebrateShake'
+import WinnerPopup from '../WinnerPopup'
+import { ServerUrl } from '../../Config'
+import useRoomId from '../../Hooks/useRoomId'
 import toast, { Toaster } from 'react-hot-toast'
-import {IPlayer} from "../../Interfaces/IPlayer";
+import { IPlayer } from '../../Interfaces/IPlayer'
+import { GameType } from '../../Interfaces/ILobby'
 
 interface Props {
 	onGameStarted: () => void
@@ -33,23 +34,23 @@ const Room = ({ onGameStarted }: Props) => {
 	const [winningPlayer, setWinningPlayer] = useState<IPlayer>()
 	const [losingPlayer, setLosingPlayer] = useState<IPlayer>()
 	const [losingPlayerCardsRemaining, setLosingPlayerCardsRemaining] = useState<number>(0)
-
+	const [searchParams, setSearchParams] = useSearchParams()
 
 	useEffect(() => {
-		if(!!roomId){
-			if(connectionRef.current?.state === HubConnectionState.Connected){
+		if (!!roomId) {
+			if (connectionRef.current?.state === HubConnectionState.Connected) {
 				connectionRef.current?.stop()
 			}
 			CreateConnection()
 		}
 	}, [roomId])
 
-	useEffect(()=>{
+	useEffect(() => {
 		let winningpPlayer = gameState?.Players.find((p) => p.Id === gameState.WinnerId)
-		setWinningPlayer(winningpPlayer);
+		setWinningPlayer(winningpPlayer)
 
 		let losingPlayer = gameState?.Players.find((p) => p.Id !== gameState.WinnerId)
-		setLosingPlayer(losingPlayer);
+		setLosingPlayer(losingPlayer)
 
 		setLosingPlayerCardsRemaining((losingPlayer?.HandCards.length ?? 0) + (losingPlayer?.KittyCardsCount ?? 0))
 	}, [gameState?.WinnerId])
@@ -98,7 +99,9 @@ const Room = ({ onGameStarted }: Props) => {
 
 	const JoinRoom = () => {
 		if (!roomIdRef?.current) return
-		connectionRef.current?.invoke('JoinRoom', roomIdRef?.current)
+		let isBotGame = searchParams.get('type') as GameType === "bot"
+		let botDifficulty = searchParams.get('difficulty') ?? "-1"
+		connectionRef.current?.invoke('JoinRoom', roomIdRef?.current, isBotGame, parseInt(botDifficulty))
 	}
 
 	const UpdateGameState = (data: any) => {
@@ -116,14 +119,18 @@ const Room = ({ onGameStarted }: Props) => {
 			{!!gameState && (
 				<>
 					<Game
-						key={connectionId+roomId}
+						key={connectionId + roomId}
 						connection={connection}
 						connectionId={connectionId}
 						gameState={gameState}
 					/>
 					<HomeButton onClick={() => connection?.stop()} />
 					{!!gameState.WinnerId && (
-						<WinnerPopup winnerName={winningPlayer?.Name} loserName={losingPlayer?.Name} cardsRemaining={losingPlayerCardsRemaining}/>
+						<WinnerPopup
+							winnerName={winningPlayer?.Name}
+							loserName={losingPlayer?.Name}
+							cardsRemaining={losingPlayerCardsRemaining}
+						/>
 					)}
 				</>
 			)}

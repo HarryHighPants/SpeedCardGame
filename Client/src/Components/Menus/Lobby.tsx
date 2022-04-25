@@ -46,22 +46,14 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	const UpdateLobbyData = (data: any) => {
 		let lobbyData: ILobby = JSON.parse(data)
 		setLobbyData(lobbyData)
-		let myPlayerInfo = lobbyData.Connections.find((c) => c.ConnectionId === connection?.connectionId)
-
-		let inputGameType = searchParams.get('type') as GameType
-		if (!!inputGameType && !lobbyData.GameStarted && !lobbyData.IsBotGame && inputGameType === 'bot') {
-			let inputDifficulty = searchParams.get('difficulty')
-			let botDifficulty = !!inputDifficulty ? +inputDifficulty : 0
-			onStartGame(true, botDifficulty)
-		}
 	}
 
 	useEffect(() => {
 		setWaitingForPlayers(lobbyData == null || lobbyData.Connections?.length < 2)
 	}, [lobbyData])
 
-	const onStartGame = (botGame: boolean = false, botDifficulty: number = 0) => {
-		connection?.invoke('StartGame', botGame, botDifficulty)
+	const onStartGame = () => {
+		connection?.invoke('StartGame')
 	}
 
 	const UpdateName = (newName: string) => {
@@ -94,7 +86,11 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 				<Header2>Lobby</Header2>
 				<Group>
 					<GameCodeTitle>Game Code:</GameCodeTitle>
-					<CopyableText displayText={roomId} copyText={window.location.href} messageText={"Copied url to clipboard"}/>
+					<CopyableText
+						displayText={roomId}
+						copyText={window.location.href}
+						messageText={'Copied url to clipboard'}
+					/>
 				</Group>
 				<Group>
 					<PlayersTitle>Players:</PlayersTitle>

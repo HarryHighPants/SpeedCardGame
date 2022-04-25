@@ -40,7 +40,7 @@ public class GameHub : Hub
     }
 
 
-    public async Task JoinRoom(string roomId)
+    public async Task JoinRoom(string roomId, bool botGame = false, BotType botType = 0)
     {
         // Remove the connection from any previous room
         var previousRoom = gameService.GetConnectionsRoomId(UserConnectionId);
@@ -62,6 +62,11 @@ public class GameHub : Hub
 
         // Add the player to the room
         gameService.JoinRoom(roomId, UserConnectionId);
+
+        if (botGame)
+        {
+	        botService.AddBotToRoom(roomId, botType);
+        }
 
         // Send gameState for roomId
         await SendGameState(roomId);
@@ -102,14 +107,9 @@ public class GameHub : Hub
         }
     }
 
-    public async Task StartGame(bool botGame = false, BotType botType = 0)
+    public async Task StartGame()
     {
 	    var roomId = gameService.GetConnectionsRoomId(UserConnectionId);
-
-	    if (botGame)
-	    {
-		    botService.AddBotToRoom(roomId, botType);
-	    }
 
         var startGameResult = gameService.StartGame(UserConnectionId);
         if (startGameResult is IErrorResult startGameError)
