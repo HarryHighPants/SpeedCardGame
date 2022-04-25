@@ -9,14 +9,15 @@ interface Props {
 	children: JSX.Element | JSX.Element[]
 	onBackButton?: () => void | undefined
 	onHomeButton?: boolean
+	customZIndex?: number
 }
 
-const Popup = ({ children, onBackButton, onHomeButton, id }: Props) => {
+const Popup = ({ children, onBackButton, onHomeButton, id, customZIndex }: Props) => {
 	const [animatingBack, setAnimatingBack] = useState(false)
 
-	const backPressed= () => {
+	const backPressed = () => {
 		setAnimatingBack(true)
-		if(!!onBackButton){
+		if (!!onBackButton) {
 			onBackButton()
 		}
 	}
@@ -28,12 +29,18 @@ const Popup = ({ children, onBackButton, onHomeButton, id }: Props) => {
 			initial={{ opacity: 0 }}
 			animate={{ opacity: 1 }}
 			exit={{ opacity: 0 }}
+			$customZIndex={customZIndex}
 		>
 			<PopupCenter
-				transition={{ duration: 0.3, type:"tween", ease:"easeOut" }}
+				transition={{ duration: 0.3, type: 'tween', ease: 'easeOut' }}
 				initial={{ opacity: 0, marginLeft: !!onBackButton ? 1000 : -1000, scale: 0 }}
-				animate={{opacity: 1, marginLeft: 0, scale: 1 }}
-				exit={{transition:{ duration: 0.3, type:"tween", ease:"easeIn" }, opacity: 0, marginLeft: animatingBack ? 1000 : -1000, scale: 0 }}
+				animate={{ opacity: 1, marginLeft: 0, scale: 1 }}
+				exit={{
+					transition: { duration: 0.3, type: 'tween', ease: 'easeIn' },
+					opacity: 0,
+					marginLeft: animatingBack ? 1000 : -1000,
+					scale: 0,
+				}}
 			>
 				{!!onBackButton && <BackButton onClick={backPressed} />}
 				{!!onHomeButton && <HomeButton />}
@@ -60,7 +67,7 @@ const PopupCenter = styled(motion.div)`
 	}
 `
 
-const PopupContainer = styled(motion.div)`
+const PopupContainer = styled(motion.div)<{ $customZIndex?: number }>`
 	position: absolute;
 	top: 0;
 	width: 100%;
@@ -70,7 +77,7 @@ const PopupContainer = styled(motion.div)`
 	flex-direction: column;
 	justify-content: center;
 	background: rgba(0, 0, 0, 0.2);
-	z-index: 60;
+	z-index: ${(p) => p.$customZIndex ?? 60};
 	backdrop-filter: blur(3px);
 `
 

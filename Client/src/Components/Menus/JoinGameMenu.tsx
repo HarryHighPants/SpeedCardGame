@@ -10,7 +10,7 @@ const JoinGameMenu = () => {
 
 	const onJoinGame = (gameId: string) => {
 		// Set the game url param
-		navigate(`/${gameId}`)
+		navigate(`/${gameId.toLowerCase()}`)
 	}
 
 	const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {

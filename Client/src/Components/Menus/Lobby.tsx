@@ -1,4 +1,3 @@
-import copyIcon from '../../Assets/copyIcon.png'
 import * as signalR from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -8,6 +7,7 @@ import { HiOutlineDocumentDuplicate } from 'react-icons/hi'
 import Popup from '../Popup'
 import { IGameState } from '../../Interfaces/IGameState'
 import { AnimatePresence, motion } from 'framer-motion'
+import LobbyPlayer from './LobbyPlayer'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
@@ -19,7 +19,9 @@ interface Props {
 const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	let navigate = useNavigate()
 	const [lobbyData, setLobbyData] = useState<ILobby>()
-	const [myPlayerName, setMyPlayerName] = useState<string>('Player')
+	const [myPlayerName, setMyPlayerName] = useState<string>(() =>
+		JSON.parse(localStorage.getItem('playerName') ?? '{playerName: Player}')
+	)
 	const [searchParams, setSearchParams] = useSearchParams()
 	const [waitingForPlayers, setWaitingForPlayers] = useState(true)
 	const [activePlayers, setActivePlayers] = useState<string[]>([])
@@ -51,10 +53,6 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 			let botDifficulty = !!inputDifficulty ? +inputDifficulty : 0
 			onStartGame(true, botDifficulty)
 		}
-
-		if (myPlayerInfo) {
-			setMyPlayerName(myPlayerInfo.Name)
-		}
 	}
 
 	useEffect(() => {
@@ -66,6 +64,9 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	}
 
 	const UpdateName = (newName: string) => {
+		// Save it to local storage
+		localStorage.setItem('playerName', JSON.stringify(newName))
+
 		// Update our name on the server
 		connection?.invoke('UpdateName', newName)
 
@@ -185,40 +186,4 @@ const CopyButton = styled(HiOutlineDocumentDuplicate)`
 const Header2 = styled.h2`
 	width: 250px;
 	margin-bottom: 0px;
-`
-
-const LobbyPlayer = (
-	connectionId: string,
-	myPlayerName: string,
-	player: IPlayerConnection,
-	onUpdateName: (newName: string) => void,
-	index: number
-) => {
-	return (
-		<div key={`lobby-player-${player.ConnectionId}`} style={{ display: 'flex' }}>
-			<p style={{ margin: 0, paddingRight: 10, width: 13 }}>{index + 1}. </p>
-			{player.ConnectionId == connectionId ? (
-				<input
-					style={{
-						marginTop: -5,
-						height: 22,
-						fontSize: 'medium',
-						fontFamily: 'inherit',
-						width: "100%"
-					}}
-					key={player.ConnectionId}
-					maxLength={20}
-					value={myPlayerName}
-					onChange={(e) => onUpdateName(e.target.value)}
-				/>
-			) : (
-				<PlayerName key={player.ConnectionId}>{player.Name}</PlayerName>
-			)}
-		</div>
-	)
-}
-
-const PlayerName = styled.p`
-	margin: 0;
-	text-align: left;
 `

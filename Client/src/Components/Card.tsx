@@ -90,9 +90,9 @@ const Card = memo(({ card, onDragEnd, draggingCardUpdated }: Props) => {
 			zIndex: 0,
 			transition: {
 				ease: 'easeOut',
-				duration: 0.2,
+				duration: 0.02,
 				opacity: {
-					delay: 1,
+					delay: 0,
 				},
 			},
 		},

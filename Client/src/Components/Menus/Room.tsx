@@ -15,6 +15,7 @@ import { motion } from 'framer-motion'
 import CelebrateShaker from "../CelebrateShake";
 import WinnerPopup from "../WinnerPopup";
 import {ServerUrl} from "../../Config";
+import useRoomId from "../../Hooks/useRoomId";
 
 interface Props {
 	onGameStarted: () => void
@@ -24,21 +25,18 @@ const Room = ({ onGameStarted }: Props) => {
 	let navigate = useNavigate()
 	const [connection, setConnection, connectionRef] = useState<HubConnection>()
 	const [gameState, setGameState] = useState<IGameState>()
-	const [roomId, setRoomId, roomIdRef] = useState('')
+	const [roomId, roomIdRef] = useRoomId()
 	const [connectionStatus, setConnectionStatus] = useState<HubConnectionState | undefined>()
 	const [connectionId, setConnectionId] = useState<string | null>()
 
 	useEffect(() => {
-		let newRoomId = window.location.pathname.replace('/', '')
-		if(!!newRoomId){
+		if(!!roomId){
 			if(connectionRef.current?.state === HubConnectionState.Connected){
 				connectionRef.current?.stop()
 			}
 			CreateConnection()
 		}
-
-		setRoomId(newRoomId)
-	}, [window.location.pathname])
+	}, [roomId])
 
 	const CreateConnection = () => {
 		// Builds the SignalR connection, mapping it to /server

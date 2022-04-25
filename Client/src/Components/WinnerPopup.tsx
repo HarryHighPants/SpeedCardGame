@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import CelebrateShaker from './CelebrateShake'
 import Popup from './Popup'
+import useRoomId from '../Hooks/useRoomId'
 
 interface Props {
 	name: string | undefined
@@ -10,16 +11,17 @@ interface Props {
 const WinnerPopup = ({ name }: Props) => {
 	const navigate = useNavigate()
 	const [replayUrl, setReplayUrl] = useState('')
+	const [searchParams, setSearchParams] = useSearchParams()
 
 	useEffect(() => {
 		let currentRoomId = window.location.pathname.replace('/', '')
 		let roomNumber = parseInt(currentRoomId.replace(/\D/g, '')) || 0
 		let roomIdWithoutNumbers = currentRoomId.replace(/[0-9]/g, '')
-		setReplayUrl(`/${roomIdWithoutNumbers}${roomNumber + 1}`)
+		setReplayUrl(`/${roomIdWithoutNumbers}${roomNumber + 1}${window.location.search}`)
 	}, [])
 
 	return (
-		<Popup id={'WinnerPopup'} onHomeButton={true}>
+		<Popup id={'WinnerPopup'} onHomeButton={true} customZIndex={62}>
 			<h2>Game over</h2>
 			<h4
 				style={{
@@ -35,7 +37,7 @@ const WinnerPopup = ({ name }: Props) => {
 				<CelebrateShaker startDelay={0.2} />
 			</div>
 			<button
-				style={{marginTop:25}}
+				style={{ marginTop: 25 }}
 				onClick={() => {
 					navigate(replayUrl)
 					window.location.reload()
