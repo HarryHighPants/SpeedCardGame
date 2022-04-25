@@ -20,6 +20,7 @@ interface Props {
 const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	let navigate = useNavigate()
 	const [lobbyData, setLobbyData] = useState<ILobby>()
+	const [inLobby, setInLobby] = useState<boolean>(false)
 	const [myPlayerName, setMyPlayerName] = useState<string>(() =>
 		JSON.parse(localStorage.getItem('playerName') ?? '{playerName: Player}')
 	)
@@ -38,6 +39,22 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	}, [connection])
 
 	useEffect(() => {
+		if (!connection) return
+		connection.on('UpdateLobbyState', UpdateLobbyData)
+
+		return () => {
+			connection.off('UpdateLobbyState', UpdateLobbyData)
+		}
+	}, [connection])
+
+	useEffect(()=>{
+		if (!inLobby) return
+		console.log("updating name",myPlayerName)
+		// Update our name on the server
+		connection?.invoke('UpdateName', myPlayerName)
+	}, [myPlayerName, inLobby])
+
+	useEffect(() => {
 		let activePlayers = (gameState?.Players.filter((p) => p.Id !== '0') ?? []).map((p) => p.Id)
 		setActivePlayers(activePlayers)
 		setSpectating(activePlayers.length >= 2 && !activePlayers.find((p) => p === connection?.connectionId))
@@ -46,6 +63,7 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	const UpdateLobbyData = (data: any) => {
 		let lobbyData: ILobby = JSON.parse(data)
 		setLobbyData(lobbyData)
+		setInLobby(lobbyData !== null)
 	}
 
 	useEffect(() => {
@@ -59,9 +77,6 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	const UpdateName = (newName: string) => {
 		// Save it to local storage
 		localStorage.setItem('playerName', JSON.stringify(newName))
-
-		// Update our name on the server
-		connection?.invoke('UpdateName', newName)
 
 		// Locally set our name
 		setMyPlayerName(newName)
