@@ -25,7 +25,7 @@ const AutomatedGame = () => {
 		if (isActive) {
 			interval = window.setInterval(() => {
 				setCurrentStateIndex((currentStateIndex) => currentStateIndex + 1)
-			}, 500)
+			}, 1000)
 		}
 		return () => clearInterval(interval)
 	}, [isActive])

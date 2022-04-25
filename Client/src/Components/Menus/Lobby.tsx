@@ -8,6 +8,7 @@ import Popup from '../Popup'
 import { IGameState } from '../../Interfaces/IGameState'
 import { AnimatePresence, motion } from 'framer-motion'
 import LobbyPlayer from './LobbyPlayer'
+import CopyableText from '../CopyableText'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
@@ -93,10 +94,7 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 				<Header2>Lobby</Header2>
 				<Group>
 					<GameCodeTitle>Game Code:</GameCodeTitle>
-					<GameCodeWrapper>
-						<input value={roomId} disabled={true} />
-						<CopyButton onClick={() => navigator.clipboard.writeText(window.location.href)} />
-					</GameCodeWrapper>
+					<CopyableText displayText={roomId} copyText={window.location.href} messageText={"Copied url to clipboard"}/>
 				</Group>
 				<Group>
 					<PlayersTitle>Players:</PlayersTitle>
@@ -164,23 +162,6 @@ const PlayersContainer = styled.div`
 
 const GameCodeTitle = styled.p`
 	margin-bottom: 5px;
-`
-
-const GameCodeWrapper = styled.div`
-	display: flex;
-	justify-content: center;
-	width: 100%;
-`
-
-const CopyButton = styled(HiOutlineDocumentDuplicate)`
-	width: 25px;
-	height: 25px;
-	color: white;
-	cursor: pointer;
-
-	&:hover {
-		color: #bebebe;
-	}
 `
 
 const Header2 = styled.h2`

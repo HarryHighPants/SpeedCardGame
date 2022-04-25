@@ -16,6 +16,8 @@ import CelebrateShaker from "../CelebrateShake";
 import WinnerPopup from "../WinnerPopup";
 import {ServerUrl} from "../../Config";
 import useRoomId from "../../Hooks/useRoomId";
+import toast, { Toaster } from 'react-hot-toast'
+import {IPlayer} from "../../Interfaces/IPlayer";
 
 interface Props {
 	onGameStarted: () => void
@@ -28,6 +30,10 @@ const Room = ({ onGameStarted }: Props) => {
 	const [roomId, roomIdRef] = useRoomId()
 	const [connectionStatus, setConnectionStatus] = useState<HubConnectionState | undefined>()
 	const [connectionId, setConnectionId] = useState<string | null>()
+	const [winningPlayer, setWinningPlayer] = useState<IPlayer>()
+	const [losingPlayer, setLosingPlayer] = useState<IPlayer>()
+	const [losingPlayerCardsRemaining, setLosingPlayerCardsRemaining] = useState<number>(0)
+
 
 	useEffect(() => {
 		if(!!roomId){
@@ -37,6 +43,16 @@ const Room = ({ onGameStarted }: Props) => {
 			CreateConnection()
 		}
 	}, [roomId])
+
+	useEffect(()=>{
+		let winningpPlayer = gameState?.Players.find((p) => p.Id === gameState.WinnerId)
+		setWinningPlayer(winningpPlayer);
+
+		let losingPlayer = gameState?.Players.find((p) => p.Id !== gameState.WinnerId)
+		setLosingPlayer(losingPlayer);
+
+		setLosingPlayerCardsRemaining((losingPlayer?.HandCards.length ?? 0) + (losingPlayer?.KittyCardsCount ?? 0))
+	}, [gameState?.WinnerId])
 
 	const CreateConnection = () => {
 		// Builds the SignalR connection, mapping it to /server
@@ -95,6 +111,8 @@ const Room = ({ onGameStarted }: Props) => {
 
 	return (
 		<>
+			<Toaster />
+
 			{!!gameState && (
 				<>
 					<Game
@@ -105,7 +123,7 @@ const Room = ({ onGameStarted }: Props) => {
 					/>
 					<HomeButton onClick={() => connection?.stop()} />
 					{!!gameState.WinnerId && (
-						<WinnerPopup name={gameState.Players.find((p) => p.Id === gameState.WinnerId)?.Name}/>
+						<WinnerPopup winnerName={winningPlayer?.Name} loserName={losingPlayer?.Name} cardsRemaining={losingPlayerCardsRemaining}/>
 					)}
 				</>
 			)}
