@@ -22,7 +22,7 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	const [lobbyData, setLobbyData] = useState<ILobby>()
 	const [inLobby, setInLobby] = useState<boolean>(false)
 	const [myPlayerName, setMyPlayerName] = useState<string>(() =>
-		JSON.parse(localStorage.getItem('playerName') ?? '{playerName: Player}')
+		JSON.parse(localStorage.getItem('playerName') ?? `"Player"`)
 	)
 	const [searchParams, setSearchParams] = useSearchParams()
 	const [waitingForPlayers, setWaitingForPlayers] = useState(true)

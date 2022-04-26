@@ -14,11 +14,11 @@ import useState from 'react-usestateref'
 import { motion } from 'framer-motion'
 import CelebrateShaker from '../CelebrateShake'
 import WinnerPopup from '../WinnerPopup'
-import { ServerUrl } from '../../Config'
 import useRoomId from '../../Hooks/useRoomId'
 import toast, { Toaster } from 'react-hot-toast'
 import { IPlayer } from '../../Interfaces/IPlayer'
 import { GameType } from '../../Interfaces/ILobby'
+import config from "../../Config";
 
 interface Props {
 	onGameStarted: () => void
@@ -56,9 +56,10 @@ const Room = ({ onGameStarted }: Props) => {
 	}, [gameState?.WinnerId])
 
 	const CreateConnection = () => {
+		console.log("connecting to: ", config.apiGateway.URL)
 		// Builds the SignalR connection, mapping it to /server
 		let signalRConnection = new signalR.HubConnectionBuilder()
-			.withUrl(ServerUrl)
+			.withUrl(config.apiGateway.URL)
 			.configureLogging(signalR.LogLevel.Information)
 			.build()
 

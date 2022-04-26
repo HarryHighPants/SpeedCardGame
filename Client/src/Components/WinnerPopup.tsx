@@ -28,12 +28,8 @@ const WinnerPopup = ({ winnerName, loserName, cardsRemaining }: Props) => {
 
 	const onShare = () => {
 		let shareText = `Speed Online ♦️\n🥇 ${winnerName}\n🥈 ${loserName}\n${winnerName} beat ${loserName} by ${cardsRemaining} card${cardsRemaining > 1 ? "s" : ""}`
-		if (navigator['share']) {
-			navigator.share({ title: 'Speed Online', text: shareText })
-		} else {
-			navigator.clipboard.writeText(shareText)
-			toast.success('Share text copied to clipboard!')
-		}
+		navigator.clipboard.writeText(shareText)
+		toast.success('Share text copied to clipboard!')
 	}
 
 	return (
