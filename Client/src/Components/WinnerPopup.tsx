@@ -9,12 +9,13 @@ import styled from 'styled-components'
 import { HiShare } from 'react-icons/hi'
 
 interface Props {
+	playerWon: boolean
 	winnerName: string | undefined
 	loserName: string | undefined
 	cardsRemaining: number
 }
 
-const WinnerPopup = ({ winnerName, loserName, cardsRemaining }: Props) => {
+const WinnerPopup = ({ winnerName, loserName, cardsRemaining, playerWon }: Props) => {
 	const navigate = useNavigate()
 	const [replayUrl, setReplayUrl] = useState('')
 	const [searchParams, setSearchParams] = useSearchParams()
@@ -27,7 +28,8 @@ const WinnerPopup = ({ winnerName, loserName, cardsRemaining }: Props) => {
 	}, [])
 
 	const onShare = () => {
-		let shareText = `Speed Online ♦️\n🥇 ${winnerName}\n🥈 ${loserName}\n${winnerName} beat ${loserName} by ${cardsRemaining} card${cardsRemaining > 1 ? "s" : ""}`
+		let outcomeText = (playerWon ? `👑 beat ${loserName}` : `☠️ lost against ${winnerName}`) + ` by ${cardsRemaining} card${cardsRemaining > 1 ? "s" : ""}`
+		let shareText = `${outcomeText}\n♦️speed.harryab.com`
 		navigator.clipboard.writeText(shareText)
 		toast.success('Share text copied to clipboard!')
 	}

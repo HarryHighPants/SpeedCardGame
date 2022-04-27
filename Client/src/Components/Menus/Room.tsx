@@ -32,6 +32,7 @@ const Room = ({ onGameStarted }: Props) => {
 	const [connectionStatus, setConnectionStatus] = useState<HubConnectionState | undefined>()
 	const [connectionId, setConnectionId] = useState<string | null>()
 	const [winningPlayer, setWinningPlayer] = useState<IPlayer>()
+	const [playerWon, setPlayerWon] = useState<boolean>(false)
 	const [losingPlayer, setLosingPlayer] = useState<IPlayer>()
 	const [losingPlayerCardsRemaining, setLosingPlayerCardsRemaining] = useState<number>(0)
 	const [searchParams, setSearchParams] = useSearchParams()
@@ -51,6 +52,8 @@ const Room = ({ onGameStarted }: Props) => {
 
 		let losingPlayer = gameState?.Players.find((p) => p.Id !== gameState.WinnerId)
 		setLosingPlayer(losingPlayer)
+
+		setPlayerWon(gameState?.WinnerId === connectionId)
 
 		setLosingPlayerCardsRemaining((losingPlayer?.HandCards.length ?? 0) + (losingPlayer?.KittyCardsCount ?? 0))
 	}, [gameState?.WinnerId])
@@ -131,6 +134,7 @@ const Room = ({ onGameStarted }: Props) => {
 							winnerName={winningPlayer?.Name}
 							loserName={losingPlayer?.Name}
 							cardsRemaining={losingPlayerCardsRemaining}
+							playerWon={playerWon}
 						/>
 					)}
 				</>
