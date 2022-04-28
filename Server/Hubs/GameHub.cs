@@ -199,6 +199,11 @@ public class GameHub : Hub
             throw new HubException(gameStateError.Message, new ApplicationException(gameStateError.Message));
         }
 
+        if (gameStateResult.Data.WinnerId != null)
+        {
+	        Console.WriteLine($"{roomId} has ended");
+        }
+
         // Send the gameState to the roomId
         var jsonData = JsonConvert.SerializeObject(gameStateResult.Data);
         await hubContext.Clients.Group(roomId).SendAsync("UpdateGameState", jsonData);

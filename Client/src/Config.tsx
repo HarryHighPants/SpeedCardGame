@@ -12,7 +12,7 @@ const dev = {
 
 const prod = {
 	apiGateway: {
-		URL: `https://serve.speed.limajuice.com/server`,
+		URL: `https://server.harryab.com:10000/server`,
 	},
 };
 

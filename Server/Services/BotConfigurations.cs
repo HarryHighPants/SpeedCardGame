@@ -14,7 +14,8 @@ public class BotConfigurations
 {
 	private static BotData GetDailyBot()
 	{
-		var dayIndex = DateTime.Today.Subtract(DateTime.Parse("12-April-2022")).Days;
+		// Add 10 hours for AEST
+		var dayIndex = DateTime.Today.AddHours(10).Subtract(DateTime.Parse("12-April-2022")).Days;
 		var botName = BotNameCreator.GetRandomBotName(dayIndex);
 		var random = new Random(dayIndex);
 		var difficultyMultiplier = random.Next(50, 150) * 0.01;
