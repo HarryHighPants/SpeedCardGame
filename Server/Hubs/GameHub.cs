@@ -133,13 +133,23 @@ public class GameHub : Hub
 
 	public async Task TryPlayCard(int cardId, int centerPileId)
 	{
+		var roomId = gameService.GetConnectionsRoomId(UserConnectionId);
+		var initialGameState = gameService.GetGameStateDto(roomId);
 		var tryPlayCardResult = gameService.TryPlayCard(UserConnectionId, cardId, centerPileId);
-		await SendGameState(gameService.GetConnectionsRoomId(UserConnectionId));
+		await SendGameState(roomId);
 		if (tryPlayCardResult is IErrorResult tryPlayCardResultError)
 		{
 			await SendConnectionMessage(tryPlayCardResultError.Message);
 			throw new HubException(tryPlayCardResultError.Message,
 				new UnauthorizedAccessException(tryPlayCardResultError.Message));
+		}
+
+		// Check if the game has just ended
+		var updatedGameState = gameService.GetGameStateDto(roomId);
+		if (initialGameState.Success && initialGameState.Data.WinnerId == null && updatedGameState.Success &&
+		    updatedGameState.Data.WinnerId != null)
+		{
+			await HandleGameOver(roomId);
 		}
 	}
 
@@ -212,11 +222,6 @@ public class GameHub : Hub
 			throw new HubException(gameStateError.Message, new ApplicationException(gameStateError.Message));
 		}
 
-		if (gameStateResult.Data.WinnerId != null)
-		{
-			await HandleGameOver(roomId);
-		}
-
 		// Send the gameState to the roomId
 		var jsonData = JsonConvert.SerializeObject(gameStateResult.Data);
 		await hubContext.Clients.Group(roomId).SendAsync("UpdateGameState", jsonData);
@@ -235,6 +240,8 @@ public class GameHub : Hub
 			throw new HubException(gameStateError.Message, new ApplicationException(gameStateError.Message));
 		}
 
+		var bot = botService.GetBotsInRoom(roomId).FirstOrDefault();
+
 		var gameState = gameService.GetGame(roomId).State;
 		var players = gameService.ConnectionsInRoom(roomId);
 		var winner = players.Single(p => p.PlayerId != null && p.ConnectionId == gameStateResult.Data.WinnerId);
@@ -243,26 +250,55 @@ public class GameHub : Hub
 		var dbWinner = await gameResultContext.Players.FindAsync(winner.PersistentPlayerId);
 		if (dbWinner == null)
 		{
-			dbWinner = new PlayerDao {Id = winner.PersistentPlayerId, Name = winner.Name};
+			dbWinner = new PlayerDao
+			{
+				Id = winner.PersistentPlayerId,
+				Name = winner.Name,
+				DailyWins = 0,
+				DailyLosses = 0,
+				Elo = 500
+			};
 			gameResultContext.Players.Add(dbWinner);
 			await gameResultContext.SaveChangesAsync();
 		}
 
+		dbWinner.Name = winner.Name;
+
 		var dbLoser = await gameResultContext.Players.FindAsync(loser.PersistentPlayerId);
 		if (dbLoser == null)
 		{
-			dbLoser = new PlayerDao {Id = loser.PersistentPlayerId, Name = loser.Name};
+			dbLoser = new PlayerDao {Id = loser.PersistentPlayerId, Name = loser.Name, Elo = 500};
 			gameResultContext.Players.Add(dbLoser);
 			await gameResultContext.SaveChangesAsync();
 		}
 
+		dbLoser.Name = loser.Name;
+
+		if (bot is {Data.Type: BotType.Daily})
+		{
+			dbWinner.DailyWins += 1;
+		}
+
+		var eloDifference = (int)(Math.Abs(dbLoser.Elo - dbWinner.Elo) * 0.3);
+		var eloWinnerPoints = (int)(1 / Math.Log(eloDifference) * 150);
+		if (dbWinner.Elo < dbLoser.Elo)
+		{
+			dbWinner.Elo += eloDifference;
+			dbLoser.Elo -= eloDifference;
+		}
+
+		dbWinner.Elo += eloWinnerPoints;
+		dbWinner.Elo -= eloWinnerPoints;
+
 		gameResultContext.GameResults.Add(new GameResultDao
 		{
-			Id = Guid.NewGuid(), Turns = gameState.MoveHistory.Count, LostBy = 1, Winner = dbWinner, Loser = dbLoser
+			Id = Guid.NewGuid(),
+			Turns = gameState.MoveHistory.Count,
+			LostBy = 1,
+			Winner = dbWinner,
+			Loser = dbLoser
 		});
 
-		dbWinner.Name = winner.Name;
-		dbLoser.Name = loser.Name;
 		await gameResultContext.SaveChangesAsync();
 	}
 

@@ -3,9 +3,8 @@ namespace Engine;
 using Helpers;
 using Models;
 
-public struct BotData
+public class BotData
 {
-	public Guid PersistentId;
 	public string Name;
 	public string? CustomIntroMessage;
 	public string? CustomWinMessage;

@@ -7,11 +7,12 @@ using Engine.Helpers;
 using Engine.Models;
 using Hubs;
 using Microsoft.AspNetCore.SignalR;
+using Models.Database;
 using Newtonsoft.Json;
 
 public class BotService : IBotService
 {
-	public record Bot(string ConnectionId, BotData Data, string roomId);
+	public record Bot(string ConnectionId, WebBotData Data, string roomId);
 
 	private ConcurrentDictionary<string, Bot> Bots = new ConcurrentDictionary<string, Bot>();
 
@@ -20,11 +21,13 @@ public class BotService : IBotService
 
 	private readonly IHubContext<GameHub> hubContext;
 	private readonly IGameService gameService;
+	private readonly GameResultContext gameResultContext;
 
-	public BotService(IGameService gameService, IHubContext<GameHub> hubContext)
+	public BotService(GameResultContext gameResultContext, IGameService gameService, IHubContext<GameHub> hubContext)
 	{
 		this.gameService = gameService;
 		this.hubContext = hubContext;
+		this.gameResultContext = gameResultContext;
 	}
 
 	public void AddBotToRoom(string roomId, BotType type)
@@ -35,7 +38,24 @@ public class BotService : IBotService
 		gameService.JoinRoom(roomId, botId, botData.PersistentId);
 		gameService.UpdateName(bot.Data.Name, botId);
 		Bots.TryAdd(botId, bot);
+		SeedBot(botData);
 	}
+
+	public void SeedBot(WebBotData botData)
+	{
+		var bot = gameResultContext.Players.Find(botData.PersistentId);
+		if (bot == null)
+		{
+			gameResultContext.Players.Add(new PlayerDao
+			{
+				Id = botData.PersistentId, Name = botData.Name, Elo = botData.Elo
+			});
+			gameResultContext.SaveChanges();
+		}
+	}
+
+	public List<Bot> GetBotsInRoom(string roomId) =>
+		Bots.Where(b => b.Value.roomId == roomId).Select(b => b.Value).ToList();
 
 	public int BotsInRoomCount(string roomId) => GetBotsInRoom(roomId).Count;
 
@@ -70,8 +90,6 @@ public class BotService : IBotService
 		}
 	}
 
-	private List<Bot> GetBotsInRoom(string roomId) =>
-		Bots.Where(b => b.Value.roomId == roomId).Select(b => b.Value).ToList();
 
 	private async Task RunBot(Bot bot, CancellationToken cancellationToken)
 	{
