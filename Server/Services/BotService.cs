@@ -32,7 +32,7 @@ public class BotService : IBotService
 		var botData = BotConfigurations.GetBot(type);
 		var botId = Guid.NewGuid().ToString();
 		var bot = new Bot(botId, botData, roomId);
-		gameService.JoinRoom(roomId, botId);
+		gameService.JoinRoom(roomId, botId, botData.PersistentId);
 		gameService.UpdateName(bot.Data.Name, botId);
 		Bots.TryAdd(botId, bot);
 	}

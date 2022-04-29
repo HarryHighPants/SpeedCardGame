@@ -16,7 +16,7 @@ public class InMemoryGameService : IGameService
 
     }
 
-    public void JoinRoom(string roomId, string connectionId)
+    public void JoinRoom(string roomId, string connectionId, Guid persistentPlayerId)
     {
         // Create the room if we don't have one yet
         if (!rooms.ContainsKey(roomId))
@@ -28,7 +28,7 @@ public class InMemoryGameService : IGameService
         var room = rooms[roomId];
         if (!room.Connections.ContainsKey(connectionId))
         {
-            room.Connections.TryAdd(connectionId, new Connection {ConnectionId = connectionId, Name = "Player"});
+            room.Connections.TryAdd(connectionId, new Connection {ConnectionId = connectionId, Name = "Player", PersistentPlayerId = persistentPlayerId});
         }
 
         if (GameStarted(roomId))
@@ -45,6 +45,16 @@ public class InMemoryGameService : IGameService
 	    }
 
 	    return rooms[roomId].Connections.Count;
+    }
+
+    public List<Connection> ConnectionsInRoom(string roomId)
+    {
+	    if (!rooms.ContainsKey(roomId))
+	    {
+		    return new List<Connection>();
+	    }
+
+	    return rooms[roomId].Connections.Values.ToList();
     }
 
     public void LeaveRoom(string roomId, string connectionId)

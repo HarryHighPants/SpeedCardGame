@@ -9,8 +9,9 @@ using Engine.Models;
 
 public interface IGameService
 {
-	public void JoinRoom(string roomId, string connectionId);
+	public void JoinRoom(string roomId, string connectionId, Guid persistentPlayerId);
 	public int ConnectionsInRoomCount(string roomId);
+	public List<Connection> ConnectionsInRoom(string roomId);
 
 	public void LeaveRoom(string roomId, string connectionId);
 
@@ -63,8 +64,10 @@ public class Room
 
 public class Connection
 {
+	public Guid PersistentPlayerId;
 	public string ConnectionId;
 	public string Name;
+	// GameEngine Player index
 	public int? PlayerId;
 }
 

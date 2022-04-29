@@ -5,6 +5,7 @@ using Models;
 
 public struct BotData
 {
+	public Guid PersistentId;
 	public string Name;
 	public string? CustomIntroMessage;
 	public string? CustomWinMessage;

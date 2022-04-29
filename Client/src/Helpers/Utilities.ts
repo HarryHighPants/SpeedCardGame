@@ -10,15 +10,6 @@ export function map(current: number, in_min: number, in_max: number, out_min: nu
 	const mapped: number = ((current - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min
 	return clamp(mapped, out_min, out_max)
 }
-export function uuid() {
-	var dt = new Date().getTime()
-	var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-		var r = (dt + Math.random() * 16) % 16 | 0
-		dt = Math.floor(dt / 16)
-		return (c == 'x' ? r : (r & 0x3) | 0x8).toString(16)
-	})
-	return uuid
-}
 
 export const GetOffsetInfo = (ourRect: DOMRect | undefined, draggingCardRect: DOMRect | undefined) => {
 	let distance = GetDistanceRect(draggingCardRect, ourRect)

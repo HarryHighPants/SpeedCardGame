@@ -27,14 +27,15 @@
     "typescript": "^4.6.3",
     "underscore": "^1.13.2",
     "unique-names-generator": "^4.7.1",
+    "uuid": "^8.3.2",
     "web-vitals": "^2.1.4"
   },
-	"scripts": {
-		"start": "REACT_APP_STAGE=dev react-scripts start",
-		"build": "REACT_APP_STAGE=prod react-scripts build",
-		"test": "react-scripts test",
-		"eject": "react-scripts eject"
-	},
+  "scripts": {
+    "start": "REACT_APP_STAGE=dev react-scripts start",
+    "build": "REACT_APP_STAGE=prod react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
