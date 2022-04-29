@@ -14,7 +14,9 @@ public class BotService : IBotService
 	public record Bot(string ConnectionId, BotData Data, string roomId);
 
 	private ConcurrentDictionary<string, Bot> Bots = new ConcurrentDictionary<string, Bot>();
-	private ConcurrentDictionary<string, CancellationTokenSource> BotRunners = new ConcurrentDictionary<string, CancellationTokenSource>();
+
+	private ConcurrentDictionary<string, CancellationTokenSource> BotRunners =
+		new ConcurrentDictionary<string, CancellationTokenSource>();
 
 	private readonly IHubContext<GameHub> hubContext;
 	private readonly IGameService gameService;
@@ -44,7 +46,11 @@ public class BotService : IBotService
 		{
 			var cancellationSource = new CancellationTokenSource();
 			BotRunners.TryAdd(bot.ConnectionId, cancellationSource);
-			RunBot(bot, cancellationSource.Token);
+			RunBot(bot, cancellationSource.Token).ContinueWith((task, _)=>{
+				if (task.Exception != null)
+				{
+					Console.WriteLine(task.Exception);
+				}}, cancellationSource);
 		}
 	}
 
@@ -64,7 +70,8 @@ public class BotService : IBotService
 		}
 	}
 
-	private List<Bot> GetBotsInRoom(string roomId) => Bots.Where(b => b.Value.roomId == roomId).Select(b=>b.Value).ToList();
+	private List<Bot> GetBotsInRoom(string roomId) =>
+		Bots.Where(b => b.Value.roomId == roomId).Select(b => b.Value).ToList();
 
 	private async Task RunBot(Bot bot, CancellationToken cancellationToken)
 	{
@@ -72,23 +79,19 @@ public class BotService : IBotService
 
 		var checks = gameService.GetGame(bot.roomId).gameEngine.Checks;
 		var playerId = gameService.GetConnectionsPlayer(bot.ConnectionId).PlayerId;
+
 		// Wait for the cards to animate in
 		await Task.Delay(5000, cancellationToken);
-		while (!cancellationToken.IsCancellationRequested || gameService.GetGameStateDto(bot.roomId).Data.WinnerId == null)
+		while (!cancellationToken.IsCancellationRequested &&
+		       gameService.GetGameStateDto(bot.roomId).Data.WinnerId == null)
 		{
-				if (playerId == null)
+			var move = BotRunner.GetMove(checks, GetGameState(bot.roomId), playerId.Value);
+			if (move.Success)
+			{
+				var result = move.Data.Type switch
 				{
-					continue;
-				}
-				var move = BotRunner.GetMove(checks, gameService.GetGame(bot.roomId).State, playerId.Value);
-				if (move is IErrorResult)
-				{
-					continue;
-				}
-
-				var result =  move.Data.Type switch
-				{
-					MoveType.PlayCard => gameService.TryPlayCard(bot.ConnectionId, move.Data.CardId.Value, move.Data.CenterPileIndex.Value),
+					MoveType.PlayCard => gameService.TryPlayCard(bot.ConnectionId, move.Data.CardId.Value,
+						move.Data.CenterPileIndex.Value),
 					MoveType.PickupCard => gameService.TryPickupFromKitty(bot.ConnectionId),
 					MoveType.RequestTopUp => gameService.TryRequestTopUp(bot.ConnectionId),
 					_ => throw new ArgumentOutOfRangeException()
@@ -98,15 +101,37 @@ public class BotService : IBotService
 				{
 					throw new Exception(moveError.Message);
 				}
+
 				await SendGameState(bot.roomId);
-				var turnDelay = random.Next(bot.Data.QuickestResponseTimeMs, bot.Data.SlowestResponseTimeMs);
-				if (move.Data.Type == MoveType.PickupCard)
-				{
-					turnDelay = bot.Data.PickupIntervalMs;
-				}
-				await Task.Delay(turnDelay, cancellationToken);
+			}
+
+			var turnDelay = random.Next(bot.Data.QuickestResponseTimeMs, bot.Data.SlowestResponseTimeMs);
+			if (move.Success && move.Data.Type == MoveType.PickupCard)
+			{
+				turnDelay = bot.Data.PickupIntervalMs;
+			}
+			var cardsPlayed = GetCardsPlayed(bot.roomId);
+			await Task.Delay(turnDelay, cancellationToken);
+
+			// Wait if we have just topped up
+			var gameState = GetGameState(bot.roomId);
+			if (gameState.MoveHistory.Count > 0 && gameState.MoveHistory.Last().Type == MoveType.TopUp)
+			{
+				await Task.Delay(2000, cancellationToken);
+			}
+
+			// Keep waiting until the center piles stop changing
+			while (cardsPlayed != GetCardsPlayed(bot.roomId))
+			{
+				cardsPlayed = GetCardsPlayed(bot.roomId);
+				await Task.Delay((int)(turnDelay*0.5), cancellationToken);
+			}
 		}
 	}
+
+	private GameState GetGameState(string roomId) => gameService.GetGame(roomId).State;
+
+	private int GetCardsPlayed(string roomId) => GetGameState(roomId).CenterPiles.Select(cp => cp.Cards.Count).Sum();
 
 	private async Task SendGameState(string roomId)
 	{

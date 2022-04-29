@@ -15,7 +15,8 @@ public class BotConfigurations
 	private static BotData GetDailyBot()
 	{
 		// Add 10 hours for AEST
-		var dayIndex = DateTime.Today.AddHours(10).Subtract(DateTime.Parse("12-April-2022")).Days;
+		var dayIndex = DateOnly.FromDateTime(DateTime.Today.AddHours(10)).DayNumber;
+
 		var botName = BotNameCreator.GetRandomBotName(dayIndex);
 		var random = new Random(dayIndex);
 		var difficultyMultiplier = random.Next(50, 150) * 0.01;
@@ -73,7 +74,7 @@ public class BotConfigurations
                 CustomLoseMessage = "Oof, rough one",
                 CustomWinMessage = "Down falls Mikaela and her wicked ways",
                 QuickestResponseTimeMs = 1000,
-                SlowestResponseTimeMs = 4000,
+                SlowestResponseTimeMs = 3500,
                 PickupIntervalMs = 750
             }
         },
@@ -86,7 +87,7 @@ public class BotConfigurations
                 CustomLoseMessage = "No chance",
                 CustomWinMessage = "No one will ever see this message so it doesn't matter",
                 QuickestResponseTimeMs = 1000,
-                SlowestResponseTimeMs = 2500,
+                SlowestResponseTimeMs = 2000,
                 PickupIntervalMs = 500
             }
         }
