@@ -23,6 +23,9 @@ namespace Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("Daily")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("LoserId")
                         .HasColumnType("TEXT");
 
@@ -53,10 +56,16 @@ namespace Server.Migrations
                     b.Property<int>("DailyLosses")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("DailyWinStreak")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("DailyWins")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Elo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MaxDailyWinStreak")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")

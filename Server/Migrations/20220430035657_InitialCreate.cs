@@ -14,7 +14,12 @@ namespace Server.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false)
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Elo = table.Column<int>(type: "INTEGER", nullable: false),
+                    DailyWinStreak = table.Column<int>(type: "INTEGER", nullable: false),
+                    MaxDailyWinStreak = table.Column<int>(type: "INTEGER", nullable: false),
+                    DailyWins = table.Column<int>(type: "INTEGER", nullable: false),
+                    DailyLosses = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -29,7 +34,8 @@ namespace Server.Migrations
                     WinnerId = table.Column<Guid>(type: "TEXT", nullable: false),
                     LoserId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Turns = table.Column<int>(type: "INTEGER", nullable: false),
-                    LostBy = table.Column<int>(type: "INTEGER", nullable: false)
+                    LostBy = table.Column<int>(type: "INTEGER", nullable: false),
+                    Daily = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {

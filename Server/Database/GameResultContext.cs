@@ -23,6 +23,7 @@ public class GameResultDao
 	public PlayerDao Loser { get; set; }
 	public int Turns { get; set; }
 	public int LostBy { get; set; }
+	public bool Daily { get; set; }
 }
 
 [Table("Player")]
@@ -31,6 +32,8 @@ public class PlayerDao
 	public Guid Id { get; set; }
 	public string Name { get; set; }
 	public int Elo { get; set; }
+	public int DailyWinStreak { get; set; }
+	public int MaxDailyWinStreak { get; set; }
 	public int DailyWins { get; set; }
 	public int DailyLosses { get; set; }
 }

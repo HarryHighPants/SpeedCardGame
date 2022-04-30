@@ -11,8 +11,8 @@ using Server.Models.Database;
 namespace Server.Migrations
 {
     [DbContext(typeof(GameResultContext))]
-    [Migration("20220429061559_SeedBots")]
-    partial class SeedBots
+    [Migration("20220430035657_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -24,6 +24,9 @@ namespace Server.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("Daily")
+                        .HasColumnType("INTEGER");
 
                     b.Property<Guid>("LoserId")
                         .HasColumnType("TEXT");
@@ -55,10 +58,16 @@ namespace Server.Migrations
                     b.Property<int>("DailyLosses")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("DailyWinStreak")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("DailyWins")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Elo")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MaxDailyWinStreak")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")

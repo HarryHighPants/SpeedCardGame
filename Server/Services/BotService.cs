@@ -21,13 +21,13 @@ public class BotService : IBotService
 
 	private readonly IHubContext<GameHub> hubContext;
 	private readonly IGameService gameService;
-	private readonly GameResultContext gameResultContext;
+	private readonly IServiceScopeFactory scopeFactory;
 
-	public BotService(GameResultContext gameResultContext, IGameService gameService, IHubContext<GameHub> hubContext)
+	public BotService(IServiceScopeFactory scopeFactory, IGameService gameService, IHubContext<GameHub> hubContext)
 	{
 		this.gameService = gameService;
 		this.hubContext = hubContext;
-		this.gameResultContext = gameResultContext;
+		this.scopeFactory = scopeFactory;
 	}
 
 	public void AddBotToRoom(string roomId, BotType type)
@@ -43,6 +43,9 @@ public class BotService : IBotService
 
 	public void SeedBot(WebBotData botData)
 	{
+		using var scope = scopeFactory.CreateScope();
+		var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
+
 		var bot = gameResultContext.Players.Find(botData.PersistentId);
 		if (bot == null)
 		{

@@ -261,7 +261,6 @@ public class GameHub : Hub
 			gameResultContext.Players.Add(dbWinner);
 			await gameResultContext.SaveChangesAsync();
 		}
-
 		dbWinner.Name = winner.Name;
 
 		var dbLoser = await gameResultContext.Players.FindAsync(loser.PersistentPlayerId);
@@ -271,32 +270,43 @@ public class GameHub : Hub
 			gameResultContext.Players.Add(dbLoser);
 			await gameResultContext.SaveChangesAsync();
 		}
-
 		dbLoser.Name = loser.Name;
 
-		if (bot is {Data.Type: BotType.Daily})
+		var dailyGame = bot is {Data.Type: BotType.Daily};
+		if (dailyGame)
 		{
 			dbWinner.DailyWins += 1;
+			dbWinner.DailyWinStreak += 1;
+			if (dbWinner.MaxDailyWinStreak < dbWinner.DailyWinStreak)
+			{
+				dbWinner.MaxDailyWinStreak = dbWinner.DailyWinStreak;
+			}
+			dbLoser.DailyLosses += 1;
+			dbWinner.DailyWinStreak = 0;
 		}
 
-		var eloDifference = (int)(Math.Abs(dbLoser.Elo - dbWinner.Elo) * 0.3);
-		var eloWinnerPoints = (int)(1 / Math.Log(eloDifference) * 150);
+		var gameStateLoser = gameState.Players.First(p => p.Id == loser.PlayerId);
+		var loserCardsRemaining = gameStateLoser.HandCards.Count + gameStateLoser.KittyCards.Count;
+
+		var eloDifference = Math.Abs(dbLoser.Elo - dbWinner.Elo);
+		var baseEloPoints = (int)(1 / Math.Log(eloDifference) * 50);
 		if (dbWinner.Elo < dbLoser.Elo)
 		{
-			dbWinner.Elo += eloDifference;
-			dbLoser.Elo -= eloDifference;
+			var upsetMultiplier = (loserCardsRemaining * 0.1) + 1;
+			dbWinner.Elo += (int)(eloDifference * upsetMultiplier * 0.3);
+			dbLoser.Elo -= (int)(eloDifference * upsetMultiplier * 0.3);
 		}
-
-		dbWinner.Elo += eloWinnerPoints;
-		dbWinner.Elo -= eloWinnerPoints;
+		dbWinner.Elo += baseEloPoints;
+		dbLoser.Elo -= baseEloPoints;
 
 		gameResultContext.GameResults.Add(new GameResultDao
 		{
 			Id = Guid.NewGuid(),
 			Turns = gameState.MoveHistory.Count,
-			LostBy = 1,
+			LostBy = loserCardsRemaining,
 			Winner = dbWinner,
-			Loser = dbLoser
+			Loser = dbLoser,
+			Daily = dailyGame
 		});
 
 		await gameResultContext.SaveChangesAsync();
