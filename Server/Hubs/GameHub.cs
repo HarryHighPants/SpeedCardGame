@@ -4,6 +4,7 @@ using System.Dynamic;
 using Engine.Helpers;
 using Engine.Models;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Models.Database;
 using Newtonsoft.Json;
 using Services;
@@ -25,7 +26,13 @@ public class GameHub : Hub
 		this.botService = botService;
 	}
 
-	// private string UserIdentifier => Context.UserIdentifier!;
+	public static int GetDayIndex()
+	{
+		var eastern = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+			DateTime.UtcNow, "AUS Eastern Standard Time");
+		return DateOnly.FromDateTime(eastern).DayNumber;
+	}
+
 	private string UserConnectionId => Context.ConnectionId;
 
 	public override Task OnConnectedAsync() => base.OnConnectedAsync();
@@ -71,6 +78,15 @@ public class GameHub : Hub
 
 		if (botGame)
 		{
+			if (botType == BotType.Daily)
+			{
+				// See if we have already played the daily game
+				if (await SendDailyResult(persistentPlayerId))
+				{
+					return;
+				}
+			}
+
 			botService.AddBotToRoom(roomId, botType);
 		}
 
@@ -261,6 +277,7 @@ public class GameHub : Hub
 			gameResultContext.Players.Add(dbWinner);
 			await gameResultContext.SaveChangesAsync();
 		}
+
 		dbWinner.Name = winner.Name;
 
 		var dbLoser = await gameResultContext.Players.FindAsync(loser.PersistentPlayerId);
@@ -270,6 +287,7 @@ public class GameHub : Hub
 			gameResultContext.Players.Add(dbLoser);
 			await gameResultContext.SaveChangesAsync();
 		}
+
 		dbLoser.Name = loser.Name;
 
 		var dailyGame = bot is {Data.Type: BotType.Daily};
@@ -281,8 +299,9 @@ public class GameHub : Hub
 			{
 				dbWinner.MaxDailyWinStreak = dbWinner.DailyWinStreak;
 			}
+
 			dbLoser.DailyLosses += 1;
-			dbWinner.DailyWinStreak = 0;
+			dbLoser.DailyWinStreak = 0;
 		}
 
 		var gameStateLoser = gameState.Players.First(p => p.Id == loser.PlayerId);
@@ -296,6 +315,7 @@ public class GameHub : Hub
 			dbWinner.Elo += (int)(eloDifference * upsetMultiplier * 0.3);
 			dbLoser.Elo -= (int)(eloDifference * upsetMultiplier * 0.3);
 		}
+
 		dbWinner.Elo += baseEloPoints;
 		dbLoser.Elo -= baseEloPoints;
 
@@ -306,11 +326,19 @@ public class GameHub : Hub
 			LostBy = loserCardsRemaining,
 			Winner = dbWinner,
 			Loser = dbLoser,
-			Daily = dailyGame
+			Daily = dailyGame,
+			DailyIndex = GetDayIndex()
 		});
 
 		await gameResultContext.SaveChangesAsync();
+
+		if (dailyGame)
+		{
+			var player = players.Single(p => p.PlayerId != null && p.ConnectionId != bot?.ConnectionId);
+			await SendDailyResult(player.PersistentPlayerId);
+		}
 	}
+
 
 	private async Task SendLobbyState(string roomId)
 	{
@@ -326,6 +354,30 @@ public class GameHub : Hub
 		// Send the gameState to the roomId
 		var jsonData = JsonConvert.SerializeObject(lobbyStateResult.Data);
 		await Clients.Group(roomId).SendAsync("UpdateLobbyState", jsonData);
+	}
+
+	private GameResultDao? GetDailyResult(Guid persistentPlayerId) =>
+		gameResultContext.GameResults
+			.Include(gr => gr.Loser)
+			.Include(gr => gr.Winner)
+			.FirstOrDefault(gr =>
+				gr.Daily && gr.DailyIndex == GetDayIndex() &&
+				(gr.Winner.Id == persistentPlayerId || gr.Loser.Id == persistentPlayerId));
+
+	private async Task<bool> SendDailyResult(Guid persistentPlayerId)
+	{
+		var dailyMatch = GetDailyResult(persistentPlayerId);
+		if (dailyMatch == null)
+		{
+			return false;
+		}
+
+		var dailyResult = new DailyResultDto(persistentPlayerId, dailyMatch);
+
+		// Send the SendDailyResult to the player
+		var jsonData = JsonConvert.SerializeObject(dailyResult);
+		await Clients.Client(UserConnectionId).SendAsync("UpdateDailyResults", jsonData);
+		return true;
 	}
 
 	private async Task SendConnectionMessage(string message) =>

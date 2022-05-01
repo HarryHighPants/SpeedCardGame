@@ -35,7 +35,8 @@ namespace Server.Migrations
                     LoserId = table.Column<Guid>(type: "TEXT", nullable: false),
                     Turns = table.Column<int>(type: "INTEGER", nullable: false),
                     LostBy = table.Column<int>(type: "INTEGER", nullable: false),
-                    Daily = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Daily = table.Column<bool>(type: "INTEGER", nullable: false),
+                    DailyIndex = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {

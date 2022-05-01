@@ -1,32 +1,32 @@
 import * as signalR from '@microsoft/signalr'
-import {HubConnection, HubConnectionState, ILogger, LogLevel} from '@microsoft/signalr'
-import {useEffect} from 'react'
-import {useLocation, useNavigate, useParams, useSearchParams} from 'react-router-dom'
-import {IGameState} from '../../Interfaces/IGameState'
+import { HubConnection, HubConnectionState, ILogger, LogLevel } from '@microsoft/signalr'
+import { useEffect } from 'react'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { IGameState } from '../../Interfaces/IGameState'
 import Game from '../../Components/Game'
 import TestData from '../../Assets/TestData.js'
 import Lobby from './Lobby'
 import styled from 'styled-components'
-import {HiOutlineHome} from 'react-icons/hi'
+import { HiOutlineHome } from 'react-icons/hi'
 import Popup from '../Popup'
 import HomeButton from '../HomeButton'
 import useState from 'react-usestateref'
-import {motion} from 'framer-motion'
+import { motion } from 'framer-motion'
 import CelebrateShaker from '../CelebrateShake'
 import WinnerPopup from '../WinnerPopup'
 import useRoomId from '../../Hooks/useRoomId'
-import toast, {Toaster} from 'react-hot-toast'
-import {IPlayer} from '../../Interfaces/IPlayer'
-import {GameType} from '../../Interfaces/ILobby'
-import config from "../../Config";
+import toast, { Toaster } from 'react-hot-toast'
+import { IPlayer } from '../../Interfaces/IPlayer'
+import { GameType } from '../../Interfaces/ILobby'
+import config from '../../Config'
 import { v4 as uuid } from 'uuid'
-
+import DailyStats from "./DailyStats";
 
 interface Props {
 	onGameStarted: () => void
 }
 
-const Room = ({onGameStarted}: Props) => {
+const Room = ({ onGameStarted }: Props) => {
 	let navigate = useNavigate()
 	const [connection, setConnection, connectionRef] = useState<HubConnection>()
 	const [gameState, setGameState] = useState<IGameState>()
@@ -50,7 +50,7 @@ const Room = ({onGameStarted}: Props) => {
 	}, [roomId])
 
 	useEffect(() => {
-		console.log("setting persistent Id", persistentId)
+		console.log('setting persistent Id', persistentId)
 		localStorage.setItem('persistentId', persistentId)
 	}, [persistentId])
 
@@ -67,7 +67,7 @@ const Room = ({onGameStarted}: Props) => {
 	}, [gameState?.WinnerId])
 
 	const CreateConnection = () => {
-		console.log("connecting to: ", config.apiGateway.URL)
+		console.log('connecting to: ', config.apiGateway.URL)
 		// Builds the SignalR connection, mapping it to /server
 		let signalRConnection = new signalR.HubConnectionBuilder()
 			.withUrl(config.apiGateway.URL)
@@ -111,8 +111,8 @@ const Room = ({onGameStarted}: Props) => {
 
 	const JoinRoom = () => {
 		if (!roomIdRef?.current) return
-		let isBotGame = searchParams.get('type') as GameType === "bot"
-		let botDifficulty = searchParams.get('difficulty') ?? "-1"
+		let isBotGame = (searchParams.get('type') as GameType) === 'bot'
+		let botDifficulty = searchParams.get('difficulty') ?? '-1'
 		connectionRef.current?.invoke('JoinRoom', roomIdRef?.current, persistentId, isBotGame, parseInt(botDifficulty))
 	}
 
@@ -121,12 +121,12 @@ const Room = ({onGameStarted}: Props) => {
 		if (!gameState) {
 			onGameStarted()
 		}
-		setGameState({...parsedData})
+		setGameState({ ...parsedData })
 	}
 
 	return (
 		<>
-			<Toaster/>
+			<Toaster />
 
 			{!!gameState && (
 				<>
@@ -136,7 +136,7 @@ const Room = ({onGameStarted}: Props) => {
 						connectionId={connectionId}
 						gameState={gameState}
 					/>
-					<HomeButton onClick={() => connection?.stop()}/>
+					<HomeButton onClick={() => connection?.stop()} />
 					{!!gameState.WinnerId && (
 						<WinnerPopup
 							winnerName={winningPlayer?.Name}
@@ -147,7 +147,8 @@ const Room = ({onGameStarted}: Props) => {
 					)}
 				</>
 			)}
-			<Lobby roomId={roomId} connection={connection} gameState={gameState} onBack={() => connection?.stop()}/>
+			<Lobby roomId={roomId} connection={connection} gameState={gameState} onBack={() => connection?.stop()} />
+			<DailyStats connection={connection}/>
 		</>
 	)
 }

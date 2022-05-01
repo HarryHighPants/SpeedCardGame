@@ -11,6 +11,10 @@ export function map(current: number, in_min: number, in_max: number, out_min: nu
 	return clamp(mapped, out_min, out_max)
 }
 
+export function convertTZ(date: string | Date, tzString: string) {
+	return new Date((typeof date === 'string' ? new Date(date) : date).toLocaleString('en-US', { timeZone: tzString }))
+}
+
 export const GetOffsetInfo = (ourRect: DOMRect | undefined, draggingCardRect: DOMRect | undefined) => {
 	let distance = GetDistanceRect(draggingCardRect, ourRect)
 	let overlaps = Overlaps(ourRect, draggingCardRect)

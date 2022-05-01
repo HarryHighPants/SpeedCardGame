@@ -24,6 +24,7 @@ public class GameResultDao
 	public int Turns { get; set; }
 	public int LostBy { get; set; }
 	public bool Daily { get; set; }
+	public int DailyIndex { get; set; }
 }
 
 [Table("Player")]

@@ -26,6 +26,9 @@ namespace Server.Migrations
                     b.Property<bool>("Daily")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("DailyIndex")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("LoserId")
                         .HasColumnType("TEXT");
 

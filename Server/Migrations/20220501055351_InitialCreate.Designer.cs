@@ -11,7 +11,7 @@ using Server.Models.Database;
 namespace Server.Migrations
 {
     [DbContext(typeof(GameResultContext))]
-    [Migration("20220430035657_InitialCreate")]
+    [Migration("20220501055351_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,6 +26,9 @@ namespace Server.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("Daily")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DailyIndex")
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("LoserId")
