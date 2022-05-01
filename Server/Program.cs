@@ -1,5 +1,8 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Server;
 using Server.Hubs;
+using Server.Models.Database;
 using Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +16,10 @@ builder.Services.AddSignalR().AddHubOptions<GameHub>(options =>
 builder.Services.AddSingleton<IGameService, InMemoryGameService>();
 builder.Services.AddSingleton<IBotService, BotService>();
 
+builder.Services.AddDbContextPool<GameResultContext>(options =>
+{
+	options.UseSqlite(builder.Configuration.GetConnectionString("GameResult"));
+});
 
 //services cors
 builder.Services.AddCors(options => options.AddDefaultPolicy(
@@ -29,6 +36,13 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(
 
 //configure
 var app = builder.Build();
+
+using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())
+{
+	await using var context = serviceScope.ServiceProvider.GetRequiredService<GameResultContext>();
+	await context.Database.MigrateAsync();
+}
+
 app.UseRouting();
 app.UseCors();
 

@@ -68,18 +68,6 @@ public abstract class Result<T> : Result, IEnumerable<T>
 	    }
     }
 
-    // public TR FlatMap<TR>(Func<T, Result<TR>> success, Func<IErrorResult, Result<TR>> error)
-    // {
-	   //  if (Success)
-	   //  {
-		  //   return success(Data);
-	   //  }
-	   //  else
-	   //  {
-		  //   return error((IErrorResult)this);
-	   //  }
-    // }
-
     public IEnumerator<T> GetEnumerator()
     {
         if (Success)

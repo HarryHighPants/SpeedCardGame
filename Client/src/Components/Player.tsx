@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
 import { HubConnection, HubConnectionState } from '@microsoft/signalr'
 import PlayerInfo, { IPlayerInfo } from './PlayerInfo'
 import { AnimatePresence, AnimateSharedLayout } from 'framer-motion'
-import { uuid } from '../Helpers/Utilities'
+import { v4 as uuid } from 'uuid'
 
 interface Props {
 	player: IPlayer

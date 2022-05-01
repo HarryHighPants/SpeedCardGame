@@ -3,7 +3,7 @@ namespace Engine;
 using Helpers;
 using Models;
 
-public struct BotData
+public class BotData
 {
 	public string Name;
 	public string? CustomIntroMessage;

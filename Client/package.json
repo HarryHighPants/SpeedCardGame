@@ -17,6 +17,8 @@
     "framer-motion": "^6.2.8",
     "lodash": "^4.17.21",
     "react": "^17.0.2",
+    "react-countdown": "^2.3.2",
+    "react-date-countdown-timer": "^1.1.0",
     "react-dom": "^17.0.2",
     "react-hot-toast": "^2.2.0",
     "react-icons": "^4.3.1",
@@ -27,14 +29,15 @@
     "typescript": "^4.6.3",
     "underscore": "^1.13.2",
     "unique-names-generator": "^4.7.1",
+    "uuid": "^8.3.2",
     "web-vitals": "^2.1.4"
   },
-	"scripts": {
-		"start": "REACT_APP_STAGE=dev react-scripts start",
-		"build": "REACT_APP_STAGE=prod react-scripts build",
-		"test": "react-scripts test",
-		"eject": "react-scripts eject"
-	},
+  "scripts": {
+    "start": "REACT_APP_STAGE=dev react-scripts start",
+    "build": "REACT_APP_STAGE=prod react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -55,6 +58,7 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.181",
+    "countdown": "^2.6.0",
     "prettier": "2.6.1"
   }
 }

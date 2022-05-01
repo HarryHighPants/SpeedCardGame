@@ -18,7 +18,9 @@ import useRoomId from '../../Hooks/useRoomId'
 import toast, { Toaster } from 'react-hot-toast'
 import { IPlayer } from '../../Interfaces/IPlayer'
 import { GameType } from '../../Interfaces/ILobby'
-import config from "../../Config";
+import config from '../../Config'
+import { v4 as uuid } from 'uuid'
+import DailyStats from "./DailyStats";
 
 interface Props {
 	onGameStarted: () => void
@@ -30,6 +32,7 @@ const Room = ({ onGameStarted }: Props) => {
 	const [gameState, setGameState] = useState<IGameState>()
 	const [roomId, roomIdRef] = useRoomId()
 	const [connectionStatus, setConnectionStatus] = useState<HubConnectionState | undefined>()
+	const [persistentId, setPersistentId] = useState<string>(() => localStorage.getItem('persistentId') ?? uuid())
 	const [connectionId, setConnectionId] = useState<string | null>()
 	const [winningPlayer, setWinningPlayer] = useState<IPlayer>()
 	const [playerWon, setPlayerWon] = useState<boolean>(false)
@@ -47,6 +50,11 @@ const Room = ({ onGameStarted }: Props) => {
 	}, [roomId])
 
 	useEffect(() => {
+		console.log('setting persistent Id', persistentId)
+		localStorage.setItem('persistentId', persistentId)
+	}, [persistentId])
+
+	useEffect(() => {
 		let winningpPlayer = gameState?.Players.find((p) => p.Id === gameState.WinnerId)
 		setWinningPlayer(winningpPlayer)
 
@@ -59,7 +67,7 @@ const Room = ({ onGameStarted }: Props) => {
 	}, [gameState?.WinnerId])
 
 	const CreateConnection = () => {
-		console.log("connecting to: ", config.apiGateway.URL)
+		console.log('connecting to: ', config.apiGateway.URL)
 		// Builds the SignalR connection, mapping it to /server
 		let signalRConnection = new signalR.HubConnectionBuilder()
 			.withUrl(config.apiGateway.URL)
@@ -103,9 +111,9 @@ const Room = ({ onGameStarted }: Props) => {
 
 	const JoinRoom = () => {
 		if (!roomIdRef?.current) return
-		let isBotGame = searchParams.get('type') as GameType === "bot"
-		let botDifficulty = searchParams.get('difficulty') ?? "-1"
-		connectionRef.current?.invoke('JoinRoom', roomIdRef?.current, isBotGame, parseInt(botDifficulty))
+		let isBotGame = (searchParams.get('type') as GameType) === 'bot'
+		let botDifficulty = searchParams.get('difficulty') ?? '-1'
+		connectionRef.current?.invoke('JoinRoom', roomIdRef?.current, persistentId, isBotGame, parseInt(botDifficulty))
 	}
 
 	const UpdateGameState = (data: any) => {
@@ -140,6 +148,7 @@ const Room = ({ onGameStarted }: Props) => {
 				</>
 			)}
 			<Lobby roomId={roomId} connection={connection} gameState={gameState} onBack={() => connection?.stop()} />
+			<DailyStats connection={connection}/>
 		</>
 	)
 }

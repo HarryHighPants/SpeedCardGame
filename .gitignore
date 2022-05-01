@@ -33,3 +33,8 @@ _UpgradeReport_Files/
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+Server/Database/database.db
+Server/Database/database.db-shm
+Server/Database/database.db-wal
+

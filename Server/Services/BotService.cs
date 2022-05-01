@@ -7,22 +7,27 @@ using Engine.Helpers;
 using Engine.Models;
 using Hubs;
 using Microsoft.AspNetCore.SignalR;
+using Models.Database;
 using Newtonsoft.Json;
 
 public class BotService : IBotService
 {
-	public record Bot(string ConnectionId, BotData Data, string roomId);
+	public record Bot(string ConnectionId, WebBotData Data, string roomId);
 
 	private ConcurrentDictionary<string, Bot> Bots = new ConcurrentDictionary<string, Bot>();
-	private ConcurrentDictionary<string, CancellationTokenSource> BotRunners = new ConcurrentDictionary<string, CancellationTokenSource>();
+
+	private ConcurrentDictionary<string, CancellationTokenSource> BotRunners =
+		new ConcurrentDictionary<string, CancellationTokenSource>();
 
 	private readonly IHubContext<GameHub> hubContext;
 	private readonly IGameService gameService;
+	private readonly IServiceScopeFactory scopeFactory;
 
-	public BotService(IGameService gameService, IHubContext<GameHub> hubContext)
+	public BotService(IServiceScopeFactory scopeFactory, IGameService gameService, IHubContext<GameHub> hubContext)
 	{
 		this.gameService = gameService;
 		this.hubContext = hubContext;
+		this.scopeFactory = scopeFactory;
 	}
 
 	public void AddBotToRoom(string roomId, BotType type)
@@ -30,10 +35,30 @@ public class BotService : IBotService
 		var botData = BotConfigurations.GetBot(type);
 		var botId = Guid.NewGuid().ToString();
 		var bot = new Bot(botId, botData, roomId);
-		gameService.JoinRoom(roomId, botId);
+		gameService.JoinRoom(roomId, botId, botData.PersistentId);
 		gameService.UpdateName(bot.Data.Name, botId);
 		Bots.TryAdd(botId, bot);
+		SeedBot(botData);
 	}
+
+	public void SeedBot(WebBotData botData)
+	{
+		using var scope = scopeFactory.CreateScope();
+		var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
+
+		var bot = gameResultContext.Players.Find(botData.PersistentId);
+		if (bot == null)
+		{
+			gameResultContext.Players.Add(new PlayerDao
+			{
+				Id = botData.PersistentId, Name = botData.Name, Elo = botData.Elo
+			});
+			gameResultContext.SaveChanges();
+		}
+	}
+
+	public List<Bot> GetBotsInRoom(string roomId) =>
+		Bots.Where(b => b.Value.roomId == roomId).Select(b => b.Value).ToList();
 
 	public int BotsInRoomCount(string roomId) => GetBotsInRoom(roomId).Count;
 
@@ -43,8 +68,12 @@ public class BotService : IBotService
 		foreach (var bot in botsInRoom)
 		{
 			var cancellationSource = new CancellationTokenSource();
-			RunBot(bot, cancellationSource.Token);
 			BotRunners.TryAdd(bot.ConnectionId, cancellationSource);
+			RunBot(bot, cancellationSource.Token).ContinueWith((task, _)=>{
+				if (task.Exception != null)
+				{
+					Console.WriteLine(task.Exception);
+				}}, cancellationSource);
 		}
 	}
 
@@ -53,17 +82,17 @@ public class BotService : IBotService
 		var botsInRoom = GetBotsInRoom(roomId);
 		foreach (var bot in botsInRoom)
 		{
+			gameService.LeaveRoom(roomId, bot.ConnectionId);
+			Bots.Remove(bot.ConnectionId, out _);
+
 			if (BotRunners.ContainsKey(bot.ConnectionId))
 			{
-				gameService.LeaveRoom(roomId, bot.ConnectionId);
 				BotRunners[bot.ConnectionId].Cancel();
 				BotRunners.Remove(bot.ConnectionId, out _);
-				Bots.Remove(bot.ConnectionId, out _);
 			}
 		}
 	}
 
-	private List<Bot> GetBotsInRoom(string roomId) => Bots.Where(b => b.Value.roomId == roomId).Select(b=>b.Value).ToList();
 
 	private async Task RunBot(Bot bot, CancellationToken cancellationToken)
 	{
@@ -71,23 +100,19 @@ public class BotService : IBotService
 
 		var checks = gameService.GetGame(bot.roomId).gameEngine.Checks;
 		var playerId = gameService.GetConnectionsPlayer(bot.ConnectionId).PlayerId;
+
 		// Wait for the cards to animate in
 		await Task.Delay(5000, cancellationToken);
-		while (!cancellationToken.IsCancellationRequested || gameService.GetGameStateDto(bot.roomId).Data.WinnerId == null)
+		while (!cancellationToken.IsCancellationRequested &&
+		       gameService.GetGameStateDto(bot.roomId).Data.WinnerId == null)
 		{
-				if (playerId == null)
+			var move = BotRunner.GetMove(checks, GetGameState(bot.roomId), playerId.Value);
+			if (move.Success)
+			{
+				var result = move.Data.Type switch
 				{
-					continue;
-				}
-				var move = BotRunner.GetMove(checks, gameService.GetGame(bot.roomId).State, playerId.Value);
-				if (move is IErrorResult)
-				{
-					continue;
-				}
-
-				var result =  move.Data.Type switch
-				{
-					MoveType.PlayCard => gameService.TryPlayCard(bot.ConnectionId, move.Data.CardId.Value, move.Data.CenterPileIndex.Value),
+					MoveType.PlayCard => gameService.TryPlayCard(bot.ConnectionId, move.Data.CardId.Value,
+						move.Data.CenterPileIndex.Value),
 					MoveType.PickupCard => gameService.TryPickupFromKitty(bot.ConnectionId),
 					MoveType.RequestTopUp => gameService.TryRequestTopUp(bot.ConnectionId),
 					_ => throw new ArgumentOutOfRangeException()
@@ -97,15 +122,37 @@ public class BotService : IBotService
 				{
 					throw new Exception(moveError.Message);
 				}
+
 				await SendGameState(bot.roomId);
-				var turnDelay = random.Next(bot.Data.QuickestResponseTimeMs, bot.Data.SlowestResponseTimeMs);
-				if (move.Data.Type == MoveType.PickupCard)
-				{
-					turnDelay = bot.Data.PickupIntervalMs;
-				}
-				await Task.Delay(turnDelay, cancellationToken);
+			}
+
+			var turnDelay = random.Next(bot.Data.QuickestResponseTimeMs, bot.Data.SlowestResponseTimeMs);
+			if (move.Success && move.Data.Type == MoveType.PickupCard)
+			{
+				turnDelay = bot.Data.PickupIntervalMs;
+			}
+			var cardsPlayed = GetCardsPlayed(bot.roomId);
+			await Task.Delay(turnDelay, cancellationToken);
+
+			// Wait if we have just topped up
+			var gameState = GetGameState(bot.roomId);
+			if (gameState.MoveHistory.Count > 0 && gameState.MoveHistory.Last().Type == MoveType.TopUp)
+			{
+				await Task.Delay(2000, cancellationToken);
+			}
+
+			// Keep waiting until the center piles stop changing
+			while (cardsPlayed != GetCardsPlayed(bot.roomId))
+			{
+				cardsPlayed = GetCardsPlayed(bot.roomId);
+				await Task.Delay((int)(turnDelay*0.5), cancellationToken);
+			}
 		}
 	}
+
+	private GameState GetGameState(string roomId) => gameService.GetGame(roomId).State;
+
+	private int GetCardsPlayed(string roomId) => GetGameState(roomId).CenterPiles.Select(cp => cp.Cards.Count).Sum();
 
 	private async Task SendGameState(string roomId)
 	{
