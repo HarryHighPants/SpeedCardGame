@@ -6,11 +6,13 @@ using System.Linq;
 using Engine;
 using Engine.Helpers;
 using Engine.Models;
+using Models.Database;
 
 public interface IGameService
 {
-	public void JoinRoom(string roomId, string connectionId);
+	public void JoinRoom(string roomId, string connectionId, Guid persistentPlayerId);
 	public int ConnectionsInRoomCount(string roomId);
+	public List<Connection> ConnectionsInRoom(string roomId);
 
 	public void LeaveRoom(string roomId, string connectionId);
 
@@ -36,7 +38,6 @@ public interface IGameService
 	public bool GameStarted(string roomId);
 	public bool ConnectionOwnsCard(string connectionId, int cardId);
 	public CardLocation? GetCardLocation(string connectionId, int cardId);
-
 }
 
 public record UpdateMovingCardData
@@ -63,21 +64,73 @@ public class Room
 
 public class Connection
 {
+	public Guid PersistentPlayerId;
 	public string ConnectionId;
 	public string Name;
+	// GameEngine Player index
 	public int? PlayerId;
+	public Rank? Rank;
+}
+
+public class ConnectionDto
+{
+	public string ConnectionId;
+	public string Name;
+	public Rank Rank;
+
+	public ConnectionDto(Connection connection)
+	{
+		ConnectionId = connection.ConnectionId;
+		Name = connection.Name;
+		Rank = connection.Rank ?? Rank.BabyCardShark;
+	}
+}
+
+public enum Rank
+{
+	BabyCardShark,
+	CardSlinger,
+	Acetronaut,
+	Speedster,
+	SpeedDemon
+}
+
+public class DailyResultDto
+{
+	public string BotName;
+	public bool PlayerWon;
+	public int LostBy;
+
+	public int DailyWinStreak;
+	public int MaxDailyWinStreak;
+	public int DailyWins;
+	public int DailyLosses;
+	public DailyResultDto(Guid playerId, GameResultDao game)
+	{
+		PlayerWon = game.Winner.Id == playerId;
+
+		var player = PlayerWon ? game.Winner : game.Loser;
+		LostBy = game.LostBy;
+		DailyWinStreak = player.DailyWinStreak;
+		MaxDailyWinStreak = player.MaxDailyWinStreak;
+		DailyWins = player.DailyWins;
+		DailyLosses = player.DailyLosses;
+
+		var bot = PlayerWon ? game.Loser : game.Winner;
+		BotName = bot.Name;
+	}
 }
 
 public class LobbyStateDto
 {
-	public List<Connection> Connections;
+	public List<ConnectionDto> Connections;
 	public bool IsBotGame;
 	public bool GameStarted;
 
 	public LobbyStateDto(List<Connection> connections, bool isBotGame, bool gameStarted)
 	{
 		this.IsBotGame = isBotGame;
-		this.Connections = connections;
+		this.Connections = connections.Select(c=>new ConnectionDto(c)).ToList();
 		this.GameStarted = gameStarted;
 	}
 }

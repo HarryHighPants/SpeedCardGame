@@ -6,29 +6,35 @@ using System.Linq;
 using Engine;
 using Engine.Helpers;
 using Engine.Models;
+using Models.Database;
 
 public class InMemoryGameService : IGameService
 {
     private readonly ConcurrentDictionary<string, Room> rooms = new();
+    private readonly IServiceScopeFactory scopeFactory;
 
-    public InMemoryGameService()
+    public InMemoryGameService(IServiceScopeFactory scopeFactory)
     {
-
+	    this.scopeFactory = scopeFactory;
     }
 
-    public void JoinRoom(string roomId, string connectionId)
+    public void JoinRoom(string roomId, string connectionId, Guid persistentPlayerId)
     {
         // Create the room if we don't have one yet
         if (!rooms.ContainsKey(roomId))
         {
-            rooms.TryAdd(roomId, new Room(){RoomId = roomId});
+            rooms.TryAdd(roomId, new Room{RoomId = roomId});
         }
 
         // Add the connection to the room
         var room = rooms[roomId];
         if (!room.Connections.ContainsKey(connectionId))
         {
-            room.Connections.TryAdd(connectionId, new Connection {ConnectionId = connectionId, Name = "Player"});
+	        // See if the player has a rank
+	        using var scope = scopeFactory.CreateScope();
+	        var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
+	        var playerDao = gameResultContext.Players.Find(persistentPlayerId);
+            room.Connections.TryAdd(connectionId, new Connection {ConnectionId = connectionId, Name = "Player", PersistentPlayerId = persistentPlayerId, Rank = GetRank(playerDao?.Elo ?? 500)});
         }
 
         if (GameStarted(roomId))
@@ -45,6 +51,16 @@ public class InMemoryGameService : IGameService
 	    }
 
 	    return rooms[roomId].Connections.Count;
+    }
+
+    public List<Connection> ConnectionsInRoom(string roomId)
+    {
+	    if (!rooms.ContainsKey(roomId))
+	    {
+		    return new List<Connection>();
+	    }
+
+	    return rooms[roomId].Connections.Values.ToList();
     }
 
     public void LeaveRoom(string roomId, string connectionId)
@@ -283,6 +299,16 @@ public class InMemoryGameService : IGameService
 	    var card = gameResult.Data.State.GetCard(cardId);
 		return card?.Location(gameResult.Data.State);
     }
+
+    public static Rank GetRank(int elo) =>
+	    elo switch
+	    {
+		    <= 1000 => Rank.BabyCardShark,
+		    <= 2000 => Rank.CardSlinger,
+		    <= 3000 => Rank.Acetronaut,
+		    <= 4000 => Rank.Speedster,
+		    >= 4000 => Rank.SpeedDemon
+	    };
 }
 
 

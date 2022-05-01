@@ -9,6 +9,7 @@ import { IGameState } from '../../Interfaces/IGameState'
 import { AnimatePresence, motion } from 'framer-motion'
 import LobbyPlayer from './LobbyPlayer'
 import CopyableText from '../CopyableText'
+import {IDailyResults} from "../../Interfaces/IDailyResults";
 
 interface Props {
 	connection: signalR.HubConnection | undefined
@@ -20,6 +21,7 @@ interface Props {
 const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	let navigate = useNavigate()
 	const [lobbyData, setLobbyData] = useState<ILobby>()
+	const [dailyResults, setDailyResults] = useState<IDailyResults>()
 	const [inLobby, setInLobby] = useState<boolean>(false)
 	const [myPlayerName, setMyPlayerName] = useState<string>(() =>
 		JSON.parse(localStorage.getItem('playerName') ?? `"Player"`)
@@ -32,9 +34,11 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	useEffect(() => {
 		if (!connection) return
 		connection.on('UpdateLobbyState', UpdateLobbyData)
+		connection.on('UpdateDailyResults', UpdateDailyResults)
 
 		return () => {
 			connection.off('UpdateLobbyState', UpdateLobbyData)
+			connection.off('UpdateDailyResults', UpdateDailyResults)
 		}
 	}, [connection])
 
@@ -64,6 +68,11 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 		let lobbyData: ILobby = JSON.parse(data)
 		setLobbyData(lobbyData)
 		setInLobby(lobbyData !== null)
+	}
+
+	const UpdateDailyResults = (data: any) => {
+		let dailyResultsData: IDailyResults = JSON.parse(data)
+		setDailyResults(dailyResultsData)
 	}
 
 	useEffect(() => {
