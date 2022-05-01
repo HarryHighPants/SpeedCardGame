@@ -19,5 +19,4 @@ WORKDIR /app
 COPY --from=build-env /app/out .
 ENV ASPNETCORE_URLS=http://*:5169
 ENV ConnectionStrings__GameResult=Filename=/DB/database.db
-RUN mkdir /DB
 ENTRYPOINT ["dotnet", "./Server.dll"]
