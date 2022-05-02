@@ -68,13 +68,14 @@ public class EngineChecks
             ? Result.Error("Not all players are requesting top up")
             : new SuccessResult();
 
-    public Result<(Card card, int centerPile)> PlayerHasPlay(GameState gameState, int playerId)
+    public Result<(Card card, int centerPile)> PlayerHasPlay(GameState gameState, int playerId, List<bool>? centerPilesAvailable = null)
     {
+	    var availablePiles = centerPilesAvailable ?? new List<bool> {true, true};
         var player = gameState.GetPlayer(playerId);
 
         foreach (var card in player.HandCards)
         {
-            var cardHasPlayResult = CardHasPlay(gameState, card);
+            var cardHasPlayResult = CardHasPlay(gameState, card, availablePiles);
             if (cardHasPlayResult.Success)
             {
                 return Result.Successful((card, cardHasPlayResult.Data));
@@ -128,11 +129,12 @@ public class EngineChecks
     /// <param name="gameState"></param>
     /// <param name="card"></param>
     /// <returns>Result with CenterPileindex as data</returns>
-    public Result<int> CardHasPlay(GameState gameState, Card card)
+    public Result<int> CardHasPlay(GameState gameState, Card card, List<bool>? centerPilesAvailable = null)
     {
-        for (var i = 0; i < gameState.CenterPiles.Count; i++)
+	    var pilesAvailable = centerPilesAvailable ?? new List<bool> {true, true};
+	    for (var i = 0; i < gameState.CenterPiles.Count; i++)
         {
-            if (gameState.CenterPiles[i].Cards.Count < 1)
+            if (!pilesAvailable[i] || gameState.CenterPiles[i].Cards.Count < 1)
             {
                 continue;
             }

@@ -10,305 +10,320 @@ using Models.Database;
 
 public class InMemoryGameService : IGameService
 {
-    private readonly ConcurrentDictionary<string, Room> rooms = new();
-    private readonly IServiceScopeFactory scopeFactory;
+	private readonly ConcurrentDictionary<string, Room> rooms = new();
+	private readonly IServiceScopeFactory scopeFactory;
 
-    public InMemoryGameService(IServiceScopeFactory scopeFactory)
-    {
-	    this.scopeFactory = scopeFactory;
-    }
+	public InMemoryGameService(IServiceScopeFactory scopeFactory)
+	{
+		this.scopeFactory = scopeFactory;
+	}
 
-    public void JoinRoom(string roomId, string connectionId, Guid persistentPlayerId)
-    {
-        // Create the room if we don't have one yet
-        if (!rooms.ContainsKey(roomId))
-        {
-            rooms.TryAdd(roomId, new Room{RoomId = roomId});
-        }
+	public void JoinRoom(string roomId, string connectionId, Guid persistentPlayerId)
+	{
+		// Create the room if we don't have one yet
+		if (!rooms.ContainsKey(roomId))
+		{
+			rooms.TryAdd(roomId, new Room {RoomId = roomId});
+		}
 
-        // Add the connection to the room
-        var room = rooms[roomId];
-        if (!room.Connections.ContainsKey(connectionId))
-        {
-	        // See if the player has a rank
-	        using var scope = scopeFactory.CreateScope();
-	        var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
-	        var playerDao = gameResultContext.Players.Find(persistentPlayerId);
-            room.Connections.TryAdd(connectionId, new Connection {ConnectionId = connectionId, Name = "Player", PersistentPlayerId = persistentPlayerId, Rank = GetRank(playerDao?.Elo ?? 500)});
-        }
+		// Add the connection to the room
+		var room = rooms[roomId];
+		if (!room.Connections.ContainsKey(connectionId))
+		{
+			// See if the player has a rank
+			using var scope = scopeFactory.CreateScope();
+			var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
+			var playerDao = gameResultContext.Players.Find(persistentPlayerId);
+			room.Connections.TryAdd(connectionId,
+				new Connection
+				{
+					ConnectionId = connectionId,
+					Name = "Player",
+					PersistentPlayerId = persistentPlayerId,
+					Rank = GetRank(playerDao?.Elo ?? 500)
+				});
+		}
 
-        if (GameStarted(roomId))
-        {
-            UpdateRoomsPlayerIds(roomId);
-        }
-    }
+		if (GameStarted(roomId))
+		{
+			UpdateRoomsPlayerIds(roomId);
+		}
+	}
 
-    public int ConnectionsInRoomCount(string roomId)
-    {
-	    if (!rooms.ContainsKey(roomId))
-	    {
-		    return 0;
-	    }
+	public int ConnectionsInRoomCount(string roomId)
+	{
+		if (!rooms.ContainsKey(roomId))
+		{
+			return 0;
+		}
 
-	    return rooms[roomId].Connections.Count;
-    }
+		return rooms[roomId].Connections.Count;
+	}
 
-    public List<Connection> ConnectionsInRoom(string roomId)
-    {
-	    if (!rooms.ContainsKey(roomId))
-	    {
-		    return new List<Connection>();
-	    }
+	public List<Connection> ConnectionsInRoom(string roomId)
+	{
+		if (!rooms.ContainsKey(roomId))
+		{
+			return new List<Connection>();
+		}
 
-	    return rooms[roomId].Connections.Values.ToList();
-    }
+		return rooms[roomId].Connections.Values.ToList();
+	}
 
-    public void LeaveRoom(string roomId, string connectionId)
-    {
-        // Check we have a room with that Id
-        if (!rooms.ContainsKey(roomId))
-        {
-            return;
-        }
+	public void LeaveRoom(string roomId, string connectionId)
+	{
+		// Check we have a room with that Id
+		if (!rooms.ContainsKey(roomId))
+		{
+			return;
+		}
 
-        // Remove the connection to the room
-        var room = rooms[roomId];
-        if (room.Connections.ContainsKey(connectionId))
-        {
-            room.Connections.TryRemove(connectionId, out _);
-        }
+		// Remove the connection to the room
+		var room = rooms[roomId];
+		if (room.Connections.ContainsKey(connectionId))
+		{
+			room.Connections.TryRemove(connectionId, out _);
+		}
 
-        if (room.Connections.IsEmpty)
-        {
-	        rooms.TryRemove(roomId, out _);
-        }
-        else
-        {
-	        UpdateRoomsPlayerIds(roomId);
-        }
-    }
+		if (room.Connections.IsEmpty)
+		{
+			rooms.TryRemove(roomId, out _);
+		}
+		else
+		{
+			UpdateRoomsPlayerIds(roomId);
+		}
+	}
 
-    public void UpdateName(string updatedName, string connectionId) =>
-        GetConnectionsPlayer(connectionId).Name = updatedName;
+	public void UpdateName(string updatedName, string connectionId) =>
+		GetConnectionsPlayer(connectionId).Name = updatedName;
 
-    public Result StartGame(string connectionId)
-    {
-        var roomResult = GetConnectionsRoom(connectionId);
-        if (roomResult is IErrorResult roomError)
-        {
-            return Result.Error(roomError.Message);
-        }
-        var room = roomResult.Data;
+	public Result StartGame(string connectionId)
+	{
+		var roomResult = GetConnectionsRoom(connectionId);
+		if (roomResult is IErrorResult roomError)
+		{
+			return Result.Error(roomError.Message);
+		}
 
-        if (room.Connections.Count < GameEngine.PlayersPerGame)
-        {
-            return Result.Error("Must have a minimum of two players to start the game");
-        }
+		var room = roomResult.Data;
 
-        if (room.Game != null)
-        {
-            return Result.Error("Game already exists");
-        }
+		if (room.Connections.Count < GameEngine.PlayersPerGame)
+		{
+			return Result.Error("Must have a minimum of two players to start the game");
+		}
 
-        var connectionsPlaying = room.Connections.Take(GameEngine.PlayersPerGame).ToList();
-        // Create the game with the players
-        room.Game = new WebGame(connectionsPlaying, new Settings());
+		if (room.Game != null)
+		{
+			return Result.Error("Game already exists");
+		}
 
-        // Update the connections with their playerId
-        for (var i = 0; i < connectionsPlaying.Count; i++)
-        {
-	        var connection = connectionsPlaying[i];
-	        room.Connections[connection.Key].PlayerId = room.Game.State.Players[i].Id;
-        }
+		var connectionsPlaying = room.Connections.Take(GameEngine.PlayersPerGame).ToList();
+		// Create the game with the players
+		room.Game = new WebGame(connectionsPlaying, new Settings());
 
-        return Result.Successful();
-    }
+		// Update the connections with their playerId
+		for (var i = 0; i < connectionsPlaying.Count; i++)
+		{
+			var connection = connectionsPlaying[i];
+			room.Connections[connection.Key].PlayerId = room.Game.State.Players[i].Id;
+		}
 
-    public Result TryPlayCard(string connectionId, int cardId, int centerPilIndex)
-    {
-	    var gameResult = GetConnectionsGame(connectionId);
-	    if (gameResult is IErrorResult gameResultError)
-	    {
-		    return Result.Error(gameResultError.Message);
-	    }
-	    var game = gameResult.Data;
+		return Result.Successful();
+	}
 
-	    return game.TryPlayCard(GetConnectionsPlayer(connectionId).PlayerId.Value, cardId, centerPilIndex);
-    }
+	public Result TryPlayCard(string connectionId, int cardId, int centerPilIndex)
+	{
+		var gameResult = GetConnectionsGame(connectionId);
+		if (gameResult is IErrorResult gameResultError)
+		{
+			return Result.Error(gameResultError.Message);
+		}
 
-    public Result TryPickupFromKitty(string connectionId)
-    {
-	    var gameResult = GetConnectionsGame(connectionId);
-	    if (gameResult is IErrorResult gameResultError)
-	    {
-		    return Result.Error(gameResultError.Message);
-	    }
-	    var game = gameResult.Data;
+		var game = gameResult.Data;
 
-	    return game.TryPickupFromKitty(GetConnectionsPlayer(connectionId).PlayerId.Value);
-    }
+		return game.TryPlayCard(GetConnectionsPlayer(connectionId).PlayerId.Value, cardId, centerPilIndex);
+	}
 
-    public Result TryRequestTopUp(string connectionId)
-    {
-	    var gameResult = GetConnectionsGame(connectionId);
-	    if (gameResult is IErrorResult gameResultError)
-	    {
-		    return Result.Error(gameResultError.Message);
-	    }
-	    var game = gameResult.Data;
+	public Result TryPickupFromKitty(string connectionId)
+	{
+		var gameResult = GetConnectionsGame(connectionId);
+		if (gameResult is IErrorResult gameResultError)
+		{
+			return Result.Error(gameResultError.Message);
+		}
 
-	    return game.TryRequestTopUp(GetConnectionsPlayer(connectionId).PlayerId.Value);
-    }
+		var game = gameResult.Data;
 
-    public WebGame GetGame(string roomId)
-    {
-	    return rooms[roomId].Game;
-    }
+		return game.TryPickupFromKitty(GetConnectionsPlayer(connectionId).PlayerId.Value);
+	}
 
-    private Result<Room> GetConnectionsRoom(string connectionId)
-    {
-        var roomId = GetConnectionsRoomId(connectionId);
-        if (string.IsNullOrEmpty(roomId))
-        {
-            return Result.Error<Room>("Connection not found in any room");
-        }
+	public Result TryRequestTopUp(string connectionId)
+	{
+		var gameResult = GetConnectionsGame(connectionId);
+		if (gameResult is IErrorResult gameResultError)
+		{
+			return Result.Error(gameResultError.Message);
+		}
 
-        return Result.Successful(rooms[roomId]);
-    }
+		var game = gameResult.Data;
 
-    private Result<WebGame> GetConnectionsGame(string connectionId)
-    {
-        var roomResult = GetConnectionsRoom(connectionId);
-        if (roomResult is IErrorResult roomError)
-        {
-            return Result.Error<WebGame>(roomError.Message);
-        }
-        var room = roomResult.Data;
+		return game.TryRequestTopUp(GetConnectionsPlayer(connectionId).PlayerId.Value);
+	}
 
-        if (!GameStarted(room.RoomId))
-        {
-            return Result.Error<WebGame>("Game hasn't started yet");
-        }
+	public WebGame GetGame(string roomId)
+	{
+		return rooms[roomId].Game;
+	}
 
-        return Result.Successful(room.Game!);
-    }
+	private Result<Room> GetConnectionsRoom(string connectionId)
+	{
+		var roomId = GetConnectionsRoomId(connectionId);
+		if (string.IsNullOrEmpty(roomId))
+		{
+			return Result.Error<Room>("Connection not found in any room");
+		}
 
-    public Connection GetConnectionsPlayer(string connectionId) =>
-        rooms[GetConnectionsRoomId(connectionId)].Connections[connectionId];
+		return Result.Successful(rooms[roomId]);
+	}
 
-    public string GetConnectionsRoomId(string connectionId) =>
-        rooms.FirstOrDefault(g => g.Value.Connections.ContainsKey(connectionId)).Key;
+	private Result<WebGame> GetConnectionsGame(string connectionId)
+	{
+		var roomResult = GetConnectionsRoom(connectionId);
+		if (roomResult is IErrorResult roomError)
+		{
+			return Result.Error<WebGame>(roomError.Message);
+		}
 
-    public Result<GameStateDto> GetGameStateDto(string roomId)
-    {
-        // Check we have a room with that Id
-        if (!rooms.ContainsKey(roomId))
-        {
-            return Result.Error<GameStateDto>("Room not found");
-        }
+		var room = roomResult.Data;
 
-        // Check we have a game in the room
-        var room = rooms[roomId];
-        if (!GameStarted(roomId))
-        {
-            return Result.Error<GameStateDto>("No game in room yet");
-        }
+		if (!GameStarted(room.RoomId))
+		{
+			return Result.Error<WebGame>("Game hasn't started yet");
+		}
 
-        return Result.Successful(new GameStateDto(room.Game.State, room.Connections, room.Game.gameEngine));
-    }
+		return Result.Successful(room.Game!);
+	}
 
-    public Result<LobbyStateDto> GetLobbyStateDto(string roomId)
-    {
-        // Check we have a room with that Id
-        if (!rooms.ContainsKey(roomId))
-        {
-            return Result.Error<LobbyStateDto>("Room not found");
-        }
+	public Connection GetConnectionsPlayer(string connectionId) =>
+		rooms[GetConnectionsRoomId(connectionId)].Connections[connectionId];
 
-        var room = rooms[roomId];
-        var LobbyStateDto = new LobbyStateDto(room.Connections.Values.ToList(), room.IsBotGame, room.Game != null);
-        return Result.Successful(LobbyStateDto);
-    }
+	public string GetConnectionsRoomId(string connectionId) =>
+		rooms.FirstOrDefault(g => g.Value.Connections.ContainsKey(connectionId)).Key;
 
-    public bool GameStarted(string roomId)
-    {
-        if (!rooms.ContainsKey(roomId))
-        {
-            return false;
-        }
+	public Result<GameStateDto> GetGameStateDto(string roomId)
+	{
+		// Check we have a room with that Id
+		if (!rooms.ContainsKey(roomId))
+		{
+			return Result.Error<GameStateDto>("Room not found");
+		}
 
-        return rooms[roomId].Game != null;
-    }
+		// Check we have a game in the room
+		var room = rooms[roomId];
+		if (!GameStarted(roomId))
+		{
+			return Result.Error<GameStateDto>("No game in room yet");
+		}
 
-    private void UpdateRoomsPlayerIds(string roomId)
-    {
-        var room = rooms[roomId];
-        var assignedPlayers = room.Connections.Values.Where(c => c.PlayerId != null).ToList();
-        if (assignedPlayers.Count < GameEngine.PlayersPerGame && room.Connections.Count >= GameEngine.PlayersPerGame)
-        {
-            // At least 1 connection can be assigned to a player
-            var assignedPlayerIds = assignedPlayers.Select(p => p.PlayerId!.Value).ToList();
+		return Result.Successful(new GameStateDto(room.Game.State, room.Connections, room.Game.gameEngine));
+	}
 
-            // Get a list of assignable playerIds
-            var playerIdsToAssign = Enumerable.Range(0, GameEngine.PlayersPerGame).ToList().Except(assignedPlayerIds).ToList();
+	public Result<LobbyStateDto> GetLobbyStateDto(string roomId)
+	{
+		// Check we have a room with that Id
+		if (!rooms.ContainsKey(roomId))
+		{
+			return Result.Error<LobbyStateDto>("Room not found");
+		}
 
-            var unassignedPlayers = room.Connections.Values.Where(c => c.PlayerId == null).ToList();
+		var room = rooms[roomId];
+		var LobbyStateDto = new LobbyStateDto(room.Connections.Values.ToList(), room.IsBotGame, room.Game != null);
+		return Result.Successful(LobbyStateDto);
+	}
 
-            for (var i = 0; i < unassignedPlayers.Count; i++)
-            {
-                if (playerIdsToAssign.Count <= 0)
-                {
-                    break;
-                }
-                room.Connections[unassignedPlayers[i].ConnectionId].PlayerId = playerIdsToAssign.Pop();
-            }
-        }
-    }
+	public bool GameStarted(string roomId)
+	{
+		if (!rooms.ContainsKey(roomId))
+		{
+			return false;
+		}
 
-    public bool ConnectionOwnsCard(string connectionId, int cardId)
-    {
-        var gameResult = GetConnectionsGame(connectionId);
-        if (gameResult is IErrorResult gameError)
-        {
-            return false;
-        }
-        var game = gameResult.Data;
+		return rooms[roomId].Game != null;
+	}
 
-        var connectionsPlayerId = GetConnectionsPlayer(connectionId).PlayerId;
-        if (connectionsPlayerId == null)
-        {
-            return false;
-        }
+	private void UpdateRoomsPlayerIds(string roomId)
+	{
+		var room = rooms[roomId];
+		var assignedPlayers = room.Connections.Values.Where(c => c.PlayerId != null).ToList();
+		if (assignedPlayers.Count < GameEngine.PlayersPerGame && room.Connections.Count >= GameEngine.PlayersPerGame)
+		{
+			// At least 1 connection can be assigned to a player
+			var assignedPlayerIds = assignedPlayers.Select(p => p.PlayerId!.Value).ToList();
 
-        var player = game.State.Players[connectionsPlayerId.Value];
-        if (player.HandCards.Any(c => c.Id == cardId))
-        {
-            return true;
-        }
+			// Get a list of assignable playerIds
+			var playerIdsToAssign = Enumerable.Range(0, GameEngine.PlayersPerGame).ToList().Except(assignedPlayerIds)
+				.ToList();
 
-        if (player.KittyCards.Count > 0 && player.KittyCards.Last().Id == cardId)
-        {
-            return true;
-        }
-        return false;
-    }
+			var unassignedPlayers = room.Connections.Values.Where(c => c.PlayerId == null).ToList();
 
-    public CardLocation? GetCardLocation(string connectionId, int cardId)
-    {
-	    var gameResult = GetConnectionsGame(connectionId);
-	    var card = gameResult.Data.State.GetCard(cardId);
+			for (var i = 0; i < unassignedPlayers.Count; i++)
+			{
+				if (playerIdsToAssign.Count <= 0)
+				{
+					break;
+				}
+
+				room.Connections[unassignedPlayers[i].ConnectionId].PlayerId = playerIdsToAssign.Pop();
+			}
+		}
+	}
+
+	public bool ConnectionOwnsCard(string connectionId, int cardId)
+	{
+		var gameResult = GetConnectionsGame(connectionId);
+		if (gameResult is IErrorResult gameError)
+		{
+			return false;
+		}
+
+		var game = gameResult.Data;
+
+		var connectionsPlayerId = GetConnectionsPlayer(connectionId).PlayerId;
+		if (connectionsPlayerId == null)
+		{
+			return false;
+		}
+
+		var player = game.State.Players[connectionsPlayerId.Value];
+		if (player.HandCards.Any(c => c.Id == cardId))
+		{
+			return true;
+		}
+
+		if (player.KittyCards.Count > 0 && player.KittyCards.Last().Id == cardId)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	public CardLocation? GetCardLocation(string connectionId, int cardId)
+	{
+		var gameResult = GetConnectionsGame(connectionId);
+		var card = gameResult.Data.State.GetCard(cardId);
 		return card?.Location(gameResult.Data.State);
-    }
+	}
 
-    public static Rank GetRank(int elo) =>
-	    elo switch
-	    {
-		    <= 1000 => Rank.BabyCardShark,
-		    <= 2000 => Rank.CardSlinger,
-		    <= 3000 => Rank.Acetronaut,
-		    <= 4000 => Rank.Speedster,
-		    >= 4000 => Rank.SpeedDemon
-	    };
+	public static Rank GetRank(int elo) =>
+		elo switch
+		{
+			<= 1000 => Rank.EagerStarter,
+			<= 2000 => Rank.DedicatedRival,
+			<= 3000 => Rank.CertifiedRacer,
+			<= 4000 => Rank.BossAthlete,
+			<= 5000 => Rank.Acetronaut,
+			> 5000 => Rank.SpeedDemon
+		};
 }
-
-
