@@ -3,15 +3,6 @@ using System.Text;
 using Engine;
 using Server.Services;
 
-public enum BotType
-{
-    Easy,
-    Medium,
-    Hard,
-    Impossible,
-    Daily
-}
-
 public class BotConfigurations
 {
 	private static WebBotData GetDailyBot()
@@ -22,16 +13,15 @@ public class BotConfigurations
 		var botName = BotNameCreator.GetRandomBotName(dayIndex);
 		var random = new Random(dayIndex);
 		var difficultyMultiplier = random.Next(50, 150) * 0.01;
-		return new WebBotData
-		{
-			PersistentId = GuidFromString(dayIndex.ToString()),
-			Name = botName,
-			QuickestResponseTimeMs = (int)(1500 * difficultyMultiplier),
-			SlowestResponseTimeMs = (int)(4000 * difficultyMultiplier),
-			PickupIntervalMs = (int)(1000 * difficultyMultiplier),
-			Elo = (int)(2000 * difficultyMultiplier),
-			Type = BotType.Daily
-		};
+		var botData = GetBot(BotType.Medium);
+		botData.Name = botName;
+		botData.PersistentId = GuidFromString(dayIndex.ToString());
+		botData.QuickestResponseTimeMs *= difficultyMultiplier;
+		botData.SlowestResponseTimeMs *= difficultyMultiplier;
+		botData.PickupIntervalMs *= difficultyMultiplier;
+		botData.Elo *= difficultyMultiplier;
+		botData.Type = BotType.Daily;
+		return botData;
 	}
 
 	public static WebBotData GetBot(BotType type) =>
@@ -52,10 +42,10 @@ public class BotConfigurations
                 CustomIntroMessage = "He can't jump far",
                 CustomLoseMessage = "Oh no",
                 CustomWinMessage = "Easy",
-                QuickestResponseTimeMs = 4000,
-                SlowestResponseTimeMs = 7000,
-                PickupIntervalMs = 1500,
-                Elo = 1000,
+                QuickestResponseTimeMs = 2000,
+                SlowestResponseTimeMs = 4000,
+                PickupIntervalMs = 1000,
+                Elo = 1500,
                 Type = BotType.Easy
             }
         },
@@ -68,10 +58,10 @@ public class BotConfigurations
                 CustomIntroMessage = "He's a bit of a trickster so watch out",
                 CustomLoseMessage = "Damn, he's tricky",
                 CustomWinMessage = "Down goes the trickster",
-                QuickestResponseTimeMs = 2000,
-                SlowestResponseTimeMs = 5000,
-                PickupIntervalMs = 1000,
-                Elo = 2000,
+                QuickestResponseTimeMs = 1000,
+                SlowestResponseTimeMs = 3000,
+                PickupIntervalMs = 500,
+                Elo = 2500,
                 Type = BotType.Medium
             }
         },
@@ -84,10 +74,10 @@ public class BotConfigurations
                 CustomIntroMessage = "She can't be trusted",
                 CustomLoseMessage = "Oof, rough one",
                 CustomWinMessage = "Down falls Mikaela and her wicked ways",
-                QuickestResponseTimeMs = 1000,
-                SlowestResponseTimeMs = 3500,
-                PickupIntervalMs = 750,
-                Elo = 3000,
+                QuickestResponseTimeMs = 500,
+                SlowestResponseTimeMs = 1750,
+                PickupIntervalMs = 400,
+                Elo = 3500,
                 Type = BotType.Hard
             }
         },
@@ -100,10 +90,10 @@ public class BotConfigurations
                 CustomIntroMessage = "rip lol",
                 CustomLoseMessage = "No chance",
                 CustomWinMessage = "No one will ever see this message so it doesn't matter",
-                QuickestResponseTimeMs = 1000,
-                SlowestResponseTimeMs = 2000,
-                PickupIntervalMs = 500,
-                Elo = 4000,
+                QuickestResponseTimeMs = 500,
+                SlowestResponseTimeMs = 750,
+                PickupIntervalMs = 300,
+                Elo = 4500,
                 Type = BotType.Impossible
             }
         }

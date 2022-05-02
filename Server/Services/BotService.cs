@@ -33,12 +33,12 @@ public class BotService : IBotService
 	public void AddBotToRoom(string roomId, BotType type)
 	{
 		var botData = BotConfigurations.GetBot(type);
+		SeedBot(botData);
 		var botId = Guid.NewGuid().ToString();
 		var bot = new Bot(botId, botData, roomId);
 		gameService.JoinRoom(roomId, botId, botData.PersistentId);
 		gameService.UpdateName(bot.Data.Name, botId);
 		Bots.TryAdd(botId, bot);
-		SeedBot(botData);
 	}
 
 	public void SeedBot(WebBotData botData)
@@ -49,12 +49,11 @@ public class BotService : IBotService
 		var bot = gameResultContext.Players.Find(botData.PersistentId);
 		if (bot == null)
 		{
-			gameResultContext.Players.Add(new PlayerDao
-			{
-				Id = botData.PersistentId, Name = botData.Name, Elo = botData.Elo
-			});
-			gameResultContext.SaveChanges();
+			bot = new PlayerDao {Id = botData.PersistentId, Name = botData.Name};
+			gameResultContext.Players.Add(bot);
 		}
+		bot.Elo = (int)botData.Elo;
+		gameResultContext.SaveChanges();
 	}
 
 	public List<Bot> GetBotsInRoom(string roomId) =>
@@ -102,11 +101,12 @@ public class BotService : IBotService
 		var playerId = gameService.GetConnectionsPlayer(bot.ConnectionId).PlayerId;
 
 		// Wait for the cards to animate in
-		await Task.Delay(5000, cancellationToken);
+		await Task.Delay(4000, cancellationToken);
+		var centerPilesAvailable = new List<bool> {true, true};
 		while (!cancellationToken.IsCancellationRequested &&
 		       gameService.GetGameStateDto(bot.roomId).Data.WinnerId == null)
 		{
-			var move = BotRunner.GetMove(checks, GetGameState(bot.roomId), playerId.Value);
+			var move = BotRunner.GetMove(checks, GetGameState(bot.roomId), playerId.Value, centerPilesAvailable);
 			if (move.Success)
 			{
 				var result = move.Data.Type switch
@@ -126,33 +126,30 @@ public class BotService : IBotService
 				await SendGameState(bot.roomId);
 			}
 
-			var turnDelay = random.Next(bot.Data.QuickestResponseTimeMs, bot.Data.SlowestResponseTimeMs);
-			if (move.Success && move.Data.Type == MoveType.PickupCard)
-			{
-				turnDelay = bot.Data.PickupIntervalMs;
-			}
-			var cardsPlayed = GetCardsPlayed(bot.roomId);
-			await Task.Delay(turnDelay, cancellationToken);
-
 			// Wait if we have just topped up
 			var gameState = GetGameState(bot.roomId);
 			if (gameState.MoveHistory.Count > 0 && gameState.MoveHistory.Last().Type == MoveType.TopUp)
 			{
-				await Task.Delay(2000, cancellationToken);
+				await Task.Delay(1500, cancellationToken);
 			}
 
-			// Keep waiting until the center piles stop changing
-			while (cardsPlayed != GetCardsPlayed(bot.roomId))
+			var turnDelay = random.Next((int)bot.Data.QuickestResponseTimeMs, (int)bot.Data.SlowestResponseTimeMs);
+			if (move.Success && move.Data.Type == MoveType.PickupCard)
 			{
-				cardsPlayed = GetCardsPlayed(bot.roomId);
-				await Task.Delay((int)(turnDelay*0.5), cancellationToken);
+				turnDelay = (int)bot.Data.PickupIntervalMs;
 			}
+			var centerTotals = GetCenterPileTotals(bot.roomId);
+			await Task.Delay(turnDelay, cancellationToken);
+
+			// If a pile was updated while the bot was thinking then it can't be played onto
+			var updatedCenterTotals = GetCenterPileTotals(bot.roomId);
+			centerPilesAvailable = centerTotals.Select((ct, i) => ct == updatedCenterTotals[i]).ToList();
 		}
 	}
 
 	private GameState GetGameState(string roomId) => gameService.GetGame(roomId).State;
 
-	private int GetCardsPlayed(string roomId) => GetGameState(roomId).CenterPiles.Select(cp => cp.Cards.Count).Sum();
+	private List<int> GetCenterPileTotals(string roomId) => GetGameState(roomId).CenterPiles.Select(cp => cp.Cards.Count).ToList();
 
 	private async Task SendGameState(string roomId)
 	{

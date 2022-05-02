@@ -1,5 +1,4 @@
 namespace Server.Services;
-using Engine;
 
 public interface IBotService
 {
@@ -8,11 +7,4 @@ public interface IBotService
 	public List<BotService.Bot> GetBotsInRoom(string roomId);
 	public void RemoveBotsFromRoom(string roomId);
 	public void RunBotsInRoom(string roomId);
-}
-
-public class WebBotData : BotData
-{
-	public Guid PersistentId;
-	public BotType Type;
-	public int Elo;
 }
