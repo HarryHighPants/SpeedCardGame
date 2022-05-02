@@ -38,8 +38,8 @@ public class CliGameRunner
     {
         try
         {
-            return Reader.ReadLine(random.Next(BotRunnerCli.Bot.QuickestResponseTimeMs,
-                BotRunnerCli.Bot.SlowestResponseTimeMs));
+            return Reader.ReadLine(random.Next((int)BotRunnerCli.Bot.QuickestResponseTimeMs,
+                (int)BotRunnerCli.Bot.SlowestResponseTimeMs));
         }
         catch (TimeoutException)
         {
