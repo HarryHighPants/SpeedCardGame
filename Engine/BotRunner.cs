@@ -3,23 +3,23 @@ namespace Engine;
 using Helpers;
 using Models;
 
-public class BotData
+public record BotData
 {
 	public string Name;
 	public string? CustomIntroMessage;
 	public string? CustomWinMessage;
 	public string? CustomLoseMessage;
-	public int QuickestResponseTimeMs;
-	public int SlowestResponseTimeMs;
-	public int PickupIntervalMs;
+	public double QuickestResponseTimeMs;
+	public double SlowestResponseTimeMs;
+	public double PickupIntervalMs;
 }
 
 public static class BotRunner
 {
-	public static Result<Move> GetMove(EngineChecks engineChecks, GameState gameState, int playerId) =>
+	public static Result<Move> GetMove(EngineChecks engineChecks, GameState gameState, int playerId, List<bool> centerPilesAvailable) =>
 		engineChecks.TryGetWinner(gameState).Map<Result<Move>>(
 			winningPlayer => Result.Error<Move>($"can't move when {winningPlayer} has won already!"),
-			_ => engineChecks.PlayerHasPlay(gameState, playerId).Map(
+			_ => engineChecks.PlayerHasPlay(gameState, playerId, centerPilesAvailable).Map(
 				play => Result.Successful(new Move(MoveType.PlayCard, playerId, play.card.Id, play.centerPile)),
 				_ => engineChecks.CanPickupFromKitty(gameState, playerId).Map<Result<Move>>(
 					() => Result.Successful(new Move(MoveType.PickupCard, playerId)),
