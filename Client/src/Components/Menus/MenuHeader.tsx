@@ -2,9 +2,7 @@ import styled from 'styled-components'
 import heaaderImg from '../../Assets/header.png'
 
 const MenuHeader = () => {
-	return (
-		<HeaderImg src={heaaderImg} />
-	)
+	return <HeaderImg src={heaaderImg} alt={"Speed card game online logo"} />
 }
 
 const HeaderImg = styled.img`
