@@ -5,13 +5,13 @@ using Models;
 
 public record BotData
 {
-	public string Name;
-	public string? CustomIntroMessage;
-	public string? CustomWinMessage;
-	public string? CustomLoseMessage;
-	public double QuickestResponseTimeMs;
-	public double SlowestResponseTimeMs;
-	public double PickupIntervalMs;
+	public string Name { get; init; }
+	public string? CustomIntroMessage { get; init; }
+	public string? CustomWinMessage {  get; init; }
+	public string? CustomLoseMessage { get; init; }
+	public double QuickestResponseTimeMs { get; init; }
+	public double SlowestResponseTimeMs { get; init; }
+	public double PickupIntervalMs { get; init; }
 }
 
 public static class BotRunner

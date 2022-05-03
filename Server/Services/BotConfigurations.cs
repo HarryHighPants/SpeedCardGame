@@ -14,13 +14,16 @@ public class BotConfigurations
 		var random = new Random(dayIndex);
 		var difficultyMultiplier = random.Next(50, 150) * 0.01;
 		var botData = GetBot(BotType.Medium);
-		botData.Name = botName;
-		botData.PersistentId = GuidFromString(dayIndex.ToString());
-		botData.QuickestResponseTimeMs *= difficultyMultiplier;
-		botData.SlowestResponseTimeMs *= difficultyMultiplier;
-		botData.PickupIntervalMs *= difficultyMultiplier;
-		botData.Elo *= difficultyMultiplier;
-		botData.Type = BotType.Daily;
+		botData = botData with
+		{
+			Name = botName,
+			PersistentId = GuidFromString(dayIndex.ToString()),
+			QuickestResponseTimeMs = botData.QuickestResponseTimeMs * difficultyMultiplier,
+			SlowestResponseTimeMs = botData.SlowestResponseTimeMs * difficultyMultiplier,
+			PickupIntervalMs = botData.PickupIntervalMs * difficultyMultiplier,
+			Elo = botData.Elo / difficultyMultiplier,
+			Type = BotType.Daily,
+		};
 		return botData;
 	}
 
@@ -28,7 +31,7 @@ public class BotConfigurations
 		type switch
 		{
 			BotType.Daily => GetDailyBot(),
-			_ => BotConfigurations.Bots[type]
+			_ => Bots[type]
 		};
 
 	public static readonly Dictionary<BotType, WebBotData> Bots = new()

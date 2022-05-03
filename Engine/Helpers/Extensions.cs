@@ -52,37 +52,6 @@ public static class Extensions
         return poppedItem;
     }
 
-    public static int? ExtractInt(this string input)
-    {
-        if (string.IsNullOrEmpty(input))
-        {
-            return null;
-        }
-
-        var stripped = Regex.Replace(
-            input, // Our input
-            "[^0-9]", // Select everything that is not in the range of 0-9
-            ""); // Replace that with an empty string.
-        if (TryParse(stripped, out var number))
-        {
-            return number;
-        }
-
-        return null;
-    }
-
-    public static T DeepClone<T>(this T obj)
-    {
-        using (var ms = new MemoryStream())
-        {
-            var formatter = new BinaryFormatter();
-            formatter.Serialize(ms, obj);
-            ms.Position = 0;
-
-            return (T)formatter.Deserialize(ms);
-        }
-    }
-
     public static IEnumerable<T> ReplaceElementAt<T>(this IEnumerable<T> source, int index, T element)
     {
         var i = 0;

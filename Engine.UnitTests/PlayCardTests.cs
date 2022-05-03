@@ -66,7 +66,7 @@ public class PlayCardTests
 
         // Assertion
         Assert.True(tryPlayResult.Failure);
-        Assert.Equal("Player Player 1 does not have card 6 in their hand",
+        Assert.Equal("6 not in players hand",
             (tryPlayResult as IErrorResult)?.Message);
     }
 
