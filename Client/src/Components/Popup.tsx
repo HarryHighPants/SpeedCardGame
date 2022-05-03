@@ -13,35 +13,16 @@ interface Props {
 }
 
 const Popup = ({ children, onBackButton, onHomeButton, id, customZIndex }: Props) => {
-	const [animatingBack, setAnimatingBack] = useState(false)
 
 	const backPressed = () => {
-		setAnimatingBack(true)
 		if (!!onBackButton) {
 			onBackButton()
 		}
 	}
 
 	return (
-		<PopupContainer
-			key={id}
-			transition={{ duration: 0.3 }}
-			initial={{ opacity: 0 }}
-			animate={{ opacity: 1 }}
-			exit={{ opacity: 0 }}
-			$customZIndex={customZIndex}
-		>
-			<PopupCenter
-				transition={{ duration: 0.3, type: 'tween', ease: 'easeOut' }}
-				initial={{ opacity: 0, marginLeft: !!onBackButton ? 1000 : -1000, scale: 0 }}
-				animate={{ opacity: 1, marginLeft: 0, scale: 1 }}
-				exit={{
-					transition: { duration: 0.3, type: 'tween', ease: 'easeIn' },
-					opacity: 0,
-					marginLeft: animatingBack ? 1000 : -1000,
-					scale: 0,
-				}}
-			>
+		<PopupContainer key={id} $customZIndex={customZIndex}>
+			<PopupCenter>
 				{!!onBackButton && <BackButton onClick={backPressed} />}
 				{!!onHomeButton && <HomeButton />}
 				{children}
@@ -50,7 +31,7 @@ const Popup = ({ children, onBackButton, onHomeButton, id, customZIndex }: Props
 	)
 }
 
-const PopupCenter = styled(motion.div)`
+const PopupCenter = styled.div`
 	position: absolute;
 	background-color: #2e2e2e;
 	border-radius: 12px;
@@ -67,7 +48,7 @@ const PopupCenter = styled(motion.div)`
 	}
 `
 
-const PopupContainer = styled(motion.div)<{ $customZIndex?: number }>`
+const PopupContainer = styled.div<{ $customZIndex?: number }>`
 	position: absolute;
 	top: 0;
 	width: 100%;

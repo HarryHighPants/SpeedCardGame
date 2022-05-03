@@ -11,7 +11,6 @@ import Tutorial from "./Tutorial";
 
 const RouteManager = () => {
 	const [gameStarted, setGameStarted] = useState(false)
-	const [roomId, setRoomId] = useState('')
 	let location = useLocation()
 
 	useEffect(() => {
@@ -22,14 +21,12 @@ const RouteManager = () => {
 
 	return (
 		<>
-			<AnimatePresence>
-				{location.pathname === '/' && <MainMenu key={'main'} />}
-				{location.pathname === '/join' && <JoinGameMenu key={'JoinGameMenu'} />}
-				{location.pathname === '/tutorial' && <Tutorial key={'Tutorial'} />}
-				{location.pathname !== '/join' && location.pathname !== '/' && location.pathname !== '/tutorial' && (
-					<Room onGameStarted={() => setGameStarted(true)} />
-				)}
-			</AnimatePresence>
+			<Routes>
+				<Route path="/" element={<MainMenu />} />
+				<Route path="/join" element={<JoinGameMenu />} />
+				<Route path="/tutorial" element={<Tutorial />} />
+				<Route path=":roomId" element={<Room onGameStarted={() => setGameStarted(true)} />} />
+			</Routes>
 			{!gameStarted && <AutomatedGame />}
 		</>
 	)
