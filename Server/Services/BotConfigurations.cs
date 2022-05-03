@@ -1,14 +1,14 @@
 using System.Security.Cryptography;
 using System.Text;
 using Engine;
+using Server.Hubs;
 using Server.Services;
 
 public class BotConfigurations
 {
 	private static WebBotData GetDailyBot()
 	{
-		// Add 10 hours for AEST
-		var dayIndex = DateOnly.FromDateTime(DateTime.Today.AddHours(10)).DayNumber;
+		var dayIndex = GameHub.GetDayIndex();
 
 		var botName = BotNameCreator.GetRandomBotName(dayIndex);
 		var random = new Random(dayIndex);

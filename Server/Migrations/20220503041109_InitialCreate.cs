@@ -13,13 +13,13 @@ namespace Server.Migrations
                 name: "Player",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Elo = table.Column<int>(type: "INTEGER", nullable: false),
-                    DailyWinStreak = table.Column<int>(type: "INTEGER", nullable: false),
-                    MaxDailyWinStreak = table.Column<int>(type: "INTEGER", nullable: false),
-                    DailyWins = table.Column<int>(type: "INTEGER", nullable: false),
-                    DailyLosses = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Elo = table.Column<int>(type: "integer", nullable: false),
+                    DailyWinStreak = table.Column<int>(type: "integer", nullable: false),
+                    MaxDailyWinStreak = table.Column<int>(type: "integer", nullable: false),
+                    DailyWins = table.Column<int>(type: "integer", nullable: false),
+                    DailyLosses = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -30,13 +30,13 @@ namespace Server.Migrations
                 name: "GameResult",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
-                    WinnerId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    LoserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Turns = table.Column<int>(type: "INTEGER", nullable: false),
-                    LostBy = table.Column<int>(type: "INTEGER", nullable: false),
-                    Daily = table.Column<bool>(type: "INTEGER", nullable: false),
-                    DailyIndex = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    WinnerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    LoserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Turns = table.Column<int>(type: "integer", nullable: false),
+                    LostBy = table.Column<int>(type: "integer", nullable: false),
+                    Daily = table.Column<bool>(type: "boolean", nullable: false),
+                    DailyIndex = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {

@@ -18,7 +18,7 @@ builder.Services.AddSingleton<IBotService, BotService>();
 
 builder.Services.AddDbContextPool<GameResultContext>(options =>
 {
-	options.UseSqlite(builder.Configuration.GetConnectionString("GameResult"));
+	options.UseNpgsql(builder.Configuration.GetConnectionString("GameResult"));
 });
 
 //services cors

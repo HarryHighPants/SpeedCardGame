@@ -18,5 +18,4 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim-arm64v8
 WORKDIR /app
 COPY --from=build-env /app/out .
 ENV ASPNETCORE_URLS=http://*:5169
-ENV ConnectionStrings__GameResult="Filename=DB/database.sqlite"
 ENTRYPOINT ["dotnet", "./Server.dll"]
