@@ -26,9 +26,12 @@ const LobbyPlayer = (
 	}
 
 	return (
-		<div key={`lobby-player-${player.ConnectionId}`} style={{ display: 'flex' }}>
+		<div
+			key={`lobby-player-${player.ConnectionId}`}
+			style={{ display: 'flex'}}
+		>
 			<p style={{ margin: 0, paddingRight: 10, width: 13 }}>{index + 1}. </p>
-			<div>
+			<div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 				{player.ConnectionId == connectionId ? (
 					<input
 						style={{
@@ -36,7 +39,6 @@ const LobbyPlayer = (
 							height: 22,
 							fontSize: 'medium',
 							fontFamily: 'inherit',
-							width: '100%',
 						}}
 						key={player.ConnectionId}
 						maxLength={20}

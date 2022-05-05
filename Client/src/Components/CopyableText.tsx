@@ -16,7 +16,7 @@ function CopyableText({ displayText, copyText, messageText }: Props) {
 				onClick={() => {
 					if (copyText) {
 						navigator.clipboard.writeText(copyText)
-						toast.success(messageText ?? "Copied")
+						toast.success(messageText ?? 'Copied')
 					}
 				}}
 			/>
@@ -26,13 +26,15 @@ function CopyableText({ displayText, copyText, messageText }: Props) {
 
 const InputWrapper = styled.div`
 	display: flex;
-	justify-content: center;
+	justify-content: flex-start;
 	width: 100%;
 `
 
 const CopyButton = styled(HiOutlineDocumentDuplicate)`
 	width: 25px;
 	height: 25px;
+	min-width: 25px;
+	padding-left: 5px;
 	color: white;
 	cursor: pointer;
 
