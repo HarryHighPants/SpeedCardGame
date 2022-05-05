@@ -20,7 +20,7 @@ import { IPlayer } from '../../Interfaces/IPlayer'
 import { GameType } from '../../Interfaces/ILobby'
 import config from '../../Config'
 import { v4 as uuid } from 'uuid'
-import DailyStats from "./DailyStats";
+import DailyStats from './DailyStats'
 
 interface Props {
 	onGameStarted: () => void
@@ -70,8 +70,11 @@ const Room = ({ onGameStarted }: Props) => {
 		console.log('connecting to: ', config.apiGateway.URL)
 		// Builds the SignalR connection, mapping it to /server
 		let signalRConnection = new signalR.HubConnectionBuilder()
-			.withUrl(config.apiGateway.URL)
-			.configureLogging(signalR.LogLevel.Information)
+			.withUrl(config.apiGateway.URL, {
+				// skipNegotiation: true,
+				// transport: signalR.HttpTransportType.WebSockets,
+			})
+			.configureLogging(signalR.LogLevel.Debug)
 			.build()
 
 		signalRConnection.serverTimeoutInMilliseconds = 15000
@@ -148,7 +151,7 @@ const Room = ({ onGameStarted }: Props) => {
 				</>
 			)}
 			<Lobby roomId={roomId} connection={connection} gameState={gameState} onBack={() => connection?.stop()} />
-			<DailyStats connection={connection}/>
+			<DailyStats connection={connection} />
 		</>
 	)
 }

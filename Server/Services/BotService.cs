@@ -30,30 +30,15 @@ public class BotService : IBotService
 		this.scopeFactory = scopeFactory;
 	}
 
-	public void AddBotToRoom(string roomId, BotType type)
+	public async Task AddBotToRoom(string roomId, BotType type)
 	{
 		var botData = BotConfigurations.GetBot(type);
-		SeedBot(botData);
+		await SeedBot(botData);
 		var botId = Guid.NewGuid().ToString();
 		var bot = new Bot(botId, botData, roomId);
 		gameService.JoinRoom(roomId, botId, botData.PersistentId);
 		gameService.UpdateName(bot.Data.Name, botId);
 		Bots.TryAdd(botId, bot);
-	}
-
-	public void SeedBot(WebBotData botData)
-	{
-		using var scope = scopeFactory.CreateScope();
-		var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
-
-		var bot = gameResultContext.Players.Find(botData.PersistentId);
-		if (bot == null)
-		{
-			bot = new PlayerDao {Id = botData.PersistentId, Name = botData.Name};
-			gameResultContext.Players.Add(bot);
-		}
-		bot.Elo = (int)botData.Elo;
-		gameResultContext.SaveChanges();
 	}
 
 	public List<Bot> GetBotsInRoom(string roomId) =>
@@ -92,6 +77,21 @@ public class BotService : IBotService
 		}
 	}
 
+	private async Task SeedBot(WebBotData botData)
+	{
+		using var scope = scopeFactory.CreateScope();
+		var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
+
+		var bot = await gameResultContext.Players.FindAsync(botData.PersistentId);
+		if (bot == null)
+		{
+			bot = new PlayerDao {Id = botData.PersistentId, Name = botData.Name};
+			gameResultContext.Players.Add(bot);
+		}
+		bot.Elo = (int)botData.Elo;
+		await gameResultContext.SaveChangesAsync();
+	}
+
 
 	private async Task RunBot(Bot bot, CancellationToken cancellationToken)
 	{
@@ -99,6 +99,11 @@ public class BotService : IBotService
 
 		var checks = gameService.GetGame(bot.roomId).gameEngine.Checks;
 		var playerId = gameService.GetConnectionsPlayer(bot.ConnectionId).PlayerId;
+		if (playerId == null)
+		{
+			Console.WriteLine("Bot has no playerId so can't participate in game");
+			return;
+		}
 
 		// Wait for the cards to animate in
 		await Task.Delay(4000, cancellationToken);

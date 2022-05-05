@@ -9,7 +9,7 @@ import { IGameState } from '../../Interfaces/IGameState'
 import { AnimatePresence, motion } from 'framer-motion'
 import LobbyPlayer from './LobbyPlayer'
 import CopyableText from '../CopyableText'
-import {IDailyResults} from "../../Interfaces/IDailyResults";
+import { IDailyResults } from '../../Interfaces/IDailyResults'
 
 interface Props {
 	connection: signalR.HubConnection | undefined
@@ -33,6 +33,7 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 
 	useEffect(() => {
 		if (!connection) return
+		console.log("connection.on('UpdateLobbyState', UpdateLobbyData)")
 		connection.on('UpdateLobbyState', UpdateLobbyData)
 		connection.on('UpdateDailyResults', UpdateDailyResults)
 
@@ -43,17 +44,8 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
 	}, [connection])
 
 	useEffect(() => {
-		if (!connection) return
-		connection.on('UpdateLobbyState', UpdateLobbyData)
-
-		return () => {
-			connection.off('UpdateLobbyState', UpdateLobbyData)
-		}
-	}, [connection])
-
-	useEffect(()=>{
 		if (!inLobby) return
-		console.log("updating name",myPlayerName)
+		console.log('updating name', myPlayerName)
 		// Update our name on the server
 		connection?.invoke('UpdateName', myPlayerName)
 	}, [myPlayerName, inLobby])
