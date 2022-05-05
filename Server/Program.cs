@@ -33,6 +33,12 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(
     })
 );
 
+// add services to DI container
+{
+	var services = builder.Services;
+	services.AddControllers();
+}
+
 
 //configure
 var app = builder.Build();
@@ -45,6 +51,11 @@ using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>(
 
 app.UseRouting();
 app.UseCors();
+
+// configure HTTP request pipeline
+{
+	app.MapControllers();
+}
 
 app.MapGet("/", () => "Speed Card Game Server root");
 app.UseEndpoints(endpoints =>
