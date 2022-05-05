@@ -11,7 +11,7 @@ interface Props {
 function CopyableText({ displayText, copyText, messageText }: Props) {
 	return (
 		<InputWrapper>
-			<input value={displayText} disabled={true} />
+			<input style={{minWidth: 0}} value={displayText} disabled={true} />
 			<CopyButton
 				onClick={() => {
 					if (copyText) {
@@ -34,7 +34,6 @@ const CopyButton = styled(HiOutlineDocumentDuplicate)`
 	width: 25px;
 	height: 25px;
 	min-width: 25px;
-	padding-left: 5px;
 	color: white;
 	cursor: pointer;
 

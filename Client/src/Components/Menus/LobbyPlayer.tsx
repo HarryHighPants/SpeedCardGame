@@ -38,7 +38,7 @@ const LobbyPlayer = (
 							marginTop: -5,
 							height: 22,
 							fontSize: 'medium',
-							fontFamily: 'inherit',
+							fontFamily: 'inherit'
 						}}
 						key={player.ConnectionId}
 						maxLength={20}
