@@ -46,6 +46,13 @@ public class ApiController : ControllerBase
 		return Ok(true);
 	}
 
+	[HttpGet("ping-shield-data")]
+	public IActionResult PingShieldData()
+	{
+		var shieldData = new ShieldData("Server status", "Online", "green");
+		return Ok(shieldData);
+	}
+
 	[HttpGet("daily-games-shield-data")]
 	public IActionResult DailyGamesShieldData()
 	{
