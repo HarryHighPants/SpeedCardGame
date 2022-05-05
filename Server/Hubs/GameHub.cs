@@ -1,6 +1,5 @@
 namespace Server.Hubs;
 
-using System.Dynamic;
 using Engine.Helpers;
 using Engine.Models;
 using Microsoft.AspNetCore.SignalR;
@@ -8,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Models.Database;
 using Newtonsoft.Json;
 using Services;
-using Player = Engine.Models.Player;
 
 public class GameHub : Hub
 {
@@ -43,7 +41,7 @@ public class GameHub : Hub
 		var roomId = gameService.GetConnectionsRoomId(UserConnectionId);
 		if (!string.IsNullOrEmpty(roomId))
 		{
-			await LeaveRoom(roomId);
+			await LeaveRoom(roomId, UserConnectionId);
 		}
 
 		Console.WriteLine($"{UserConnectionId} has disconnected");
@@ -55,26 +53,24 @@ public class GameHub : Hub
 	public async Task JoinRoom(string roomId, Guid persistentPlayerId, bool botGame = false, BotType botType = 0)
 	{
 		// Remove the connection from any previous room
-		var previousRoom = gameService.GetConnectionsRoomId(UserConnectionId);
+		var playersPreviousRoom = gameService.GetPlayersRoomId(persistentPlayerId);
 		Console.WriteLine($"Join room, {UserConnectionId}  room: {roomId}");
 
-		if (roomId == previousRoom)
+		if (roomId == playersPreviousRoom)
 		{
 			Console.WriteLine($"Already in room, {UserConnectionId}  room: {roomId}");
-			return;
-		}
 
-		if (!string.IsNullOrEmpty(previousRoom))
-		{
-			Console.WriteLine($"leaving old room, {UserConnectionId}  room: {previousRoom}");
-			await LeaveRoom(roomId);
+			// get the previous connection to leave the room
+			var existingConnectionToRoom = gameService.GetPlayersConnectionId(persistentPlayerId);
+			Console.WriteLine($"previous connection leaving room, {existingConnectionToRoom}  room: {roomId}");
+			await LeaveRoom(roomId, existingConnectionToRoom);
 		}
 
 		// Add connection to the group with roomId
 		await Groups.AddToGroupAsync(UserConnectionId, roomId);
 
 		// Add the player to the room
-		gameService.JoinRoom(roomId, UserConnectionId, persistentPlayerId);
+		gameService.JoinRoom(roomId, UserConnectionId, persistentPlayerId, botType == BotType.Daily ? GetDayIndex() : null);
 
 		if (botGame)
 		{
@@ -87,7 +83,7 @@ public class GameHub : Hub
 				}
 			}
 
-			botService.AddBotToRoom(roomId, botType);
+			await botService.AddBotToRoom(roomId, botType);
 		}
 
 		// Send gameState for roomId
@@ -101,13 +97,13 @@ public class GameHub : Hub
 		await SendLobbyState(gameService.GetConnectionsRoomId(UserConnectionId));
 	}
 
-	public async Task LeaveRoom(string roomId)
+	public async Task LeaveRoom(string roomId, string connectionId)
 	{
 		// Remove connection to the group
-		await Groups.RemoveFromGroupAsync(UserConnectionId, roomId);
+		await Groups.RemoveFromGroupAsync(connectionId, roomId);
 
 		// Remove the connection from the room
-		gameService.LeaveRoom(roomId, UserConnectionId);
+		gameService.LeaveRoom(roomId, connectionId);
 		Console.WriteLine($"They were in room id: {roomId}");
 
 		var connectionsInRoom = gameService.ConnectionsInRoomCount(roomId);
@@ -266,14 +262,7 @@ public class GameHub : Hub
 		var dbWinner = await gameResultContext.Players.FindAsync(winner.PersistentPlayerId);
 		if (dbWinner == null)
 		{
-			dbWinner = new PlayerDao
-			{
-				Id = winner.PersistentPlayerId,
-				Name = winner.Name,
-				DailyWins = 0,
-				DailyLosses = 0,
-				Elo = 500
-			};
+			dbWinner = new PlayerDao {Id = winner.PersistentPlayerId, Name = winner.Name, Elo = 500};
 			gameResultContext.Players.Add(dbWinner);
 			await gameResultContext.SaveChangesAsync();
 		}

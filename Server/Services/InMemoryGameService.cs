@@ -18,23 +18,23 @@ public class InMemoryGameService : IGameService
 		this.scopeFactory = scopeFactory;
 	}
 
-	public void JoinRoom(string roomId, string connectionId, Guid persistentPlayerId)
+	public void JoinRoom(string roomId, string connectionId, Guid persistentPlayerId, int? customGameSeed = null)
 	{
 		// Create the room if we don't have one yet
 		if (!rooms.ContainsKey(roomId))
 		{
-			rooms.TryAdd(roomId, new Room {RoomId = roomId});
+			rooms.TryAdd(roomId, new Room {RoomId = roomId, CustomGameSeed = customGameSeed});
 		}
 
 		// Add the connection to the room
 		var room = rooms[roomId];
-		if (!room.Connections.ContainsKey(connectionId))
+		if (!room.Connections.Any(c=>c.ConnectionId == connectionId))
 		{
 			// See if the player has a rank
 			using var scope = scopeFactory.CreateScope();
 			var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
 			var playerDao = gameResultContext.Players.Find(persistentPlayerId);
-			room.Connections.TryAdd(connectionId,
+			room.Connections.Add(
 				new Connection
 				{
 					ConnectionId = connectionId,
@@ -67,7 +67,7 @@ public class InMemoryGameService : IGameService
 			return new List<Connection>();
 		}
 
-		return rooms[roomId].Connections.Values.ToList();
+		return rooms[roomId].Connections;
 	}
 
 	public void LeaveRoom(string roomId, string connectionId)
@@ -80,12 +80,9 @@ public class InMemoryGameService : IGameService
 
 		// Remove the connection to the room
 		var room = rooms[roomId];
-		if (room.Connections.ContainsKey(connectionId))
-		{
-			room.Connections.TryRemove(connectionId, out _);
-		}
+		room.Connections.RemoveAll(c=>c.ConnectionId == connectionId);
 
-		if (room.Connections.IsEmpty)
+		if (room.Connections.Count <= 0)
 		{
 			rooms.TryRemove(roomId, out _);
 		}
@@ -120,13 +117,13 @@ public class InMemoryGameService : IGameService
 
 		var connectionsPlaying = room.Connections.Take(GameEngine.PlayersPerGame).ToList();
 		// Create the game with the players
-		room.Game = new WebGame(connectionsPlaying, new Settings());
+		room.Game = new WebGame(connectionsPlaying, new Settings{RandomSeed = room.CustomGameSeed});
 
 		// Update the connections with their playerId
 		for (var i = 0; i < connectionsPlaying.Count; i++)
 		{
 			var connection = connectionsPlaying[i];
-			room.Connections[connection.Key].PlayerId = room.Game.State.Players[i].Id;
+			room.Connections.Single(c=>c.ConnectionId == connection.ConnectionId).PlayerId = room.Game.State.Players[i].Id;
 		}
 
 		return Result.Successful();
@@ -206,10 +203,19 @@ public class InMemoryGameService : IGameService
 	}
 
 	public Connection GetConnectionsPlayer(string connectionId) =>
-		rooms[GetConnectionsRoomId(connectionId)].Connections[connectionId];
+		rooms[GetConnectionsRoomId(connectionId)].Connections.Single(c=>c.ConnectionId == connectionId);
 
 	public string GetConnectionsRoomId(string connectionId) =>
-		rooms.FirstOrDefault(g => g.Value.Connections.ContainsKey(connectionId)).Key;
+		rooms.SingleOrDefault(room => room.Value.Connections.Any(c=>c.ConnectionId == connectionId)).Key;
+
+	public string GetPlayersRoomId(Guid persistentPlayerId) =>
+		rooms.SingleOrDefault(room => room.Value.Connections.Any(c=>c.PersistentPlayerId == persistentPlayerId)).Key;
+
+	public string GetPlayersConnectionId(Guid persistentPlayerId) =>
+		rooms.SelectMany(room => room.Value.Connections)
+			.Single(c => c.PersistentPlayerId == persistentPlayerId)
+			.ConnectionId;
+
 
 	public Result<GameStateDto> GetGameStateDto(string roomId)
 	{
@@ -238,7 +244,7 @@ public class InMemoryGameService : IGameService
 		}
 
 		var room = rooms[roomId];
-		var LobbyStateDto = new LobbyStateDto(room.Connections.Values.ToList(), room.IsBotGame, room.Game != null);
+		var LobbyStateDto = new LobbyStateDto(room.Connections.ToList(), room.IsBotGame, room.Game != null);
 		return Result.Successful(LobbyStateDto);
 	}
 
@@ -255,7 +261,7 @@ public class InMemoryGameService : IGameService
 	private void UpdateRoomsPlayerIds(string roomId)
 	{
 		var room = rooms[roomId];
-		var assignedPlayers = room.Connections.Values.Where(c => c.PlayerId != null).ToList();
+		var assignedPlayers = room.Connections.Where(c => c.PlayerId != null).ToList();
 		if (assignedPlayers.Count < GameEngine.PlayersPerGame && room.Connections.Count >= GameEngine.PlayersPerGame)
 		{
 			// At least 1 connection can be assigned to a player
@@ -265,7 +271,7 @@ public class InMemoryGameService : IGameService
 			var playerIdsToAssign = Enumerable.Range(0, GameEngine.PlayersPerGame).ToList().Except(assignedPlayerIds)
 				.ToList();
 
-			var unassignedPlayers = room.Connections.Values.Where(c => c.PlayerId == null).ToList();
+			var unassignedPlayers = room.Connections.Where(c => c.PlayerId == null).ToList();
 
 			for (var i = 0; i < unassignedPlayers.Count; i++)
 			{
@@ -274,7 +280,7 @@ public class InMemoryGameService : IGameService
 					break;
 				}
 
-				room.Connections[unassignedPlayers[i].ConnectionId].PlayerId = playerIdsToAssign.Pop();
+				room.Connections.Single(c=>c.ConnectionId == unassignedPlayers[i].ConnectionId).PlayerId = playerIdsToAssign.Pop();
 			}
 		}
 	}
