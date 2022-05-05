@@ -65,32 +65,21 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 	}, [])
 
 	const SendPlayCard = (topCard: ICard, centerPileIndex: number) => {
-		// Call the event
 		let correctedCenterPileIndex = flippedCenterPiles ? (centerPileIndex + 1) % 2 : centerPileIndex
 		connection?.invoke('TryPlayCard', topCard.Id, correctedCenterPileIndex).catch((e) => console.log(e))
-
-		// Show any messages (Move to a warnings component)
-
-		// assume the server will return success and update the gamestate
 	}
-
-	// todo: move to ConnectionManager Component that uses use contexts and renders children
 
 	const SendPickupFromKitty = () => {
 		connection?.invoke('TryPickupFromKitty').catch((e) => console.log(e))
-		// Show any messages (Move to a warnings component)
-		// assume the server will return success and update the gamestate
 	}
 
 	const SendRequestTopUp = () => {
 		connection?.invoke('TryRequestTopUp').catch((e) => console.log(e))
-		// Show any messages (Move to a warnings component)
 	}
 
 	const SendMovedCard = debounce(
 		(movedCard: IMovedCardPos | undefined) => {
 			connection?.invoke('UpdateMovingCard', movedCard).catch((e) => console.log(e))
-			// Show any messages (Move to a warnings component)
 		},
 		100,
 		{ leading: true, trailing: true, maxWait: 100 }

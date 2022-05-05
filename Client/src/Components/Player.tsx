@@ -34,11 +34,9 @@ const Player = ({ player, onRequestTopUp, onTop, connection, mustTopUp }: Props)
 		if (connection?.state !== HubConnectionState.Connected) {
 			return
 		}
-		console.log("connection.on('Message', ReceivedMessaged)", player.Name)
 		connection.on('Message', ReceivedMessaged)
 
 		return () => {
-			console.log("connection.off('Message', ReceivedMessaged)", player.Name)
 			connection.off('Message', ReceivedMessaged)
 		}
 	}, [connection, onTop])
