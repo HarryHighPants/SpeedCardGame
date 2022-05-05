@@ -1,6 +1,6 @@
 
 <p align="center">
-  <a href="https://www.chartjs.org/" target="_blank">
+  <a href="speed.harryab.com" target="_blank">
     <img src="https://user-images.githubusercontent.com/38173749/164132835-9de2b46f-7478-4a89-aef6-31a406b69284.png" width="500" alt="https://github.com/HarryHighPants/SpeedCardGame/"><br/>
   </a>
     An online version of the card game called speed. Play against bots or your friends!<br/>
