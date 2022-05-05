@@ -1,6 +1,6 @@
 import * as signalR from '@microsoft/signalr'
 import { HubConnection, HubConnectionState, ILogger, LogLevel } from '@microsoft/signalr'
-import { useEffect } from 'react'
+import { memo, useCallback, useEffect, useMemo } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { IGameState } from '../../Interfaces/IGameState'
 import Game from '../../Components/Game'
@@ -127,6 +127,8 @@ const Room = ({ onGameStarted }: Props) => {
 		setGameState({ ...parsedData })
 	}
 
+	const stopConnection = useCallback(() => connection?.stop(), [connection])
+
 	return (
 		<>
 			<Toaster />
@@ -139,7 +141,7 @@ const Room = ({ onGameStarted }: Props) => {
 						connectionId={connectionId}
 						gameState={gameState}
 					/>
-					<HomeButton onClick={() => connection?.stop()} />
+					<HomeButton onClick={stopConnection} />
 					{!!gameState.WinnerId && (
 						<WinnerPopup
 							winnerName={winningPlayer?.Name}

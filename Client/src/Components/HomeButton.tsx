@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { HiOutlineHome } from 'react-icons/hi'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
@@ -35,4 +36,4 @@ const StyledHomeButton = styled(HiOutlineHome)`
 		color: #7e7e7e;
 	}
 `
-export default HomeButton
+export default memo(HomeButton)
