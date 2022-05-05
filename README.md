@@ -1,17 +1,19 @@
 
+
 <p align="center">
   <a href="speed.harryab.com" target="_blank">
     <img src="https://user-images.githubusercontent.com/38173749/164132835-9de2b46f-7478-4a89-aef6-31a406b69284.png" width="500" alt="https://github.com/HarryHighPants/SpeedCardGame/"><br/>
   </a>
     An online version of the card game called speed. Play against bots or your friends!<br/>
     <a href="https://github.com/HarryHighPants/SpeedCardGame/blob/master/LICENSE.md"><img alt="GitHub" src="https://img.shields.io/github/license/harryhighpants/SpeedCardGame"></a>
-    <a href="https://github.com/HarryHighPants/SpeedCardGame/actions"><img alt="Docker" src="https://img.shields.io/github/workflow/status/harryhighpants/speedcardgame/Docker">
-  
+    <a href="https://github.com/HarryHighPants/SpeedCardGame/actions"><img alt="Docker" src="https://img.shields.io/github/workflow/status/harryhighpants/speedcardgame/Docker?logo=GitHubActions&logoColor=white">
+    <img alt="Server status" src="https://img.shields.io/endpoint?label=Server%20status&logo=Statuspal&url=https%3A%2F%2Fserver.harryab.com%3A10000%2Fapi%2Fping-shield-data">
+    <br>
+    <img alt="Custom badge" src="https://img.shields.io/endpoint?color=orange&logo=youTubeGaming&style=for-the-badge&url=https%3A%2F%2Fserver.harryab.com%3A10000%2Fapi%2Fdaily-games-shield-data">
 </p>
-
-
+    
 ## Description
-♦️ **Play now at: [speed.harryab.com](speed.harryab.com)** 
+♦️ **Play now at:** [speed.harryab.com](speed.harryab.com)
 
 This is a online version of the card game called [Speed](https://en.wikipedia.org/wiki/Speed_(card_game))
 #### Features:
