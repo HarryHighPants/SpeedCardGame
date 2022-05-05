@@ -1,11 +1,25 @@
 
-<img src="https://user-images.githubusercontent.com/38173749/164132835-9de2b46f-7478-4a89-aef6-31a406b69284.png" width="600"/>
+
+<img src="" width="500"/>
+<p align="center">
+  <a href="https://www.chartjs.org/" target="_blank">
+    <img src="https://user-images.githubusercontent.com/38173749/164132835-9de2b46f-7478-4a89-aef6-31a406b69284.png" width="500" alt="https://github.com/HarryHighPants/SpeedCardGame/"><br/>
+  </a>
+    An online version of the card game called speed. Play against bots or your friends!<br/>
+    <a href="https://github.com/HarryHighPants/SpeedCardGame/blob/master/LICENSE.md"><img alt="GitHub" src="https://img.shields.io/github/license/harryhighpants/SpeedCardGame"></a>
+    <a href="https://github.com/HarryHighPants/SpeedCardGame/actions"><img alt="Docker" src="https://img.shields.io/github/workflow/status/harryhighpants/speedcardgame/Docker">
+  
+</p>
+
 
 ## Description
+♦️ **Play now at: [speed.harryab.com](speed.harryab.com)** 
+
 This is a online version of the card game called [Speed](https://en.wikipedia.org/wiki/Speed_(card_game))
 #### Features:
 - Warm up against different levels of bots
 - Play against your friends in realtime
+- Ranking system
 - Offline CLI version
 
 
@@ -28,13 +42,5 @@ This is a online version of the card game called [Speed](https://en.wikipedia.or
 - Running the Server: [Server instructions](https://github.com/HarryHighPants/SpeedCardGame/tree/master/Server)
 - Running the CLI version of the game: [CLI instructions](https://github.com/HarryHighPants/SpeedCardGame/tree/master/CliGame)
 
-## Demo
-*Coming soon*
-
-#### Preview Video:
-https://user-images.githubusercontent.com/38173749/164133009-764fba40-bb85-47a8-a1e2-573918a9de5a.mp4
-
-
-
-
-
+## License
+SpeedCardGame is available under the [MIT license](LICENSE.md).
