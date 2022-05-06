@@ -85,7 +85,7 @@ public class BotService : IBotService
 		var bot = await gameResultContext.Players.FindAsync(botData.PersistentId);
 		if (bot == null)
 		{
-			bot = new PlayerDao {Id = botData.PersistentId, Name = botData.Name};
+			bot = new PlayerDao {Id = botData.PersistentId, Name = botData.Name, IsBot = true};
 			gameResultContext.Players.Add(bot);
 		}
 		bot.Elo = (int)botData.Elo;

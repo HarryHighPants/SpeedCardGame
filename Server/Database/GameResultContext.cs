@@ -34,6 +34,7 @@ public class PlayerDao
 {
 	public Guid Id { get; set; }
 	public string Name { get; set; }
+	public bool IsBot { get; set; }
 	public int Elo { get; set; }
 	public int DailyWinStreak { get; set; }
 	public int MaxDailyWinStreak { get; set; }
