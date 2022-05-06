@@ -82,13 +82,13 @@ public class ApiController : ControllerBase
 	class PlayerApi
 	{
 		public string Name { get; set; }
-		private int Elo { get; set; }
-		private string Rank { get; set; }
-		private int Wins { get; set; }
-		private int Losses { get; set; }
-		private int DailyLosses { get; set; }
-		private int DailyWins { get; set; }
-		private int DailyStreak { get; set; }
+		public int Elo { get; set; }
+		public string Rank { get; set; }
+		public int Wins { get; set; }
+		public int Losses { get; set; }
+		public int DailyLosses { get; set; }
+		public int DailyWins { get; set; }
+		public int DailyStreak { get; set; }
 
 		public PlayerApi(PlayerDao playerDoa)
 		{
