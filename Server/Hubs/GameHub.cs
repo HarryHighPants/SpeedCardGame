@@ -292,6 +292,8 @@ public class GameHub : Hub
 			dbLoser.DailyLosses += 1;
 			dbLoser.DailyWinStreak = 0;
 		}
+		dbLoser.Losses += 1;
+		dbWinner.Wins += 1;
 
 		var gameStateLoser = gameState.Players.First(p => p.Id == loser.PlayerId);
 		var loserCardsRemaining = gameStateLoser.HandCards.Count + gameStateLoser.KittyCards.Count;
@@ -311,6 +313,7 @@ public class GameHub : Hub
 		gameResultContext.GameResults.Add(new GameResultDao
 		{
 			Id = Guid.NewGuid(),
+			Created = DateTime.UtcNow,
 			Turns = gameState.MoveHistory.Count,
 			LostBy = loserCardsRemaining,
 			Winner = dbWinner,

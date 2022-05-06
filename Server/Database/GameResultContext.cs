@@ -19,6 +19,8 @@ public class GameResultContext : DbContext
 public class GameResultDao
 {
 	public Guid Id { get; set; }
+
+	public DateTime Created { get; set; }
 	public PlayerDao Winner { get; set; }
 	public PlayerDao Loser { get; set; }
 	public int Turns { get; set; }
@@ -36,5 +38,7 @@ public class PlayerDao
 	public int DailyWinStreak { get; set; }
 	public int MaxDailyWinStreak { get; set; }
 	public int DailyWins { get; set; }
+	public int Wins { get; set; }
 	public int DailyLosses { get; set; }
+	public int Losses { get; set; }
 }

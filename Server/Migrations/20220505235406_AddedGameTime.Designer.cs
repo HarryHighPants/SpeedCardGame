@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Server.Models.Database;
@@ -11,9 +12,10 @@ using Server.Models.Database;
 namespace Server.Migrations
 {
     [DbContext(typeof(GameResultContext))]
-    partial class GameResultContextModelSnapshot : ModelSnapshot
+    [Migration("20220505235406_AddedGameTime")]
+    partial class AddedGameTime
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
