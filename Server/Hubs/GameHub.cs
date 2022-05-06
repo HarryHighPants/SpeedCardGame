@@ -14,16 +14,16 @@ public class GameHub : Hub
 	private readonly IHubContext<GameHub> hubContext;
 	private readonly IBotService botService;
 	private readonly GameResultContext gameResultContext;
-	private readonly StatsService statsService;
+	private readonly StatService statService;
 
-	public GameHub(GameResultContext gameResultContext, IGameService gameService, IHubContext<GameHub> hubContext, StatsService statsService,
+	public GameHub(GameResultContext gameResultContext, IGameService gameService, IHubContext<GameHub> hubContext, StatService statService,
 		IBotService botService)
 	{
 		this.gameResultContext = gameResultContext;
 		this.gameService = gameService;
 		this.hubContext = hubContext;
 		this.botService = botService;
-		this.statsService = statsService;
+		this.statService = statService;
 	}
 
 	public static int GetDayIndex()
@@ -58,14 +58,14 @@ public class GameHub : Hub
 		var playersPreviousRoom = gameService.GetPlayersRoomId(persistentPlayerId);
 		Console.WriteLine($"Join room, {UserConnectionId}  room: {roomId}");
 
-		if (roomId == playersPreviousRoom)
+		if (playersPreviousRoom != null)
 		{
-			Console.WriteLine($"Already in room, {UserConnectionId}  room: {roomId}");
+			Console.WriteLine($"Already in room, {UserConnectionId}  room: {playersPreviousRoom}");
 
 			// get the previous connection to leave the room
 			var existingConnectionToRoom = gameService.GetPlayersConnectionId(persistentPlayerId);
-			Console.WriteLine($"previous connection leaving room, {existingConnectionToRoom}  room: {roomId}");
-			await LeaveRoom(roomId, existingConnectionToRoom);
+			Console.WriteLine($"previous connection leaving room, {existingConnectionToRoom}  room: {playersPreviousRoom}");
+			await LeaveRoom(playersPreviousRoom, existingConnectionToRoom);
 		}
 
 		// Add connection to the group with roomId
@@ -103,12 +103,13 @@ public class GameHub : Hub
 
 	public async Task LeaveRoom(string roomId, string connectionId)
 	{
+		Console.WriteLine($"Remove connection from room id: {roomId}");
+
 		// Remove connection to the group
 		await Groups.RemoveFromGroupAsync(connectionId, roomId);
 
 		// Remove the connection from the room
 		gameService.LeaveRoom(roomId, connectionId);
-		Console.WriteLine($"They were in room id: {roomId}");
 
 		var connectionsInRoom = gameService.ConnectionsInRoomCount(roomId);
 		var botsInRoom = botService.BotsInRoomCount(roomId);
@@ -247,7 +248,7 @@ public class GameHub : Hub
 	{
 		Console.WriteLine($"{roomId} has ended");
 
-		await statsService.HandleGameOver(roomId);
+		await statService.HandleGameOver(roomId);
 
 		var bot = botService.GetBotsInRoom(roomId).FirstOrDefault();
 		var dailyGame = bot is {Data.Type: BotType.Daily};
@@ -282,7 +283,7 @@ public class GameHub : Hub
 
 	private async Task<bool> SendDailyResult(Connection connection)
 	{
-		var dailyResult = statsService.GetDailyResultDto(connection.PersistentPlayerId);
+		var dailyResult = statService.GetDailyResultDto(connection.PersistentPlayerId);
 
 		// Send the SendDailyResult to the player
 		var jsonData = JsonConvert.SerializeObject(dailyResult);
@@ -292,7 +293,7 @@ public class GameHub : Hub
 
 	private async Task SendEloInfo(Connection connection, string roomId)
 	{
-		var eloInfo = await statsService.GetRankingStats(connection.PersistentPlayerId, roomId);
+		var eloInfo = await statService.GetRankingStats(connection.PersistentPlayerId, roomId);
 
 		// Send the SendDailyResult to the player
 		var jsonData = JsonConvert.SerializeObject(eloInfo);

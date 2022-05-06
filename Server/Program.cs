@@ -15,6 +15,8 @@ builder.Services.AddSignalR().AddHubOptions<GameHub>(options =>
 });
 builder.Services.AddSingleton<IGameService, InMemoryGameService>();
 builder.Services.AddSingleton<IBotService, BotService>();
+builder.Services.AddSingleton<StatService, StatService>();
+builder.Services.AddSingleton<EloService, EloService>();
 
 builder.Services.AddDbContextPool<GameResultContext>(options =>
 {

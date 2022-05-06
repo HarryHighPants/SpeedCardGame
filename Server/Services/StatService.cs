@@ -5,15 +5,16 @@ using Hubs;
 using Microsoft.EntityFrameworkCore;
 using Models.Database;
 
-public class StatsService
+public class StatService
 {
-	private readonly GameResultContext gameResultContext;
 	private readonly IGameService gameService;
 	private readonly IBotService botService;
+	private readonly IServiceScopeFactory scopeFactory;
 
-	public StatsService(GameResultContext gameResultContext, IGameService gameService, IBotService botService)
+
+	public StatService(IServiceScopeFactory scopeFactory, IGameService gameService, IBotService botService)
 	{
-		this.gameResultContext = gameResultContext;
+		this.scopeFactory = scopeFactory;
 		this.gameService = gameService;
 		this.botService = botService;
 	}
@@ -45,6 +46,9 @@ public class StatsService
 
 		// Update the players Elo
 		EloService.CalculateElo(ref dbWinner, ref dbLoser);
+
+		using var scope = scopeFactory.CreateScope();
+		var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
 
 		gameResultContext.GameResults.Add(new GameResultDao
 		{
@@ -97,12 +101,16 @@ public class StatsService
 		var dbWinner = await GetConnectionsPlayerDao(winner);
 		var dbLoser = await GetConnectionsPlayerDao(loser);
 
+		using var scope = scopeFactory.CreateScope();
+		var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
 		await gameResultContext.SaveChangesAsync();
 		return (dbWinner, dbLoser);
 	}
 
 	private async Task<PlayerDao> GetConnectionsPlayerDao(Connection connection)
 	{
+		using var scope = scopeFactory.CreateScope();
+		var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
 		var player = await gameResultContext.Players.FindAsync(connection.PersistentPlayerId);
 		if (player == null)
 		{
@@ -115,11 +123,15 @@ public class StatsService
 		return player;
 	}
 
-	private GameResultDao? GetDailyResult(Guid persistentPlayerId) =>
-		gameResultContext.GameResults
+	private GameResultDao? GetDailyResult(Guid persistentPlayerId)
+	{
+		using var scope = scopeFactory.CreateScope();
+		var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
+		return gameResultContext.GameResults
 			.Include(gr => gr.Loser)
 			.Include(gr => gr.Winner)
 			.FirstOrDefault(gr =>
 				gr.Daily && gr.DailyIndex == GameHub.GetDayIndex() &&
 				(gr.Winner.Id == persistentPlayerId || gr.Loser.Id == persistentPlayerId));
+	}
 }
