@@ -72,8 +72,8 @@ public class ApiController : ControllerBase
 
 	private int GamesPlayed(int? inDays = null)
 	{
-		var dailyIndex = GameHub.GetDayIndex();
-		return gameResultContext.GameResults.Count(g => inDays == null || g.DailyIndex >= dailyIndex-inDays);
+		var dateFrom = DateTime.UtcNow.Subtract(TimeSpan.FromDays(inDays ?? 0));
+		return gameResultContext.GameResults.Count(g => inDays == null || g.Created > dateFrom);
 	}
 
 	// https://shields.io/endpoint
@@ -86,6 +86,8 @@ public class ApiController : ControllerBase
 		private string Rank { get; set; }
 		private int Wins { get; set; }
 		private int Losses { get; set; }
+		private int DailyLosses { get; set; }
+		private int DailyWins { get; set; }
 		private int DailyStreak { get; set; }
 
 		public PlayerApi(PlayerDao playerDoa)
@@ -93,8 +95,10 @@ public class ApiController : ControllerBase
 			Name = playerDoa.Name;
 			Elo = playerDoa.Elo;
 			Rank = InMemoryGameService.GetRank(playerDoa.Elo).ToString();
-			Wins = playerDoa.DailyWins;
-			Losses = playerDoa.DailyLosses;
+			DailyWins = playerDoa.DailyWins;
+			DailyLosses = playerDoa.DailyLosses;
+			Wins = playerDoa.Wins;
+			Losses = playerDoa.Losses;
 			DailyStreak = playerDoa.DailyWinStreak;
 		}
 	}
