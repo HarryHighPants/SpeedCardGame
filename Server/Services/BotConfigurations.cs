@@ -8,7 +8,7 @@ public class BotConfigurations
 {
 	private static WebBotData GetDailyBot()
 	{
-		var dayIndex = GameHub.GetDayIndex();
+		var dayIndex = InMemoryGameService.GetDayIndex();
 
 		var botName = BotNameCreator.GetRandomBotName(dayIndex);
 		var random = new Random(dayIndex);

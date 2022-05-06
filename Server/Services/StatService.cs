@@ -59,7 +59,7 @@ public class StatService
 			Winner = dbWinner,
 			Loser = dbLoser,
 			Daily = dailyGame,
-			DailyIndex = GameHub.GetDayIndex()
+			DailyIndex = InMemoryGameService.GetDayIndex()
 		});
 
 		await gameResultContext.SaveChangesAsync();
@@ -131,7 +131,7 @@ public class StatService
 			.Include(gr => gr.Loser)
 			.Include(gr => gr.Winner)
 			.FirstOrDefault(gr =>
-				gr.Daily && gr.DailyIndex == GameHub.GetDayIndex() &&
+				gr.Daily && gr.DailyIndex == InMemoryGameService.GetDayIndex() &&
 				(gr.Winner.Id == persistentPlayerId || gr.Loser.Id == persistentPlayerId));
 	}
 }

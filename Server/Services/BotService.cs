@@ -158,7 +158,7 @@ public class BotService : IBotService
 
 	private async Task SendGameState(string roomId)
 	{
-		if (!gameService.GameStarted(roomId))
+		if (!gameService.HasGameStarted(roomId))
 		{
 			return;
 		}

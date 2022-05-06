@@ -7,14 +7,15 @@ using Engine.Models;
 
 public class GameStateDto
 {
-	public List<PlayerDto> Players;
-	public List<CenterPile> CenterPiles;
-	public string LastMove;
-	public string? WinnerId;
-	public bool MustTopUp;
+	public List<PlayerDto> Players { get; }
+	public List<CenterPile> CenterPiles { get; }
+	public string LastMove { get; }
+	public string? WinnerId { get; }
+	public bool MustTopUp { get; }
 
 	public GameStateDto(GameState gameState, List<Connection> connections, GameEngine gameEngine)
 	{
+		// todo: hash playerId
 		Players = gameState.Players
 			.Select((p, i) => new PlayerDto(p, gameEngine.Checks.CanRequestTopUp(gameState, i).Success))
 			.ToList();
@@ -33,7 +34,8 @@ public class GameStateDto
 		}
 
 		// Only send the top 3
-		CenterPiles = gameState.CenterPiles.Select((pile, i) => new CenterPile{Cards = pile.Cards.TakeLast(3).ToImmutableList()} ).ToList();
+		CenterPiles = gameState.CenterPiles
+			.Select((pile, i) => new CenterPile {Cards = pile.Cards.TakeLast(3).ToImmutableList()}).ToList();
 		LastMove = gameState.LastMove;
 
 		var winnerResult = gameEngine.Checks.TryGetWinner(gameState);

@@ -18,17 +18,36 @@ public class InMemoryGameService : IGameService
 		this.scopeFactory = scopeFactory;
 	}
 
-	public void JoinRoom(string roomId, string connectionId, Guid persistentPlayerId, int? customGameSeed = null)
+	public static int GetDayIndex()
 	{
+		var eastern = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+			DateTime.UtcNow, "AUS Eastern Standard Time");
+		return DateOnly.FromDateTime(eastern).DayNumber;
+	}
+
+	public void JoinRoom(string roomId, Guid persistentPlayerId, BotType? botType)
+	{
+		int? customGameSeed = botType == BotType.Daily ? GetDayIndex() : null;
+
 		// Create the room if we don't have one yet
 		if (!rooms.ContainsKey(roomId))
 		{
+			// If the game doesn't exist yet, check it's not a daily one that's already been played
+			if (botType != null)
+			{
+				if (botType == BotType.Daily)
+				{
+					// todo: check if todays daily game has already been played by this player
+					// throw new Exception("Daily game already played today");
+				}
+			}
+
 			rooms.TryAdd(roomId, new Room {RoomId = roomId, CustomGameSeed = customGameSeed});
 		}
 
 		// Add the connection to the room
 		var room = rooms[roomId];
-		if (room.Connections.All(c => c.ConnectionId != connectionId))
+		if (room.Connections.All(c => c.PersistentPlayerId != persistentPlayerId))
 		{
 			// See if the player has a rank
 			using var scope = scopeFactory.CreateScope();
@@ -37,17 +56,35 @@ public class InMemoryGameService : IGameService
 			room.Connections.Add(
 				new Connection
 				{
-					ConnectionId = connectionId,
 					Name = playerDao?.Name ?? "Player",
 					PersistentPlayerId = persistentPlayerId,
 					Rank = EloService.GetRank(playerDao?.Elo ?? EloService.StartingElo)
 				});
 		}
 
-		if (GameStarted(roomId))
+
+		if (HasGameStarted(roomId))
 		{
 			UpdateRoomsPlayerIds(roomId);
 		}
+		else
+		{
+			if (botType != null)
+			{
+				if (botType == BotType.Daily)
+				{
+					var connection = GetConnectionInfo(persistentPlayerId);
+					// See if we have already played the daily game
+					if (await SendDailyResult(connection))
+					{
+						return;
+					}
+				}
+
+				await botService.AddBotToRoom(roomId, botType);
+			}
+		}
+
 	}
 
 	public int ConnectionsInRoomCount(string roomId)
@@ -70,7 +107,7 @@ public class InMemoryGameService : IGameService
 		return rooms[roomId].Connections;
 	}
 
-	public void LeaveRoom(string roomId, string connectionId)
+	public void LeaveRoom(string roomId, Guid persistentPlayerId)
 	{
 		// Check we have a room with that Id
 		if (!rooms.ContainsKey(roomId))
@@ -82,6 +119,20 @@ public class InMemoryGameService : IGameService
 		var room = rooms[roomId];
 		room.Connections.RemoveAll(c=>c.ConnectionId == connectionId);
 
+		var connectionsInRoom = gameService.ConnectionsInRoomCount(roomId);
+		var botsInRoom = botService.BotsInRoomCount(roomId);
+		if (botsInRoom > 0 && botsInRoom == connectionsInRoom)
+		{
+			Console.WriteLine(
+				$"RemoveBotsFromRoom, {botService.BotsInRoomCount(roomId)} connections: {gameService.ConnectionsInRoomCount(roomId)}");
+			botService.RemoveBotsFromRoom(roomId);
+			return;
+		}
+
+		Console.WriteLine(
+			$"Bots, {botService.BotsInRoomCount(roomId)} connections: {gameService.ConnectionsInRoomCount(roomId)}");
+
+
 		if (room.Connections.Count <= 0)
 		{
 			rooms.TryRemove(roomId, out _);
@@ -92,10 +143,10 @@ public class InMemoryGameService : IGameService
 		}
 	}
 
-	public void UpdateName(string updatedName, string connectionId) =>
+	public void UpdateName(string updatedName, Guid persistentPlayerId) =>
 		GetConnectionInfo(connectionId).Name = updatedName;
 
-	public Result StartGame(string connectionId)
+	public Result StartGame(string roomId, Guid persistentPlayerId)
 	{
 		var roomResult = GetConnectionsRoom(connectionId);
 		if (roomResult is IErrorResult roomError)
@@ -126,10 +177,13 @@ public class InMemoryGameService : IGameService
 			room.Connections.Single(c=>c.ConnectionId == connection.ConnectionId).PlayerId = room.Game.State.Players[i].Id;
 		}
 
+		botService.RunBotsInRoom(roomId);
+
+
 		return Result.Successful();
 	}
 
-	public Result TryPlayCard(string connectionId, int cardId, int centerPilIndex)
+	public Result TryPlayCard(string roomId, Guid persistentPlayerId, int cardId, int centerPilIndex)
 	{
 		var gameResult = GetConnectionsGame(connectionId);
 		if (gameResult is IErrorResult gameResultError)
@@ -139,10 +193,22 @@ public class InMemoryGameService : IGameService
 
 		var game = gameResult.Data;
 
+		// Check if the game has just ended
+		var updatedGameState = gameService.GetGameStateDto(roomId);
+		if (updatedGameState.Success && updatedGameState.Data.WinnerId != null)
+		{
+			var a = 1;
+		}
+		if (initialGameState.Success && initialGameState.Data.WinnerId == null && updatedGameState.Success &&
+		    updatedGameState.Data.WinnerId != null)
+		{
+			await HandleGameOver(roomId);
+		}
+
 		return game.TryPlayCard(GetConnectionInfo(connectionId).PlayerId.Value, cardId, centerPilIndex);
 	}
 
-	public Result TryPickupFromKitty(string connectionId)
+	public Result TryPickupFromKitty(string roomId, Guid persistentPlayerId)
 	{
 		var gameResult = GetConnectionsGame(connectionId);
 		if (gameResult is IErrorResult gameResultError)
@@ -155,7 +221,7 @@ public class InMemoryGameService : IGameService
 		return game.TryPickupFromKitty(GetConnectionInfo(connectionId).PlayerId.Value);
 	}
 
-	public Result TryRequestTopUp(string connectionId)
+	public Result TryRequestTopUp(string roomId, Guid persistentPlayerId)
 	{
 		var gameResult = GetConnectionsGame(connectionId);
 		if (gameResult is IErrorResult gameResultError)
@@ -168,12 +234,33 @@ public class InMemoryGameService : IGameService
 		return game.TryRequestTopUp(GetConnectionInfo(connectionId).PlayerId.Value);
 	}
 
+	private async Task HandleGameOver(string roomId)
+	{
+		Console.WriteLine($"{roomId} has ended");
+
+		await statService.HandleGameOver(roomId);
+
+		var bot = botService.GetBotsInRoom(roomId).FirstOrDefault();
+		var dailyGame = bot is {Data.Type: BotType.Daily};
+		var players = gameService.ConnectionsInRoom(roomId);
+		if (dailyGame)
+		{
+			var player = players.Single(p => p.PlayerId != null && p.ConnectionId != bot?.ConnectionId);
+			await SendDailyResult(player);
+		}
+
+		foreach (var player in players)
+		{
+			await SendEloInfo(player, roomId);
+		}
+	}
+
 	public WebGame GetGame(string roomId)
 	{
 		return rooms[roomId].Game;
 	}
 
-	private Result<Room> GetConnectionsRoom(string connectionId)
+	private Result<Room> GetConnectionsRoom(Guid persistentPlayerId)
 	{
 		var roomId = GetConnectionsRoomId(connectionId);
 		if (string.IsNullOrEmpty(roomId))
@@ -184,7 +271,7 @@ public class InMemoryGameService : IGameService
 		return Result.Successful(rooms[roomId]);
 	}
 
-	private Result<WebGame> GetConnectionsGame(string connectionId)
+	private Result<WebGame> GetConnectionsGame(Guid persistentPlayerId)
 	{
 		var roomResult = GetConnectionsRoom(connectionId);
 		if (roomResult is IErrorResult roomError)
@@ -194,7 +281,7 @@ public class InMemoryGameService : IGameService
 
 		var room = roomResult.Data;
 
-		if (!GameStarted(room.RoomId))
+		if (!HasGameStarted(room.RoomId))
 		{
 			return Result.Error<WebGame>("Game hasn't started yet");
 		}
@@ -202,10 +289,10 @@ public class InMemoryGameService : IGameService
 		return Result.Successful(room.Game!);
 	}
 
-	public Connection GetConnectionInfo(string connectionId) =>
+	public Connection GetConnectionInfo(Guid persistentPlayerId) =>
 		rooms[GetConnectionsRoomId(connectionId)].Connections.Single(c=>c.ConnectionId == connectionId);
 
-	public string GetConnectionsRoomId(string connectionId) =>
+	public string GetConnectionsRoomId(Guid persistentPlayerId) =>
 		rooms.SingleOrDefault(room => room.Value.Connections.Any(c=>c.ConnectionId == connectionId)).Key;
 
 	public string GetPlayersRoomId(Guid persistentPlayerId) =>
@@ -227,7 +314,7 @@ public class InMemoryGameService : IGameService
 
 		// Check we have a game in the room
 		var room = rooms[roomId];
-		if (!GameStarted(roomId))
+		if (!HasGameStarted(roomId))
 		{
 			return Result.Error<GameStateDto>("No game in room yet");
 		}
@@ -248,7 +335,7 @@ public class InMemoryGameService : IGameService
 		return Result.Successful(LobbyStateDto);
 	}
 
-	public bool GameStarted(string roomId)
+	public bool HasGameStarted(string roomId)
 	{
 		if (!rooms.ContainsKey(roomId))
 		{
@@ -285,7 +372,7 @@ public class InMemoryGameService : IGameService
 		}
 	}
 
-	public bool ConnectionOwnsCard(string connectionId, int cardId)
+	public bool ConnectionOwnsCard(Guid persistentPlayerId, int cardId)
 	{
 		var gameResult = GetConnectionsGame(connectionId);
 		if (gameResult is IErrorResult gameError)
@@ -315,7 +402,7 @@ public class InMemoryGameService : IGameService
 		return false;
 	}
 
-	public CardLocation? GetCardLocation(string connectionId, int cardId)
+	public CardLocation? GetCardLocation(Guid persistentPlayerId, int cardId)
 	{
 		var gameResult = GetConnectionsGame(connectionId);
 		var card = gameResult.Data.State.GetCard(cardId);

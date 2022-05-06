@@ -73,6 +73,7 @@ const Room = ({ onGameStarted }: Props) => {
 			.withUrl(config.apiGateway.URL, {
 				// skipNegotiation: true,
 				// transport: signalR.HttpTransportType.WebSockets,
+				accessTokenFactory: () => persistentId,
 			})
 			.configureLogging(signalR.LogLevel.Debug)
 			.build()
