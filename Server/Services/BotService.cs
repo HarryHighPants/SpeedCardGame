@@ -98,7 +98,7 @@ public class BotService : IBotService
 		var random = new Random();
 
 		var checks = gameService.GetGame(bot.roomId).gameEngine.Checks;
-		var playerId = gameService.GetConnectionsPlayer(bot.ConnectionId).PlayerId;
+		var playerId = gameService.GetConnectionInfo(bot.ConnectionId).PlayerId;
 		if (playerId == null)
 		{
 			Console.WriteLine("Bot has no playerId so can't participate in game");

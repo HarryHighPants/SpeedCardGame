@@ -93,7 +93,7 @@ public class InMemoryGameService : IGameService
 	}
 
 	public void UpdateName(string updatedName, string connectionId) =>
-		GetConnectionsPlayer(connectionId).Name = updatedName;
+		GetConnectionInfo(connectionId).Name = updatedName;
 
 	public Result StartGame(string connectionId)
 	{
@@ -139,7 +139,7 @@ public class InMemoryGameService : IGameService
 
 		var game = gameResult.Data;
 
-		return game.TryPlayCard(GetConnectionsPlayer(connectionId).PlayerId.Value, cardId, centerPilIndex);
+		return game.TryPlayCard(GetConnectionInfo(connectionId).PlayerId.Value, cardId, centerPilIndex);
 	}
 
 	public Result TryPickupFromKitty(string connectionId)
@@ -152,7 +152,7 @@ public class InMemoryGameService : IGameService
 
 		var game = gameResult.Data;
 
-		return game.TryPickupFromKitty(GetConnectionsPlayer(connectionId).PlayerId.Value);
+		return game.TryPickupFromKitty(GetConnectionInfo(connectionId).PlayerId.Value);
 	}
 
 	public Result TryRequestTopUp(string connectionId)
@@ -165,7 +165,7 @@ public class InMemoryGameService : IGameService
 
 		var game = gameResult.Data;
 
-		return game.TryRequestTopUp(GetConnectionsPlayer(connectionId).PlayerId.Value);
+		return game.TryRequestTopUp(GetConnectionInfo(connectionId).PlayerId.Value);
 	}
 
 	public WebGame GetGame(string roomId)
@@ -202,7 +202,7 @@ public class InMemoryGameService : IGameService
 		return Result.Successful(room.Game!);
 	}
 
-	public Connection GetConnectionsPlayer(string connectionId) =>
+	public Connection GetConnectionInfo(string connectionId) =>
 		rooms[GetConnectionsRoomId(connectionId)].Connections.Single(c=>c.ConnectionId == connectionId);
 
 	public string GetConnectionsRoomId(string connectionId) =>
@@ -295,7 +295,7 @@ public class InMemoryGameService : IGameService
 
 		var game = gameResult.Data;
 
-		var connectionsPlayerId = GetConnectionsPlayer(connectionId).PlayerId;
+		var connectionsPlayerId = GetConnectionInfo(connectionId).PlayerId;
 		if (connectionsPlayerId == null)
 		{
 			return false;
@@ -325,11 +325,11 @@ public class InMemoryGameService : IGameService
 	public static Rank GetRank(int elo) =>
 		elo switch
 		{
-			<= 1000 => Rank.EagerStarter,
-			<= 2000 => Rank.DedicatedRival,
-			<= 3000 => Rank.CertifiedRacer,
-			<= 4000 => Rank.BossAthlete,
-			<= 5000 => Rank.Acetronaut,
-			> 5000 => Rank.SpeedDemon
+			<= 500 => Rank.EagerStarter,
+			<= 1000 => Rank.DedicatedRival,
+			<= 1500 => Rank.CertifiedRacer,
+			<= 2000 => Rank.BossAthlete,
+			<= 2500 => Rank.Acetronaut,
+			> 2500 => Rank.SpeedDemon
 		};
 }

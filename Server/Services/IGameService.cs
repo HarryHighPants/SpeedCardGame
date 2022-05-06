@@ -15,7 +15,7 @@ public interface IGameService
 
 	public Result StartGame(string connectionId);
 
-	public Connection GetConnectionsPlayer(string connectionId);
+	public Connection GetConnectionInfo(string connectionId);
 
 	public string GetConnectionsRoomId(string connectionId);
 	public string GetPlayersRoomId(Guid persistentPlayerId);

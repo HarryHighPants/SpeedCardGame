@@ -14,14 +14,16 @@ public class GameHub : Hub
 	private readonly IHubContext<GameHub> hubContext;
 	private readonly IBotService botService;
 	private readonly GameResultContext gameResultContext;
+	private readonly StatsService statsService;
 
-	public GameHub(GameResultContext gameResultContext, IGameService gameService, IHubContext<GameHub> hubContext,
+	public GameHub(GameResultContext gameResultContext, IGameService gameService, IHubContext<GameHub> hubContext, StatsService statsService,
 		IBotService botService)
 	{
 		this.gameResultContext = gameResultContext;
 		this.gameService = gameService;
 		this.hubContext = hubContext;
 		this.botService = botService;
+		this.statsService = statsService;
 	}
 
 	public static int GetDayIndex()
@@ -70,14 +72,16 @@ public class GameHub : Hub
 		await Groups.AddToGroupAsync(UserConnectionId, roomId);
 
 		// Add the player to the room
-		gameService.JoinRoom(roomId, UserConnectionId, persistentPlayerId, botType == BotType.Daily ? GetDayIndex() : null);
+		gameService.JoinRoom(roomId, UserConnectionId, persistentPlayerId,
+			botType == BotType.Daily ? GetDayIndex() : null);
 
 		if (botGame)
 		{
 			if (botType == BotType.Daily)
 			{
+				var connection = gameService.GetConnectionInfo(UserConnectionId);
 				// See if we have already played the daily game
-				if (await SendDailyResult(persistentPlayerId))
+				if (await SendDailyResult(connection))
 				{
 					return;
 				}
@@ -243,91 +247,20 @@ public class GameHub : Hub
 	{
 		Console.WriteLine($"{roomId} has ended");
 
-		// Get the gameState from the gameService
-		var gameStateResult = gameService.GetGameStateDto(roomId);
-
-		// Check it's valid
-		if (gameStateResult is IErrorResult gameStateError)
-		{
-			throw new HubException(gameStateError.Message, new ApplicationException(gameStateError.Message));
-		}
+		await statsService.HandleGameOver(roomId);
 
 		var bot = botService.GetBotsInRoom(roomId).FirstOrDefault();
-
-		var gameState = gameService.GetGame(roomId).State;
-		var players = gameService.ConnectionsInRoom(roomId);
-		var winner = players.Single(p => p.PlayerId != null && p.ConnectionId == gameStateResult.Data.WinnerId);
-		var loser = players.Single(p => p.PlayerId != null && p.ConnectionId != gameStateResult.Data.WinnerId);
-
-		var dbWinner = await gameResultContext.Players.FindAsync(winner.PersistentPlayerId);
-		if (dbWinner == null)
-		{
-			dbWinner = new PlayerDao {Id = winner.PersistentPlayerId, Name = winner.Name, Elo = 500};
-			gameResultContext.Players.Add(dbWinner);
-			await gameResultContext.SaveChangesAsync();
-		}
-
-		dbWinner.Name = winner.Name;
-
-		var dbLoser = await gameResultContext.Players.FindAsync(loser.PersistentPlayerId);
-		if (dbLoser == null)
-		{
-			dbLoser = new PlayerDao {Id = loser.PersistentPlayerId, Name = loser.Name, Elo = 500};
-			gameResultContext.Players.Add(dbLoser);
-			await gameResultContext.SaveChangesAsync();
-		}
-
-		dbLoser.Name = loser.Name;
-
 		var dailyGame = bot is {Data.Type: BotType.Daily};
-		if (dailyGame)
-		{
-			dbWinner.DailyWins += 1;
-			dbWinner.DailyWinStreak += 1;
-			if (dbWinner.MaxDailyWinStreak < dbWinner.DailyWinStreak)
-			{
-				dbWinner.MaxDailyWinStreak = dbWinner.DailyWinStreak;
-			}
-
-			dbLoser.DailyLosses += 1;
-			dbLoser.DailyWinStreak = 0;
-		}
-		dbLoser.Losses += 1;
-		dbWinner.Wins += 1;
-
-		var gameStateLoser = gameState.Players.First(p => p.Id == loser.PlayerId);
-		var loserCardsRemaining = gameStateLoser.HandCards.Count + gameStateLoser.KittyCards.Count;
-
-		var eloDifference = Math.Abs(dbLoser.Elo - dbWinner.Elo);
-		var baseEloPoints = (int)(1 / Math.Log(eloDifference) * 50);
-		if (dbWinner.Elo < dbLoser.Elo)
-		{
-			var upsetMultiplier = (loserCardsRemaining * 0.1) + 1;
-			dbWinner.Elo += (int)(eloDifference * upsetMultiplier * 0.3);
-			dbLoser.Elo -= (int)(eloDifference * upsetMultiplier * 0.3);
-		}
-
-		dbWinner.Elo += baseEloPoints;
-		dbLoser.Elo -= baseEloPoints;
-
-		gameResultContext.GameResults.Add(new GameResultDao
-		{
-			Id = Guid.NewGuid(),
-			Created = DateTime.UtcNow,
-			Turns = gameState.MoveHistory.Count,
-			LostBy = loserCardsRemaining,
-			Winner = dbWinner,
-			Loser = dbLoser,
-			Daily = dailyGame,
-			DailyIndex = GetDayIndex()
-		});
-
-		await gameResultContext.SaveChangesAsync();
-
+		var players = gameService.ConnectionsInRoom(roomId);
 		if (dailyGame)
 		{
 			var player = players.Single(p => p.PlayerId != null && p.ConnectionId != bot?.ConnectionId);
-			await SendDailyResult(player.PersistentPlayerId);
+			await SendDailyResult(player);
+		}
+
+		foreach (var player in players)
+		{
+			await SendEloInfo(player, roomId);
 		}
 	}
 
@@ -348,28 +281,23 @@ public class GameHub : Hub
 		await Clients.Group(roomId).SendAsync("UpdateLobbyState", jsonData);
 	}
 
-	private GameResultDao? GetDailyResult(Guid persistentPlayerId) =>
-		gameResultContext.GameResults
-			.Include(gr => gr.Loser)
-			.Include(gr => gr.Winner)
-			.FirstOrDefault(gr =>
-				gr.Daily && gr.DailyIndex == GetDayIndex() &&
-				(gr.Winner.Id == persistentPlayerId || gr.Loser.Id == persistentPlayerId));
-
-	private async Task<bool> SendDailyResult(Guid persistentPlayerId)
+	private async Task<bool> SendDailyResult(Connection connection)
 	{
-		var dailyMatch = GetDailyResult(persistentPlayerId);
-		if (dailyMatch == null)
-		{
-			return false;
-		}
-
-		var dailyResult = new DailyResultDto(persistentPlayerId, dailyMatch);
+		var dailyResult = statsService.GetDailyResultDto(connection.PersistentPlayerId);
 
 		// Send the SendDailyResult to the player
 		var jsonData = JsonConvert.SerializeObject(dailyResult);
 		await Clients.Client(UserConnectionId).SendAsync("UpdateDailyResults", jsonData);
 		return true;
+	}
+
+	private async Task SendEloInfo(Connection connection, string roomId)
+	{
+		var eloInfo = await statsService.GetRankingStats(connection.PersistentPlayerId, roomId);
+
+		// Send the SendDailyResult to the player
+		var jsonData = JsonConvert.SerializeObject(eloInfo);
+		await Clients.Client(UserConnectionId).SendAsync("UpdateEloInfo", jsonData);
 	}
 
 	private async Task SendConnectionMessage(string message) =>

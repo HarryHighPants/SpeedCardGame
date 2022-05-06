@@ -48,7 +48,7 @@ public class BotConfigurations
                 QuickestResponseTimeMs = 2000,
                 SlowestResponseTimeMs = 4000,
                 PickupIntervalMs = 1000,
-                Elo = 1500,
+                Elo = 750,
                 Type = BotType.Easy
             }
         },
@@ -64,7 +64,7 @@ public class BotConfigurations
                 QuickestResponseTimeMs = 1000,
                 SlowestResponseTimeMs = 3000,
                 PickupIntervalMs = 500,
-                Elo = 2500,
+                Elo = 1250,
                 Type = BotType.Medium
             }
         },
@@ -80,7 +80,7 @@ public class BotConfigurations
                 QuickestResponseTimeMs = 500,
                 SlowestResponseTimeMs = 1750,
                 PickupIntervalMs = 400,
-                Elo = 3500,
+                Elo = 1750,
                 Type = BotType.Hard
             }
         },
@@ -96,7 +96,7 @@ public class BotConfigurations
                 QuickestResponseTimeMs = 500,
                 SlowestResponseTimeMs = 750,
                 PickupIntervalMs = 300,
-                Elo = 4500,
+                Elo = 2250,
                 Type = BotType.Impossible
             }
         }
