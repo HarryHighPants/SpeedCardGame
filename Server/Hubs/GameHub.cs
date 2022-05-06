@@ -264,7 +264,6 @@ public class GameHub : Hub
 		}
 	}
 
-
 	private async Task SendLobbyState(string roomId)
 	{
 		// Get the gameState from the gameService

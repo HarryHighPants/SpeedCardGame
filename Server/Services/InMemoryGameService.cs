@@ -28,7 +28,7 @@ public class InMemoryGameService : IGameService
 
 		// Add the connection to the room
 		var room = rooms[roomId];
-		if (!room.Connections.Any(c=>c.ConnectionId == connectionId))
+		if (room.Connections.All(c => c.ConnectionId != connectionId))
 		{
 			// See if the player has a rank
 			using var scope = scopeFactory.CreateScope();
@@ -38,7 +38,7 @@ public class InMemoryGameService : IGameService
 				new Connection
 				{
 					ConnectionId = connectionId,
-					Name = "Player",
+					Name = playerDao?.Name ?? "Player",
 					PersistentPlayerId = persistentPlayerId,
 					Rank = GetRank(playerDao?.Elo ?? 500)
 				});
