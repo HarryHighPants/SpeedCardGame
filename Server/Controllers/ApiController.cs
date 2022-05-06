@@ -94,7 +94,7 @@ public class ApiController : ControllerBase
 		{
 			Name = playerDoa.Name;
 			Elo = playerDoa.Elo;
-			Rank = InMemoryGameService.GetRank(playerDoa.Elo).ToString();
+			Rank = EloService.GetRank(playerDoa.Elo).ToString();
 			DailyWins = playerDoa.DailyWins;
 			DailyLosses = playerDoa.DailyLosses;
 			Wins = playerDoa.Wins;

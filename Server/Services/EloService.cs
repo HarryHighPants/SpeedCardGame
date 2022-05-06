@@ -4,6 +4,19 @@ using Models.Database;
 
 public class EloService
 {
+	public static Rank GetRank(int elo) =>
+		elo switch
+		{
+			<= 500 => Rank.EagerStarter,
+			<= 1000 => Rank.DedicatedRival,
+			<= 1500 => Rank.CertifiedRacer,
+			<= 2000 => Rank.BossAthlete,
+			<= 2500 => Rank.Acetronaut,
+			> 2500 => Rank.SpeedDemon
+		};
+
+	public static readonly int StartingElo = 250;
+
 	public static void CalculateElo(ref PlayerDao winner, ref PlayerDao loser)
 	{
 		int eloK = 20;

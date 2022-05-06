@@ -1,10 +1,7 @@
 namespace Server.Services;
 
 using System.Linq;
-using Engine.Helpers;
-using Engine.Models;
 using Hubs;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Models.Database;
 
@@ -109,7 +106,7 @@ public class StatsService
 		var player = await gameResultContext.Players.FindAsync(connection.PersistentPlayerId);
 		if (player == null)
 		{
-			player = new PlayerDao {Id = connection.PersistentPlayerId, Name = connection.Name, Elo = 500};
+			player = new PlayerDao {Id = connection.PersistentPlayerId, Name = connection.Name, Elo = EloService.StartingElo};
 			gameResultContext.Players.Add(player);
 			await gameResultContext.SaveChangesAsync();
 		}

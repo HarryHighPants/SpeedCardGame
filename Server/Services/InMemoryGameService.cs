@@ -40,7 +40,7 @@ public class InMemoryGameService : IGameService
 					ConnectionId = connectionId,
 					Name = playerDao?.Name ?? "Player",
 					PersistentPlayerId = persistentPlayerId,
-					Rank = GetRank(playerDao?.Elo ?? 500)
+					Rank = EloService.GetRank(playerDao?.Elo ?? EloService.StartingElo)
 				});
 		}
 
@@ -321,15 +321,4 @@ public class InMemoryGameService : IGameService
 		var card = gameResult.Data.State.GetCard(cardId);
 		return card?.Location(gameResult.Data.State);
 	}
-
-	public static Rank GetRank(int elo) =>
-		elo switch
-		{
-			<= 500 => Rank.EagerStarter,
-			<= 1000 => Rank.DedicatedRival,
-			<= 1500 => Rank.CertifiedRacer,
-			<= 2000 => Rank.BossAthlete,
-			<= 2500 => Rank.Acetronaut,
-			> 2500 => Rank.SpeedDemon
-		};
 }

@@ -11,8 +11,8 @@ public class RankingStatsDto
 
 	public RankingStatsDto(int previousElo, int newElo)
 	{
-		OldRank = InMemoryGameService.GetRank(previousElo);
-		NewRank = InMemoryGameService.GetRank(newElo);
+		OldRank = EloService.GetRank(previousElo);
+		NewRank = EloService.GetRank(newElo);
 		PreviousElo = previousElo;
 		NewElo = newElo;
 	}
