@@ -13,7 +13,8 @@ public class EndToEndTests
 {
     private readonly ITestOutputHelper _testOutputHelper;
 
-    public EndToEndTests(ITestOutputHelper testOutputHelper) => _testOutputHelper = testOutputHelper;
+    public EndToEndTests(ITestOutputHelper testOutputHelper) =>
+        _testOutputHelper = testOutputHelper;
 
     [Fact]
     public void BotGame()
@@ -38,7 +39,8 @@ public class EndToEndTests
 
         var winnerResult = game.TryGetWinner();
         _testOutputHelper.WriteLine(
-            $"Bot game complete with {winnerResult.Data.Name} winning in {movesMade} moves");
+            $"Bot game complete with {winnerResult.Data.Name} winning in {movesMade} moves"
+        );
         Assert.True(game.TryGetWinner().Success);
     }
 
@@ -46,29 +48,31 @@ public class EndToEndTests
     public void TopUpExample()
     {
         // Arrange
-        var gameState =
-            ModelGenerator.CreateGameCustom(
-                new List<int?> {1},
-                new List<int?> {1},
-                new List<int?> {2},
-                new List<int?> {6},
-                new List<int?> {4},
-                player2Cards: new List<int?> {5, 5},
-                player2TopUps: new List<int?> {4}
-            );
+        var gameState = ModelGenerator.CreateGameCustom(
+            new List<int?> { 1 },
+            new List<int?> { 1 },
+            new List<int?> { 2 },
+            new List<int?> { 6 },
+            new List<int?> { 4 },
+            player2Cards: new List<int?> { 5, 5 },
+            player2TopUps: new List<int?> { 4 }
+        );
 
         var gameEngine = new GameEngine();
         // Act
         gameState = gameEngine.TryRequestTopUp(gameState, 1).Data;
-        gameState = gameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0).Data;
+        gameState =
+            gameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0).Data;
         Assert.Equal((CardValue)2, gameState.CenterPiles[0].Cards.Last().CardValue);
 
         gameState = gameEngine.TryPickupFromKitty(gameState, 0).Data;
         gameState = gameEngine.TryRequestTopUp(gameState, 0).Data;
         Assert.Equal((CardValue)4, gameState.CenterPiles[0].Cards.Last().CardValue);
 
-        gameState = gameEngine.TryPlayCard(gameState, 1, gameState.Players[1].HandCards[0].Id, 0).Data;
-        gameState = gameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0).Data;
+        gameState =
+            gameEngine.TryPlayCard(gameState, 1, gameState.Players[1].HandCards[0].Id, 0).Data;
+        gameState =
+            gameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0).Data;
         var winnerResult = gameEngine.TryGetWinner(gameState);
 
         // Assertion
@@ -79,13 +83,12 @@ public class EndToEndTests
     public void ReplenishExample()
     {
         // Arrange
-        var gameState =
-            ModelGenerator.CreateGameCustom(
-                new List<int?> {6, 6, 1},
-                new List<int?> {6, 6, 1},
-                new List<int?> {5},
-                player2Cards: new List<int?> {5}
-            );
+        var gameState = ModelGenerator.CreateGameCustom(
+            new List<int?> { 6, 6, 1 },
+            new List<int?> { 6, 6, 1 },
+            new List<int?> { 5 },
+            player2Cards: new List<int?> { 5 }
+        );
 
         var player1 = gameState.Players[0];
         var player2 = gameState.Players[1];
@@ -97,10 +100,12 @@ public class EndToEndTests
         Assert.Single(gameState.CenterPiles[0].Cards);
 
         // Manually add a 6 to ensure the 6 "was" shuffled in first
-        var newCenterPile =
-            new CenterPile {Cards = gameState.CenterPiles[0].Cards.Add(ModelGenerator.CreateBasicCard(6))};
+        var newCenterPile = new CenterPile
+        {
+            Cards = gameState.CenterPiles[0].Cards.Add(ModelGenerator.CreateBasicCard(6))
+        };
         var newCenterPiles = gameState.CenterPiles.ReplaceElementAt(0, newCenterPile);
-        gameState = gameState with {CenterPiles = newCenterPiles.ToImmutableList()};
+        gameState = gameState with { CenterPiles = newCenterPiles.ToImmutableList() };
 
         // Try to play a card
         gameState = gameEngine.TryPlayCard(gameState, 0, player1.HandCards[0].Id, 0).Data;

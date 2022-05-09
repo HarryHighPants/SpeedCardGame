@@ -33,8 +33,12 @@ public class PlayCardTests
         var hasPlayResult = gameEngine.Checks.PlayerHasPlay(gameState, 0);
 
         // Try to play it
-        var tryPlayResult =
-            gameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0);
+        var tryPlayResult = gameEngine.TryPlayCard(
+            gameState,
+            0,
+            gameState.Players[0].HandCards[0].Id,
+            0
+        );
 
         // Assertion
         Assert.Equal(expectedCanPlay, hasPlayResult.Success);
@@ -49,8 +53,10 @@ public class PlayCardTests
             }
 
             // Check the card has been removed from players hand
-            Assert.DoesNotContain(tryPlayResult.Data.Players[0].HandCards,
-                card => card.CardValue == (CardValue)player1Card);
+            Assert.DoesNotContain(
+                tryPlayResult.Data.Players[0].HandCards,
+                card => card.CardValue == (CardValue)player1Card
+            );
         }
     }
 
@@ -62,12 +68,16 @@ public class PlayCardTests
 
         // Act
         var gameEngine = new GameEngine();
-        var tryPlayResult = gameEngine.TryPlayCard(gameState, 0, gameState.Players[1].HandCards[0].Id, 0);
+        var tryPlayResult = gameEngine.TryPlayCard(
+            gameState,
+            0,
+            gameState.Players[1].HandCards[0].Id,
+            0
+        );
 
         // Assertion
         Assert.True(tryPlayResult.Failure);
-        Assert.Equal("6 not in players hand",
-            (tryPlayResult as IErrorResult)?.Message);
+        Assert.Equal("6 not in players hand", (tryPlayResult as IErrorResult)?.Message);
     }
 
     [Fact]
@@ -75,10 +85,17 @@ public class PlayCardTests
     {
         // Arrange
         var gameState = ModelGenerator.CreateGameBasic(5, player1Card: 4, player2Card: 6);
-        var randomCard = new Card {Id = 0, Suit = Suit.Clubs, CardValue = (CardValue)4};
+        var randomCard = new Card
+        {
+            Id = 0,
+            Suit = Suit.Clubs,
+            CardValue = (CardValue)4
+        };
 
         // Try to play it
         var gameEngine = new GameEngine();
-        Assert.Throws<NullReferenceException>(() => gameEngine.TryPlayCard(gameState, 0, randomCard.Id, 0));
+        Assert.Throws<NullReferenceException>(
+            () => gameEngine.TryPlayCard(gameState, 0, randomCard.Id, 0)
+        );
     }
 }

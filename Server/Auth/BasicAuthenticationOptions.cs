@@ -1,5 +1,6 @@
 namespace Server.Auth
 {
-	using Microsoft.AspNetCore.Authentication;
-	public class BasicAuthenticationOptions : AuthenticationSchemeOptions { }
+    using Microsoft.AspNetCore.Authentication;
+
+    public class BasicAuthenticationOptions : AuthenticationSchemeOptions { }
 }

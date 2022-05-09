@@ -5,11 +5,10 @@ using Models;
 
 public abstract class Game
 {
-
     public Game(List<string> playerNames, Settings settings, GameEngine gameEngine)
     {
-	    this.gameEngine = gameEngine;
-	    State = this.gameEngine.NewGame(playerNames, settings);
+        this.gameEngine = gameEngine;
+        State = this.gameEngine.NewGame(playerNames, settings);
     }
 
     public GameEngine gameEngine { get; protected set; }
@@ -21,8 +20,9 @@ public abstract class Game
         var result = gameEngine.TryGetWinner(State);
         if (result.Success)
         {
-            return new SuccessResult<Player>(State.GetPlayer(result.Data) ??
-                                             throw new InvalidOperationException());
+            return new SuccessResult<Player>(
+                State.GetPlayer(result.Data) ?? throw new InvalidOperationException()
+            );
         }
 
         return Result.Error<Player>("No winner yet");

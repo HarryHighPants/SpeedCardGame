@@ -1,8 +1,8 @@
 public enum BotType
 {
-	Easy,
-	Medium,
-	Hard,
-	Impossible,
-	Daily
+    Easy,
+    Medium,
+    Hard,
+    Impossible,
+    Daily
 }

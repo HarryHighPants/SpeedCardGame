@@ -6,9 +6,13 @@ using Engine.Models;
 
 public class CliGame : Game
 {
-    public CliGame(List<string>? playerNames = null, Settings? settings = null, GameEngine? gameEngine = null)
+    public CliGame(
+        List<string>? playerNames = null,
+        Settings? settings = null,
+        GameEngine? gameEngine = null
+    )
     {
-	    Initialise(playerNames, settings, gameEngine);
+        Initialise(playerNames, settings, gameEngine);
     }
 
     public Card? GetCardWithValue(IEnumerable<Card> cards, int? value) =>

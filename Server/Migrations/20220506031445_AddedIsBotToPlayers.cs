@@ -13,14 +13,13 @@ namespace Server.Migrations
                 table: "Player",
                 type: "boolean",
                 nullable: false,
-                defaultValue: false);
+                defaultValue: false
+            );
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "IsBot",
-                table: "Player");
+            migrationBuilder.DropColumn(name: "IsBot", table: "Player");
         }
     }
 }

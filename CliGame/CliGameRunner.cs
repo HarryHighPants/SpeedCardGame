@@ -15,8 +15,10 @@ public class CliGameRunner
         // Intro
         CliGameIoHelper.GameIntro(skipIntro);
 
-        Game = new CliGame(new List<string> {BotRunnerCli.Bot.Name, "You"},
-            new Settings {MinifiedCardStrings = true, IncludeSuitInCardStrings = false});
+        Game = new CliGame(
+            new List<string> { BotRunnerCli.Bot.Name, "You" },
+            new Settings { MinifiedCardStrings = true, IncludeSuitInCardStrings = false }
+        );
         CliGameIoHelper.UpdateMessage(Game.State, "Game started!");
 
         // Main game loop
@@ -38,8 +40,12 @@ public class CliGameRunner
     {
         try
         {
-            return Reader.ReadLine(random.Next((int)BotRunnerCli.Bot.QuickestResponseTimeMs,
-                (int)BotRunnerCli.Bot.SlowestResponseTimeMs));
+            return Reader.ReadLine(
+                random.Next(
+                    (int)BotRunnerCli.Bot.QuickestResponseTimeMs,
+                    (int)BotRunnerCli.Bot.SlowestResponseTimeMs
+                )
+            );
         }
         catch (TimeoutException)
         {
@@ -56,7 +62,6 @@ public class CliGameRunner
         }
     }
 
-
     private void HandleUserInput(string? input)
     {
         switch (input?.Trim())
@@ -66,8 +71,7 @@ public class CliGameRunner
             case "k":
                 // Try and pickup from kitty
                 var pickupKittyResult = Game.TryPickupFromKitty(1);
-                if (pickupKittyResult is IErrorResult
-                    pickupKittyResultError)
+                if (pickupKittyResult is IErrorResult pickupKittyResultError)
                 {
                     CliGameIoHelper.UpdateMessage(Game.State, pickupKittyResultError.Message);
                     return;
@@ -93,12 +97,14 @@ public class CliGameRunner
 
     private void PlayCard(string input)
     {
-        var splitInput = input.Split(new[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries);
+        var splitInput = input.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
         var inputCardValue = splitInput.Length > 0 ? splitInput[0].ExtractInt() : null;
         if (inputCardValue == null)
         {
-            CliGameIoHelper.UpdateMessage(Game.State,
-                "Enter a card followed by the card to play it on e.g '6 5'. To pickup from the kitty enter 'k' ");
+            CliGameIoHelper.UpdateMessage(
+                Game.State,
+                "Enter a card followed by the card to play it on e.g '6 5'. To pickup from the kitty enter 'k' "
+            );
             return;
         }
 
@@ -114,8 +120,10 @@ public class CliGameRunner
         var centerCard = splitInput.Length > 1 ? splitInput[1].ExtractInt() : null;
         if (centerCard == null)
         {
-            CliGameIoHelper.UpdateMessage(Game.State,
-                "Invalid center card, specify it after the card like: '7, 6'");
+            CliGameIoHelper.UpdateMessage(
+                Game.State,
+                "Invalid center card, specify it after the card like: '7, 6'"
+            );
             return;
         }
 

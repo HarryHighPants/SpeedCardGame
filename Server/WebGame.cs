@@ -8,7 +8,6 @@ using Engine.Models;
 
 public class WebGame : Game
 {
-	public WebGame(List<GameParticipant> connections, Settings settings, GameEngine gameEngine) : base(connections.Select(c=>c.Name).ToList(), settings, gameEngine)
-    {
-    }
+    public WebGame(List<GameParticipant> connections, Settings settings, GameEngine gameEngine)
+        : base(connections.Select(c => c.Name).ToList(), settings, gameEngine) { }
 }
