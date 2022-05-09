@@ -6,20 +6,20 @@ using Newtonsoft.Json;
 
 public class GameHubGameUpdateHandler : IGameUpdateHandler
 {
-    private readonly IHubContext<GameHub> hubContext;
+    private readonly IHubContext<GameHub, IGameHubClient> hubContext;
 
-    public GameHubGameUpdateHandler(IHubContext<GameHub> hubContext)
+    public GameHubGameUpdateHandler(IHubContext<GameHub, IGameHubClient> hubContext)
     {
         this.hubContext = hubContext;
     }
 
     public async Task HandleGameUpdate(string roomId, GameStateDto gameStateDto)
     {
-        await hubContext.Clients.Group(roomId).SendAsync("UpdateGameState", gameStateDto);
+        await hubContext.Clients.Group(roomId).UpdateGameState(gameStateDto);
     }
 
     public async Task HandleLobbyUpdate(string roomId, LobbyStateDto lobbyStateDto)
     {
-        await hubContext.Clients.Group(roomId).SendAsync("UpdateLobbyState", lobbyStateDto);
+        await hubContext.Clients.Group(roomId).UpdateLobbyState(lobbyStateDto);
     }
 }

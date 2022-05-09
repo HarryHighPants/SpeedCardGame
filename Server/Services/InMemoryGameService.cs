@@ -58,7 +58,7 @@ public class InMemoryGameService : IGameService
                 }
             }
 
-            rooms.TryAdd(roomId, new Room { RoomId = roomId, CustomGameSeed = customGameSeed });
+            rooms.TryAdd(roomId, new Room { RoomId = roomId, CustomGameSeed = customGameSeed, BotType = botType});
         }
 
         // Add the connection to the room
@@ -88,6 +88,7 @@ public class InMemoryGameService : IGameService
         {
             if (botType != null)
             {
+	            await botService.SeedBot(botType.Value);
                 await JoinRoom(roomId, BotConfigurations.GetBot(botType.Value).PersistentId, null);
             }
         }

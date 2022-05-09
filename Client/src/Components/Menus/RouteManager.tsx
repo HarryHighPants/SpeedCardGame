@@ -27,7 +27,8 @@ const RouteManager = () => {
 				<Route path="/tutorial" element={<Tutorial />} />
 				<Route path=":roomId" element={<Room onGameStarted={() => setGameStarted(true)} />} />
 			</Routes>
-			{!gameStarted && <AutomatedGame />}
+			{/*/Todo: re-record game json*/}
+			{/*{!gameStarted && <AutomatedGame />}*/}
 		</>
 	)
 }

@@ -9,8 +9,14 @@ using Models.Database;
 using Newtonsoft.Json;
 using Services;
 
+public interface IGameHubClient
+{
+	public Task UpdateGameState(GameStateDto gameStateDto);
+	public Task UpdateLobbyState(LobbyStateDto lobbyStateDto);
+}
+
 [Authorize]
-public class GameHub : Hub
+public class GameHub : Hub<IGameHubClient>
 {
     private readonly IGameService gameService;
 
@@ -26,6 +32,7 @@ public class GameHub : Hub
 
     public async Task JoinRoom(string roomId, BotType? botType = null)
     {
+	    
         Console.WriteLine($"Join room, {UserIdentifier}  room: {roomId}");
 
         // Add gameParticipant to the group with roomId

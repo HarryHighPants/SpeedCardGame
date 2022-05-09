@@ -1,13 +1,13 @@
 export interface ILobby {
-	Connections: IPlayerConnection[]
-	IsBotGame: boolean
-	GameStarted: boolean
+	connections: IPlayerConnection[]
+	isBotGame: boolean
+	gameStarted: boolean
 }
 
 export interface IPlayerConnection {
-	ConnectionId: string
-	Name: string
-	Rank: Rank
+	connectionId: string
+	name: string
+	rank: Rank
 }
 
 export enum Rank {

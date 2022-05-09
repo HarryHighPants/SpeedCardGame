@@ -10,6 +10,10 @@ public interface IBotService
         BotActionHandler actionHandler,
         CancellationToken cancellationToken
     );
+    
+    public Task SeedBot(
+	    BotType botType
+    );
 }
 
 public record BotActionHandler(

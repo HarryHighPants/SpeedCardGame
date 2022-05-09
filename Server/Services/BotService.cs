@@ -47,6 +47,12 @@ public class BotService : IBotService
             );
     }
 
+    public async Task SeedBot(BotType botType)
+    {
+	    var botData = BotConfigurations.GetBot(botType);
+	    await SeedBot(botData);
+    }
+
     private async Task RunBot(
         Bot bot,
         BotActionHandler actionHandler,

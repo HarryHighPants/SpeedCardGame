@@ -60,7 +60,7 @@ const CardsContainer = ({
 
     const UpdateMovingCard = (data: IMovedCardPos) => {
         // @ts-ignore
-        let movingCard = renderableCardsRef.current?.find((c) => c.Id === data.CardId)
+        let movingCard = renderableCardsRef.current?.find((c) => c.id === data.CardId)
 
         movingCard.isCustomPos = data?.Pos !== null
         let updatedPos = gameBoardLayout.getCardPosPixels(
@@ -84,16 +84,16 @@ const CardsContainer = ({
         let rect = draggingCard?.ref?.current?.getBoundingClientRect()
         let cardIndex = -1
         if (draggingCard.location === CardLocationType.Hand) {
-            gameState.Players.forEach((p) => {
-                if (p.Id === playerId) {
-                    cardIndex = p.HandCards.findIndex((c) => c.Id === draggingCard.Id)
+            gameState.players.forEach((p) => {
+                if (p.id === playerId) {
+                    cardIndex = p.handCards.findIndex((c) => c.id === draggingCard.id)
                 }
             })
         }
         let movedCard =
             rect !== undefined
                 ? ({
-                      CardId: draggingCard.Id,
+                      CardId: draggingCard.id,
                       Pos: endDrag
                           ? null
                           : GameBoardLayout.GetCardRectToPercent(rect, gameBoardLayout.gameBoardDimensions),
@@ -118,7 +118,7 @@ const CardsContainer = ({
         for (let i = 0; i < renderableCards.length; i++) {
             let card = renderableCards[i]
 
-            if (draggingCard?.Id === card.Id || !card) continue
+            if (draggingCard?.id === card.id || !card) continue
 
             let draggingCardRect = draggingCard?.ref.current?.getBoundingClientRect()
             let ourRect = card.ref?.current?.getBoundingClientRect()
@@ -160,7 +160,7 @@ const CardsContainer = ({
     return (
         <AnimatePresence>
             {renderableCards.map((c) => (
-                <Card key={`card-${c.Id}`} card={c} draggingCardUpdated={DraggingCardUpdated} onDragEnd={OnEndDrag} />
+                <Card key={`card-${c.id}`} card={c} draggingCardUpdated={DraggingCardUpdated} onDragEnd={OnEndDrag} />
             ))}
         </AnimatePresence>
     )

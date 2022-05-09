@@ -1,12 +1,12 @@
 import { ICard } from './ICard'
 
 export interface IPlayer {
-	Id: string
-	Name: string
-	HandCards: ICard[]
-	TopKittyCardId?: number
-	KittyCardsCount: number
-	RequestingTopUp: boolean
-	CanRequestTopUp: boolean
-	LastMove: string
+	id: string
+	name: string
+	handCards: ICard[]
+	topKittyCardId?: number
+	kittyCardsCount: number
+	requestingTopUp: boolean
+	canRequestTopUp: boolean
+	lastMove: string
 }

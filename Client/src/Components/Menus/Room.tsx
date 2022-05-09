@@ -55,16 +55,16 @@ const Room = ({ onGameStarted }: Props) => {
     }, [persistentId])
 
     useEffect(() => {
-        let winningpPlayer = gameState?.Players.find((p) => p.Id === gameState.WinnerId)
+        let winningpPlayer = gameState?.players.find((p) => p.id === gameState.winnerId)
         setWinningPlayer(winningpPlayer)
 
-        let losingPlayer = gameState?.Players.find((p) => p.Id !== gameState.WinnerId)
+        let losingPlayer = gameState?.players.find((p) => p.id !== gameState.winnerId)
         setLosingPlayer(losingPlayer)
 
-        setPlayerWon(gameState?.WinnerId === connectionId)
+        setPlayerWon(gameState?.winnerId === connectionId)
 
-        setLosingPlayerCardsRemaining((losingPlayer?.HandCards.length ?? 0) + (losingPlayer?.KittyCardsCount ?? 0))
-    }, [gameState?.WinnerId])
+        setLosingPlayerCardsRemaining((losingPlayer?.handCards.length ?? 0) + (losingPlayer?.kittyCardsCount ?? 0))
+    }, [gameState?.winnerId])
 
     const CreateConnection = () => {
         console.log('connecting to: ', config.apiGateway.URL)
@@ -121,6 +121,7 @@ const Room = ({ onGameStarted }: Props) => {
     }
 
     const UpdateGameState = (updatedGameState: IGameState) => {
+        console.log(updatedGameState)
         if (!gameState) {
             onGameStarted()
         }
@@ -142,10 +143,10 @@ const Room = ({ onGameStarted }: Props) => {
                         gameState={gameState}
                     />
                     <HomeButton onClick={stopConnection} />
-                    {!!gameState.WinnerId && (
+                    {!!gameState.winnerId && (
                         <WinnerPopup
-                            winnerName={winningPlayer?.Name}
-                            loserName={losingPlayer?.Name}
+                            winnerName={winningPlayer?.name}
+                            loserName={losingPlayer?.name}
                             cardsRemaining={losingPlayerCardsRemaining}
                             playerWon={playerWon}
                         />

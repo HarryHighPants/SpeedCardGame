@@ -51,12 +51,13 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
     }, [myPlayerName, inLobby])
 
     useEffect(() => {
-        let activePlayers = (gameState?.Players.filter((p) => p.Id !== '0') ?? []).map((p) => p.Id)
+        let activePlayers = (gameState?.players.filter((p) => p.id !== '0') ?? []).map((p) => p.id)
         setActivePlayers(activePlayers)
         setSpectating(activePlayers.length >= 2 && !activePlayers.find((p) => p === connection?.connectionId))
     }, [gameState])
 
     const UpdateLobbyData = (updatedLobby: ILobby) => {
+        console.log(updatedLobby)
         setLobbyData(updatedLobby)
         setInLobby(updatedLobby !== null)
     }
@@ -67,7 +68,7 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
     }
 
     useEffect(() => {
-        setWaitingForPlayers(lobbyData == null || lobbyData.Connections?.length < 2)
+        setWaitingForPlayers(lobbyData == null || lobbyData.connections?.length < 2)
     }, [lobbyData])
 
     const onStartGame = () => {
@@ -83,7 +84,7 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
     }
 
     const ShowLobby = () => {
-        return !gameState || !connection || activePlayers.length < 2 || spectating || !lobbyData?.GameStarted
+        return !gameState || !connection || activePlayers.length < 2 || spectating || !lobbyData?.gameStarted
     }
 
     if (!ShowLobby()) {
@@ -112,7 +113,7 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
                     <PlayersContainer>
                         {lobbyData != null && !!connection?.connectionId ? (
                             <>
-                                {lobbyData?.Connections?.map((p, i) =>
+                                {lobbyData?.connections?.map((p, i) =>
                                     LobbyPlayer(connection?.connectionId as string, myPlayerName, p, UpdateName, i)
                                 )}
                             </>
