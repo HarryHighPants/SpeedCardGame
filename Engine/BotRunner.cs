@@ -23,7 +23,7 @@ public static class BotRunner
 				play => Result.Successful(new Move(MoveType.PlayCard, playerId, play.card.Id, play.centerPile)),
 				_ => engineChecks.CanPickupFromKitty(gameState, playerId).Map<Result<Move>>(
 					() => Result.Successful(new Move(MoveType.PickupCard, playerId)),
-					_ => engineChecks.CanRequestTopUp(gameState, playerId).Map<Result<Move>>(
+					_ => engineChecks.CanPlayerRequestTopUp(gameState, playerId).Map<Result<Move>>(
 						() => Result.Successful(new Move(MoveType.RequestTopUp, playerId)),
 						_ => Result.Error<Move>("No moves for bot to make"))
 				)

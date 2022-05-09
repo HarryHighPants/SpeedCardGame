@@ -1,10 +1,13 @@
 namespace Server.Services;
 
+using Engine.Models;
+
 public interface IBotService
 {
-	public Task AddBotToRoom(string roomId, BotType type);
-	public int BotsInRoomCount(string roomId);
-	public List<BotService.Bot> GetBotsInRoom(string roomId);
-	public void RemoveBotsFromRoom(string roomId);
-	public void RunBotsInRoom(string roomId);
+	public Task RunBot(int playerIndex, BotType botType, BotActionHandler actionHandler, CancellationToken cancellationToken);
 }
+
+public record BotActionHandler(Func<GameState> GetGameState, Func<PlayCardRequest, Task> PlayCardAction, Func<Task> PickupAction,
+	Func<Task> RequestTopUpAction);
+
+public record PlayCardRequest(int CardId, int CenterPilIndex);

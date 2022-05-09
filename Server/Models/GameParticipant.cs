@@ -1,10 +1,9 @@
 namespace Server;
 
-public class Connection
+public class GameParticipant
 {
 	public Guid PersistentPlayerId;
 	public string Name;
-	// GameEngine Player index
-	public int? PlayerId;
+	public int PlayerIndex;
 	public Rank? Rank;
 }

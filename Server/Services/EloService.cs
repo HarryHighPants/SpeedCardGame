@@ -17,13 +17,16 @@ public class EloService
 
 	public static readonly int StartingElo = 250;
 
-	public static void CalculateElo(ref PlayerDao winner, ref PlayerDao loser)
+	public static (int winnerEloChange, int loserEloChange) SetPlayerElo(ref PlayerDao winner, ref PlayerDao loser)
 	{
 		int eloK = 20;
 
 		int delta = (int)(eloK * (1 - ExpectationToWin(winner.Elo, loser.Elo)));
-		winner.Elo += (int)(delta * PlayerK(winner.Wins+winner.Losses));
-		loser.Elo -= (int)(delta * PlayerK(loser.Wins+loser.Losses));
+		var winnerEloChange = (int)(delta * PlayerK(winner.Wins+winner.Losses));
+		var	loserEloChange = (int)(delta * PlayerK(loser.Wins+loser.Losses));
+		winner.Elo += winnerEloChange;
+		loser.Elo -= loserEloChange;
+		return (winnerEloChange, loserEloChange);
 	}
 
 	/// <summary>

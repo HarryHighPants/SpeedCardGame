@@ -68,6 +68,7 @@ public abstract class Result<T> : Result, IEnumerable<T>
 	    }
     }
 
+
     public IEnumerator<T> GetEnumerator()
     {
         if (Success)

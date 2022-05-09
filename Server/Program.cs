@@ -1,3 +1,4 @@
+using Engine;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Server;
@@ -18,9 +19,12 @@ builder.Services.AddSingleton<IGameService, InMemoryGameService>();
 builder.Services.AddSingleton<IBotService, BotService>();
 builder.Services.AddSingleton<StatService, StatService>();
 builder.Services.AddSingleton<EloService, EloService>();
+builder.Services.AddSingleton(new GameEngine(new EngineChecks(), new EngineActions()));
+
 builder.Services
 	.AddAuthentication("Basic")
 	.AddScheme<BasicAuthenticationOptions, BasicAuthenticationHandler>("Basic", null);
+
 
 builder.Services.AddDbContextPool<GameResultContext>(options =>
 {

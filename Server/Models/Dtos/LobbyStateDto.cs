@@ -6,7 +6,7 @@ public class LobbyStateDto
 	public bool IsBotGame;
 	public bool GameStarted;
 
-	public LobbyStateDto(List<Connection> connections, bool isBotGame, bool gameStarted)
+	public LobbyStateDto(List<GameParticipant> connections, bool isBotGame, bool gameStarted)
 	{
 		this.IsBotGame = isBotGame;
 		this.Connections = connections.Select(c=>new ConnectionDto(c)).ToList();

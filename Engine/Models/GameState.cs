@@ -4,57 +4,60 @@ using System.Collections.Immutable;
 
 public record GameState
 {
-    public Settings Settings { get; init; }
-    public ImmutableList<Player> Players { get; init; }
-    public ImmutableList<CenterPile> CenterPiles { get; init; }
-    public ImmutableList<Move> MoveHistory { get; init; }
-    public string LastMove { get; init; } = "";
+	public Settings Settings { get; init; }
+	public ImmutableList<Player> Players { get; init; }
+	public ImmutableList<CenterPile> CenterPiles { get; init; }
+	public ImmutableList<Move> MoveHistory { get; init; }
+	public string LastMove { get; init; } = "";
+	public int? WinnerIndex { get; init; }
 
-    public Player? GetPlayer(int? id)
-    {
-        var playerResult = Players.FirstOrDefault(p => p.Id == id);
-        return playerResult;
-    }
+	public bool MustTopUp { get; init; }
 
-    public Card? GetCard(int? id)
-    {
-        foreach (var player in Players)
-        {
-            var handCard = player.HandCards.FirstOrDefault(c => c.Id == id);
-            if (handCard != default)
-            {
-                return handCard;
-            }
+	public Player? GetPlayer(int? id)
+	{
+		var playerResult = Players.FirstOrDefault(p => p.Id == id);
+		return playerResult;
+	}
 
-            var kittyCard = player.KittyCards.FirstOrDefault(c => c.Id == id);
-            if (kittyCard != default)
-            {
-                return kittyCard;
-            }
+	public Card? GetCard(int? id)
+	{
+		foreach (var player in Players)
+		{
+			var handCard = player.HandCards.FirstOrDefault(c => c.Id == id);
+			if (handCard != default)
+			{
+				return handCard;
+			}
 
-            var topUpCard = player.TopUpCards.FirstOrDefault(c => c.Id == id);
-            if (topUpCard != default)
-            {
-                return topUpCard;
-            }
-        }
+			var kittyCard = player.KittyCards.FirstOrDefault(c => c.Id == id);
+			if (kittyCard != default)
+			{
+				return kittyCard;
+			}
 
-        for (var i = 0; i < CenterPiles.Count; i++)
-        {
-            var centerPile = CenterPiles[i];
+			var topUpCard = player.TopUpCards.FirstOrDefault(c => c.Id == id);
+			if (topUpCard != default)
+			{
+				return topUpCard;
+			}
+		}
 
-            var centerCard = centerPile.Cards.FirstOrDefault(c => c.Id == id);
-            if (centerCard != default)
-            {
-                return centerCard;
-            }
-        }
+		for (var i = 0; i < CenterPiles.Count; i++)
+		{
+			var centerPile = CenterPiles[i];
 
-        return default;
-    }
+			var centerCard = centerPile.Cards.FirstOrDefault(c => c.Id == id);
+			if (centerCard != default)
+			{
+				return centerCard;
+			}
+		}
+
+		return default;
+	}
 }
 
 public record CenterPile
 {
-    public ImmutableList<Card> Cards = ImmutableList<Card>.Empty;
+	public ImmutableList<Card> Cards = ImmutableList<Card>.Empty;
 }

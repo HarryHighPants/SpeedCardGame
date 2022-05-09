@@ -6,10 +6,10 @@ public class ConnectionDto
 	public string Name;
 	public Rank Rank;
 
-	public ConnectionDto(Connection connection)
+	public ConnectionDto(GameParticipant gameParticipant)
 	{
-		ConnectionId = connection.ConnectionId;
-		Name = connection.Name;
-		Rank = connection.Rank ?? 0;
+		ConnectionId = gameParticipant.ConnectionId;
+		Name = gameParticipant.Name;
+		Rank = gameParticipant.Rank ?? 0;
 	}
 }

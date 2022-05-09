@@ -6,9 +6,9 @@ using Models;
 public abstract class Game
 {
 
-    protected void Initialise(List<string>? playerNames = null, Settings? settings = null, GameEngine? gameEngine = null)
+    public Game(List<string> playerNames, Settings settings, GameEngine gameEngine)
     {
-	    this.gameEngine = gameEngine ?? new GameEngine();
+	    this.gameEngine = gameEngine;
 	    State = this.gameEngine.NewGame(playerNames, settings);
     }
 
@@ -28,24 +28,24 @@ public abstract class Game
         return Result.Error<Player>("No winner yet");
     }
 
-    public Result TryPickupFromKitty(int playerId)
+    public Result<GameState> TryPickupFromKitty(int playerId)
     {
         var result = gameEngine.TryPickupFromKitty(State, playerId);
         State = result.Success ? result.Data : State;
-        return result as Result;
+        return result;
     }
 
-    public Result TryPlayCard(int playerId, int cardId, int centerPileIndex)
+    public Result<GameState> TryPlayCard(int playerId, int cardId, int centerPileIndex)
     {
         var result = gameEngine.TryPlayCard(State, playerId, cardId, centerPileIndex);
         State = result.Success ? result.Data : State;
-        return result as Result;
+        return result;
     }
 
-    public Result TryRequestTopUp(int playerId)
+    public Result<GameState> TryRequestTopUp(int playerId)
     {
         var result = gameEngine.TryRequestTopUp(State, playerId);
         State = result.Success ? result.Data : State;
-        return result as Result;
+        return result;
     }
 }

@@ -62,7 +62,7 @@ public class EngineActions
 		return gameState;
 	}
 
-	public GameState UpdateLastMove(GameState gameState, Move data)
+	private GameState UpdateLastMove(GameState gameState, Move data)
 	{
 		var newMoveHistory = gameState.MoveHistory.Add(data);
 		var newGameState = gameState with {MoveHistory = newMoveHistory};
@@ -91,7 +91,7 @@ public class EngineActions
 	{
 		// Update the player to requesting top up
 		var player = gameState.GetPlayer(playerId);
-		var newPlayer = player with {RequestingTopUp = true};
+		var newPlayer = player with {RequestingTopUp = true, CanRequestTopUp = false};
 		var newPlayers = gameState.Players.ReplaceElementAt(gameState.Players.IndexOf(player), newPlayer)
 			.ToImmutableList();
 		var newGameState = gameState with {Players = newPlayers};
@@ -139,6 +139,16 @@ public class EngineActions
 
 		return Result.Successful(newGameState);
 	}
+
+	public GameState SetCanRequestTopUp(GameState gameState, int playerId, bool canRequestTopUp)
+	{
+		var newGameState = gameState;
+		var newPlayer = gameState.GetPlayer(playerId) with {CanRequestTopUp = canRequestTopUp};
+		var newPlayers = newGameState.Players.SetItem(playerId, newPlayer);
+		return newGameState with {Players = newPlayers};
+	}
+
+	public GameState SetMustTopUp(GameState gameState, bool mustTopUp) => gameState with {MustTopUp = mustTopUp};
 
 	public Result<GameState> ReplenishTopUpCards(GameState gameState)
 	{
@@ -223,7 +233,11 @@ public class EngineActions
 				card.Id,
 				centerPileIndex
 			));
-
 		return newGameState;
+	}
+
+	public GameState UpdateWinner(GameState gameState, int winnerIndex)
+	{
+		return gameState with {WinnerIndex = winnerIndex};
 	}
 }

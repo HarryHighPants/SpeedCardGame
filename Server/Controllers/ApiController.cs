@@ -17,6 +17,8 @@ public class ApiController : ControllerBase
 		this.gameResultContext = gameResultContext;
 	}
 
+	//todo add get stats and daily results
+
 	[HttpGet]
 	public IActionResult GetGamesPlayed()
 	{

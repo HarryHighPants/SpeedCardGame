@@ -91,6 +91,7 @@ const Room = ({ onGameStarted }: Props) => {
 	const ConnectionStatusUpdated = () => {
 		switch (connectionRef.current?.state) {
 			case HubConnectionState.Connected:
+				console.log("connection id", connectionRef.current.connectionId)
 				connectionRef.current?.onclose((error) => {
 					if (!!error) {
 						ConnectionStatusUpdated()

@@ -1,63 +1,42 @@
 namespace Server.Services;
 
 using System.Linq;
+using Engine.Models;
 using Hubs;
 using Microsoft.EntityFrameworkCore;
 using Models.Database;
 
 public class StatService
 {
-	private readonly IGameService gameService;
-	private readonly IBotService botService;
 	private readonly IServiceScopeFactory scopeFactory;
 
 
 	public StatService(IServiceScopeFactory scopeFactory, IGameService gameService, IBotService botService)
 	{
 		this.scopeFactory = scopeFactory;
-		this.gameService = gameService;
-		this.botService = botService;
 	}
 
-	public async Task HandleGameOver(string roomId)
+	public async Task UpdateGameOverStats(GameState gameState, List<GameParticipant> participants, bool dailyGame)
 	{
-		Console.WriteLine($"{roomId} has ended");
-		var bot = botService.GetBotsInRoom(roomId).FirstOrDefault();
-		var gameState = gameService.GetGame(roomId).State;
-		var (dbWinner, dbLoser) = await GetWinnerLoser(roomId);
-		var cardsRemaining = gameState.Players.Select(p => p.HandCards.Count + p.KittyCards.Count).Sum();
+		Console.WriteLine($"Game has ended");
+		var winner = await GetPlayerDao(participants[0]);
+		var loser = await GetPlayerDao(participants[1]);
 
-		var dailyGame = bot is {Data.Type: BotType.Daily};
-		if (dailyGame)
-		{
-			dbWinner.DailyWins += 1;
-			dbWinner.DailyWinStreak += 1;
-			if (dbWinner.MaxDailyWinStreak < dbWinner.DailyWinStreak)
-			{
-				dbWinner.MaxDailyWinStreak = dbWinner.DailyWinStreak;
-			}
-
-			dbLoser.DailyLosses += 1;
-			dbLoser.DailyWinStreak = 0;
-		}
-
-		dbLoser.Losses += 1;
-		dbWinner.Wins += 1;
-
-		// Update the players Elo
-		EloService.CalculateElo(ref dbWinner, ref dbLoser);
+		SetWinsAndLosses(winner, loser, dailyGame);
+		EloService.SetPlayerElo(ref winner, ref loser);
 
 		using var scope = scopeFactory.CreateScope();
 		var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
 
+		var cardsRemaining = gameState.Players.Select(p => p.HandCards.Count + p.KittyCards.Count).Sum();
 		gameResultContext.GameResults.Add(new GameResultDao
 		{
 			Id = Guid.NewGuid(),
 			Created = DateTime.UtcNow,
 			Turns = gameState.MoveHistory.Count,
 			LostBy = cardsRemaining,
-			Winner = dbWinner,
-			Loser = dbLoser,
+			Winner = winner,
+			Loser = loser,
 			Daily = dailyGame,
 			DailyIndex = InMemoryGameService.GetDayIndex()
 		});
@@ -65,6 +44,26 @@ public class StatService
 		await gameResultContext.SaveChangesAsync();
 	}
 
+	public void SetWinsAndLosses(PlayerDao winner, PlayerDao loser, bool dailyGame)
+	{
+		loser.Losses += 1;
+		winner.Wins += 1;
+
+		if (dailyGame)
+		{
+			winner.DailyWins += 1;
+			winner.DailyWinStreak += 1;
+			if (winner.MaxDailyWinStreak < winner.DailyWinStreak)
+			{
+				winner.MaxDailyWinStreak = winner.DailyWinStreak;
+			}
+
+			loser.DailyLosses += 1;
+			loser.DailyWinStreak = 0;
+		}
+	}
+
+	// Todo: called from api
 	public DailyResultDto? GetDailyResultDto(Guid persistentPlayerId)
 	{
 		var dailyMatch = GetDailyResult(persistentPlayerId);
@@ -76,49 +75,40 @@ public class StatService
 		return new DailyResultDto(persistentPlayerId, dailyMatch);
 	}
 
-	public async Task<RankingStatsDto> GetRankingStats(Guid playerId, string roomId)
+	// Todo: called from api
+	public async Task<RankingStatsDto> GetRankingStats(GameState gameState, bool playerWon, List<GameParticipant> participants, bool dailyGame)
 	{
-		var (dbWinner, dbLoser) = await GetWinnerLoser(roomId);
-		var player = dbWinner;
-		if (dbWinner.Id != playerId)
-		{
-			player = dbLoser;
-		}
-		var startingElo = player.Elo;
-		EloService.CalculateElo(ref dbWinner, ref dbLoser);
-		return new RankingStatsDto(startingElo, player.Elo);
+		// Get the players
+		var winner = await GetPlayerDao(participants[0]);
+		var loser = await GetPlayerDao(participants[1]);
+		var player = await GetPlayerDao(participants.Single(p=>p.PersistentPlayerId == playerId));
 
+		// Get the players Elo before the game
+		var startingElo = playerWon ? winner.Elo : loser.Elo;
+		EloService.SetPlayerElo(ref winner, ref loser);
+
+		// Get the players Elo after the game
+		var updatedElo = playerDaos.Single(p => p.Id == playerId).Elo;
+
+		return new RankingStatsDto(startingElo, updatedElo);
 	}
 
-	private async Task<(PlayerDao winner, PlayerDao loser)> GetWinnerLoser(string roomId)
-	{
-		// Get the gameState from the gameService
-		var gameStateResult = gameService.GetGameStateDto(roomId);
-		var players = gameService.ConnectionsInRoom(roomId);
-		var winner = players.Single(p => p.PlayerId != null && p.ConnectionId == gameStateResult.Data.WinnerId);
-		var loser = players.Single(p => p.PlayerId != null && p.ConnectionId != gameStateResult.Data.WinnerId);
-
-		var dbWinner = await GetConnectionsPlayerDao(winner);
-		var dbLoser = await GetConnectionsPlayerDao(loser);
-
-		using var scope = scopeFactory.CreateScope();
-		var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
-		await gameResultContext.SaveChangesAsync();
-		return (dbWinner, dbLoser);
-	}
-
-	private async Task<PlayerDao> GetConnectionsPlayerDao(Connection connection)
+	private async Task<PlayerDao> GetPlayerDao(GameParticipant gameParticipant)
 	{
 		using var scope = scopeFactory.CreateScope();
 		var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
-		var player = await gameResultContext.Players.FindAsync(connection.PersistentPlayerId);
+		var player = await gameResultContext.Players.FindAsync(gameParticipant.PersistentPlayerId);
 		if (player == null)
 		{
-			player = new PlayerDao {Id = connection.PersistentPlayerId, Name = connection.Name, Elo = EloService.StartingElo};
+			player = new PlayerDao
+			{
+				Id = gameParticipant.PersistentPlayerId, Name = gameParticipant.Name, Elo = EloService.StartingElo
+			};
 			gameResultContext.Players.Add(player);
 			await gameResultContext.SaveChangesAsync();
 		}
-		player.Name = connection.Name;
+
+		player.Name = gameParticipant.Name;
 		await gameResultContext.SaveChangesAsync();
 		return player;
 	}

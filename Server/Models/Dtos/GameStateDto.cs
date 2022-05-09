@@ -13,35 +13,27 @@ public class GameStateDto
 	public string? WinnerId { get; }
 	public bool MustTopUp { get; }
 
-	public GameStateDto(GameState gameState, List<Connection> connections, GameEngine gameEngine)
+	public GameStateDto(GameState gameState, List<GameParticipant> connections)
 	{
-		// todo: hash playerId
 		Players = gameState.Players
-			.Select((p, i) => new PlayerDto(p, gameEngine.Checks.CanRequestTopUp(gameState, i).Success))
+			.Select(p => new PlayerDto(p, GetPlayersId(p, connections)))
 			.ToList();
 
 		MustTopUp = Players.All(p => p.CanRequestTopUp || p.RequestingTopUp);
-
-
-		// Replace the playerId with the players connectionId
-		foreach (var player in Players)
-		{
-			var connection = connections.FirstOrDefault(c => c.PlayerId.ToString() == player.Id);
-			if (connection != null)
-			{
-				player.Id = connection.ConnectionId;
-			}
-		}
 
 		// Only send the top 3
 		CenterPiles = gameState.CenterPiles
 			.Select((pile, i) => new CenterPile {Cards = pile.Cards.TakeLast(3).ToImmutableList()}).ToList();
 		LastMove = gameState.LastMove;
-
-		var winnerResult = gameEngine.Checks.TryGetWinner(gameState);
-		WinnerId = gameEngine.Checks.TryGetWinner(gameState).Map(x =>
-		{
-			return connections.Single(c => c.PlayerId == x).ConnectionId;
-		}, _ => null);
+		gameState.WinnerIndex
+			WinnerId = gameEngine.Checks.TryGetWinner(gameState).Map(x =>
+			{
+				return connections.Single(c => c.PlayerIndex == x).PersistentPlayerId as Guid?;
+			}, _ => null)?.ToString();
 	}
+
+	// todo: hash playerId
+	private static string GetPlayersId(Player player, List<GameParticipant> connections) =>
+		connections.SingleOrDefault(c => c.PlayerIndex == player.Id)?.PersistentPlayerId.ToString() ??
+		player.Id.ToString();
 }
