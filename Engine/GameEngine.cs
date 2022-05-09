@@ -25,7 +25,7 @@ public class GameEngine
         Actions = engineActions;
     }
 
-    public GameState NewGame(List<string> playerNames, Settings settings) =>
+    public GameState NewGame(List<string>? playerNames, Settings settings) =>
         Actions.NewGame(playerNames, settings);
 
     /// <returns>Player Index</returns>
@@ -78,11 +78,7 @@ public class GameEngine
             newGameState = Actions.UpdateWinner(newGameState, winnerResult.Data);
         }
 
-        Actions.SetCanRequestTopUp(
-            newGameState,
-            playerId,
-            Checks.CanPlayerRequestTopUp(newGameState, playerId)
-        );
+        newGameState = this.SetTopUpRequests(newGameState);
 
         return Result.Successful(newGameState);
     }
@@ -102,11 +98,7 @@ public class GameEngine
         var topUpResult = TryTopUp(newGameState);
         newGameState = topUpResult.Success ? topUpResult.Data : newGameState;
 
-        Actions.SetCanRequestTopUp(
-            newGameState,
-            playerId,
-            Checks.CanPlayerRequestTopUp(newGameState, playerId)
-        );
+        newGameState = this.SetTopUpRequests(newGameState);
 
         return Result.Successful(newGameState);
     }
@@ -123,7 +115,11 @@ public class GameEngine
         }
 
         // Action - Pickup card
-        return Result.Successful(Actions.PickupCard(gameState, playerId));
+        newGameState = Actions.PickupCard(newGameState, playerId);
+
+        newGameState = this.SetTopUpRequests(newGameState);
+
+        return Result.Successful(newGameState);
     }
 
     // Private
@@ -138,5 +134,20 @@ public class GameEngine
 
         // Action - Top Up
         return Actions.TopUp(gameState);
+    }
+
+    private GameState SetTopUpRequests(GameState gameState)
+    {
+        var newGameState = gameState;
+        foreach (var player in newGameState.Players)
+        {
+            newGameState = Actions.SetCanRequestTopUp(
+                newGameState,
+                player.Id,
+                Checks.CanPlayerRequestTopUp(newGameState, player.Id)
+            );
+        }
+
+        return Actions.SetMustTopUp(newGameState, Checks.MustTopUp(newGameState));
     }
 }

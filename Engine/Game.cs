@@ -5,7 +5,7 @@ using Models;
 
 public abstract class Game
 {
-    public Game(List<string> playerNames, Settings settings, GameEngine gameEngine)
+    public Game(List<string>? playerNames, Settings settings, GameEngine gameEngine)
     {
         this.gameEngine = gameEngine;
         State = this.gameEngine.NewGame(playerNames, settings);

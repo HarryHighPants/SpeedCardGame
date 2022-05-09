@@ -132,8 +132,8 @@ public class InMemoryGameService : IGameService
         }
     }
 
-    public async Task UpdateName(string updatedName, Guid persistentPlayerId) =>
-        GetConnectionInfo(persistentPlayerId).Name = updatedName;
+    public async Task UpdateName(string roomId, string updatedName, Guid persistentPlayerId) =>
+        GetConnectionsRoom(roomId, persistentPlayerId).Map(room => room.Connections, err => err);
 
     public async Task<Result> StartGame(string roomId, Guid persistentPlayerId)
     {
@@ -181,7 +181,7 @@ public class InMemoryGameService : IGameService
                 1,
                 room.BotType.Value,
                 new BotActionHandler(
-                    () => GetGame(roomId).State,
+                    () => GetConnectionsGame(roomId, bot.PersistentId).Data.Game.State,
                     (PlayCardRequest playCardRequest) =>
                         TryPlayCard(
                             roomId,
@@ -215,7 +215,7 @@ public class InMemoryGameService : IGameService
         var (room, game) = gameResult.Data;
         var playerId = GetConnectionInfo(persistentPlayerId).PlayerIndex;
 
-        var initialGameState = new GameStateDto(game.State, room.Connections, game.gameEngine);
+        var initialGameState = new GameStateDto(game.State, room.Connections);
 
         var playCardResult = game.TryPlayCard(playerId, cardId, centerPilIndex);
         if (playCardResult.Failure)
@@ -224,17 +224,8 @@ public class InMemoryGameService : IGameService
         }
 
         // Check if the game has just ended
-        var updatedGameState = new GameStateDto(
-            playCardResult.Data,
-            room.Connections,
-            updatedGame.gameEngine
-        );
-        if (
-            initialGameState.Success
-            && initialGameState.Data.WinnerId == null
-            && updatedGameState.Success
-            && updatedGameState.Data.WinnerId != null
-        )
+        var updatedGameState = new GameStateDto(playCardResult.Data, room.Connections);
+        if (initialGameState.WinnerId == null && updatedGameState.WinnerId != null)
         {
             await HandleGameOver(game.State, rooms[roomId]);
         }
@@ -250,7 +241,7 @@ public class InMemoryGameService : IGameService
             return gameResult;
         }
 
-        var game = gameResult.Data;
+        var (_, game) = gameResult.Data;
 
         return game.TryPickupFromKitty(GetConnectionInfo(persistentPlayerId).PlayerIndex);
     }
@@ -263,7 +254,7 @@ public class InMemoryGameService : IGameService
             return gameResult;
         }
 
-        var game = gameResult.Data;
+        var (_, game) = gameResult.Data;
 
         return game.TryRequestTopUp(GetConnectionInfo(persistentPlayerId).PlayerIndex);
     }
@@ -273,11 +264,6 @@ public class InMemoryGameService : IGameService
         Console.WriteLine($"{room.RoomId} has ended");
         var dailyGame = room.BotType == BotType.Daily;
         await statService.UpdateGameOverStats(finalGameState, room.Connections, dailyGame);
-    }
-
-    public WebGame GetGame(string roomId)
-    {
-        return rooms[roomId].Game;
     }
 
     private Result<Room> GetConnectionsRoom(string roomId, Guid persistentPlayerId)
@@ -296,7 +282,10 @@ public class InMemoryGameService : IGameService
         return Result.Successful(room);
     }
 
-    private Result<(Room, WebGame)> GetConnectionsGame(string roomId, Guid persistentPlayerId)
+    private Result<(Room Room, WebGame Game)> GetConnectionsGame(
+        string roomId,
+        Guid persistentPlayerId
+    )
     {
         var roomResult = GetConnectionsRoom(roomId, persistentPlayerId);
         if (roomResult is IErrorResult roomResultError)
@@ -312,15 +301,14 @@ public class InMemoryGameService : IGameService
         return Result.Successful((roomResult.Data, roomResult.Data.Game));
     }
 
-    public GameParticipant GetConnectionInfo(Guid persistentPlayerId) =>
-        rooms[GetConnectionsRoomId(persistentPlayerId)].Connections.Single(
-            c => c.PersistentPlayerId == persistentPlayerId
-        );
-
-    public string GetConnectionsRoomId(Guid persistentPlayerId) =>
-        rooms.SingleOrDefault(
-            room => room.Value.Connections.Any(c => c.PersistentPlayerId == persistentPlayerId)
-        ).Key;
+    private Result<GameParticipant> GetGameParticipant(
+        string roomId,
+        Guid persistentPlayerId
+    )
+    {
+       return GetConnectionsRoom(roomId, persistentPlayerId)
+        .Map(room=> room.Connections.Single(pl=>pl.PersistentPlayerId === persistentPlayerId), err=>err);
+    }
 
     public Result<LobbyStateDto> GetLobbyStateDto(string roomId)
     {
@@ -342,23 +330,22 @@ public class InMemoryGameService : IGameService
     private void UpdateRoomsPlayerIds(string roomId)
     {
         var room = rooms[roomId];
-        var assignedPlayers = room.Connections.Where(c => c.PlayerIndex != null).ToList();
+        var assignedPlayers = room.Connections.ToList();
         if (
             assignedPlayers.Count < GameEngine.PlayersPerGame
             && room.Connections.Count >= GameEngine.PlayersPerGame
         )
         {
             // At least 1 connection can be assigned to a player
-            var assignedPlayerIds = assignedPlayers.Select(p => p.PlayerIndex!.Value).ToList();
+            var assignedPlayerIds = assignedPlayers.Select(p => p.PlayerIndex);
 
             // Get a list of assignable playerIds
             var playerIdsToAssign = Enumerable
                 .Range(0, GameEngine.PlayersPerGame)
-                .ToList()
                 .Except(assignedPlayerIds)
                 .ToList();
 
-            var unassignedPlayers = room.Connections.Where(c => c.PlayerIndex == null).ToList();
+            var unassignedPlayers = room.Connections.ToList();
 
             for (var i = 0; i < unassignedPlayers.Count; i++)
             {
@@ -368,46 +355,46 @@ public class InMemoryGameService : IGameService
                 }
 
                 room.Connections.Single(
-                    c => c.ConnectionId == unassignedPlayers[i].ConnectionId
+                    c => c.PersistentPlayerId == unassignedPlayers[i].PersistentPlayerId
                 ).PlayerIndex = playerIdsToAssign.Pop();
             }
         }
     }
 
-    public bool ConnectionOwnsCard(Guid persistentPlayerId, int cardId)
-    {
-        var gameResult = GetConnectionsGame(connectionId);
-        if (gameResult is IErrorResult gameError)
-        {
-            return false;
-        }
+    // public bool ConnectionOwnsCard(Guid persistentPlayerId, int cardId)
+    // {
+    //     var gameResult = GetConnectionsGame(connectionId);
+    //     if (gameResult is IErrorResult gameError)
+    //     {
+    //         return false;
+    //     }
 
-        var game = gameResult.Data;
+    //     var game = gameResult.Data;
 
-        var connectionsPlayerId = GetConnectionInfo(connectionId).PlayerIndex;
-        if (connectionsPlayerId == null)
-        {
-            return false;
-        }
+    //     var connectionsPlayerId = GetConnectionInfo(connectionId).PlayerIndex;
+    //     if (connectionsPlayerId == null)
+    //     {
+    //         return false;
+    //     }
 
-        var player = game.State.Players[connectionsPlayerId.Value];
-        if (player.HandCards.Any(c => c.Id == cardId))
-        {
-            return true;
-        }
+    //     var player = game.State.Players[connectionsPlayerId.Value];
+    //     if (player.HandCards.Any(c => c.Id == cardId))
+    //     {
+    //         return true;
+    //     }
 
-        if (player.KittyCards.Count > 0 && player.KittyCards.Last().Id == cardId)
-        {
-            return true;
-        }
+    //     if (player.KittyCards.Count > 0 && player.KittyCards.Last().Id == cardId)
+    //     {
+    //         return true;
+    //     }
 
-        return false;
-    }
+    //     return false;
+    // }
 
-    public CardLocation? GetCardLocation(Guid persistentPlayerId, int cardId)
-    {
-        var gameResult = GetConnectionsGame(connectionId);
-        var card = gameResult.Data.State.GetCard(cardId);
-        return card?.Location(gameResult.Data.State);
-    }
+    // public CardLocation? GetCardLocation(Guid persistentPlayerId, int cardId)
+    // {
+    //     var gameResult = GetConnectionsGame(connectionId);
+    //     var card = gameResult.Data.State.GetCard(cardId);
+    //     return card?.Location(gameResult.Data.State);
+    // }
 }

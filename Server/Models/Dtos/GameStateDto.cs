@@ -1,5 +1,6 @@
 namespace Server;
 
+using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using Engine;
@@ -19,7 +20,7 @@ public class GameStateDto
             .Select(p => new PlayerDto(p, GetPlayersId(p, connections)))
             .ToList();
 
-        MustTopUp = Players.All(p => p.CanRequestTopUp || p.RequestingTopUp);
+        MustTopUp = gameState.MustTopUp;
 
         // Only send the top 3
         CenterPiles = gameState.CenterPiles
@@ -28,16 +29,9 @@ public class GameStateDto
             )
             .ToList();
         LastMove = gameState.LastMove;
-        gameState.WinnerIndex WinnerId = gameEngine.Checks
-            .TryGetWinner(gameState)
-            .Map(
-                x =>
-                {
-                    return connections.Single(c => c.PlayerIndex == x).PersistentPlayerId as Guid?;
-                },
-                _ => null
-            )
-            ?.ToString();
+        WinnerId = connections
+            .SingleOrDefault(c => c.PlayerIndex == gameState.WinnerIndex)
+            ?.PersistentPlayerId.ToString();
     }
 
     // todo: hash playerId

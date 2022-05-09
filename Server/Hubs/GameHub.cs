@@ -32,12 +32,12 @@ public class GameHub : Hub
         await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
 
         // Add the player to the room
-        gameService.JoinRoom(roomId, UserIdentifier, botType);
+        await gameService.JoinRoom(roomId, UserIdentifier, botType);
     }
 
     public async Task UpdateName(string roomId, string name)
     {
-        gameService.UpdateName(name, UserIdentifier);
+        await gameService.UpdateName(roomId, name, UserIdentifier);
     }
 
     public async Task LeaveRoom(string roomId)
@@ -48,7 +48,7 @@ public class GameHub : Hub
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId);
 
         // Remove the gameParticipant from the room
-        gameService.LeaveRoom(roomId, UserIdentifier);
+        await gameService.LeaveRoom(roomId, UserIdentifier);
     }
 
     public async Task StartGame(string roomId) =>

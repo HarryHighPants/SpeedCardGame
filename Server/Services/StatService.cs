@@ -87,27 +87,27 @@ public class StatService
     }
 
     // Todo: called from api
-    public async Task<RankingStatsDto> GetRankingStats(
-        GameState gameState,
-        bool playerWon,
-        List<GameParticipant> participants,
-        bool dailyGame
-    )
-    {
-        // Get the players
-        var winner = await GetPlayerDao(participants[0]);
-        var loser = await GetPlayerDao(participants[1]);
-        var player = await GetPlayerDao(participants.Single(p => p.PersistentPlayerId == playerId));
+    // public async Task<RankingStatsDto> GetRankingStats(
+    //     GameState gameState,
+    //     bool playerWon,
+    //     List<GameParticipant> participants,
+    //     bool dailyGame
+    // )
+    // {
+    //     // Get the players
+    //     var winner = await GetPlayerDao(participants[0]);
+    //     var loser = await GetPlayerDao(participants[1]);
+    //     var player = await GetPlayerDao(participants.Single(p => p.PersistentPlayerId == playerId));
 
-        // Get the players Elo before the game
-        var startingElo = playerWon ? winner.Elo : loser.Elo;
-        EloService.SetPlayerElo(ref winner, ref loser);
+    //     // Get the players Elo before the game
+    //     var startingElo = playerWon ? winner.Elo : loser.Elo;
+    //     EloService.SetPlayerElo(ref winner, ref loser);
 
-        // Get the players Elo after the game
-        var updatedElo = playerDaos.Single(p => p.Id == playerId).Elo;
+    //     // Get the players Elo after the game
+    //     var updatedElo = playerDaos.Single(p => p.Id == playerId).Elo;
 
-        return new RankingStatsDto(startingElo, updatedElo);
-    }
+    //     return new RankingStatsDto(startingElo, updatedElo);
+    // }
 
     private async Task<PlayerDao> GetPlayerDao(GameParticipant gameParticipant)
     {

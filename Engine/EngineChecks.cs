@@ -25,13 +25,13 @@ public class EngineChecks
     }
 
     public bool CanPlayerRequestTopUp(GameState gameState, int playerIndex) =>
-        gameState.MustTopUp && gameState.Players[playerIndex].RequestingTopUp;
+        gameState.MustTopUp && !gameState.Players[playerIndex].RequestingTopUp;
 
     public bool MustTopUp(GameState gameState) =>
         !gameState.Players.Any(
             p =>
                 PlayerHasPlay(gameState, p.Id).Success
-                && CanPickupFromKitty(gameState, p.Id).Success
+                || CanPickupFromKitty(gameState, p.Id).Success
         );
 
     public bool AllPlayersRequestingTopUp(GameState gameState) =>

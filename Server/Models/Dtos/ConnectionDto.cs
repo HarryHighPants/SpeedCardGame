@@ -8,7 +8,8 @@ public class ConnectionDto
 
     public ConnectionDto(GameParticipant gameParticipant)
     {
-        ConnectionId = gameParticipant.ConnectionId;
+        // TODO: Hash this
+        ConnectionId = gameParticipant.PersistentPlayerId.ToString();
         Name = gameParticipant.Name;
         Rank = gameParticipant.Rank ?? 0;
     }

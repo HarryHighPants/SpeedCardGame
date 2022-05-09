@@ -43,27 +43,17 @@ public static class BotRunner
                             _ =>
                                 engineChecks
                                     .CanPickupFromKitty(gameState, playerId)
-                                    .Map<Result<Move>>(
+                                    .Map(
                                         () =>
                                             Result.Successful(
                                                 new Move(MoveType.PickupCard, playerId)
                                             ),
                                         _ =>
-                                            engineChecks
-                                                .CanPlayerRequestTopUp(gameState, playerId)
-                                                .Map<Result<Move>>(
-                                                    () =>
-                                                        Result.Successful(
-                                                            new Move(
-                                                                MoveType.RequestTopUp,
-                                                                playerId
-                                                            )
-                                                        ),
-                                                    _ =>
-                                                        Result.Error<Move>(
-                                                            "No moves for bot to make"
-                                                        )
+                                            engineChecks.CanPlayerRequestTopUp(gameState, playerId)
+                                              ? Result.Successful(
+                                                    new Move(MoveType.RequestTopUp, playerId)
                                                 )
+                                              : Result.Error<Move>("No moves for bot to make")
                                     )
                         )
             );

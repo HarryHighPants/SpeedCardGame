@@ -10,10 +10,7 @@ public class CliGame : Game
         List<string>? playerNames = null,
         Settings? settings = null,
         GameEngine? gameEngine = null
-    )
-    {
-        Initialise(playerNames, settings, gameEngine);
-    }
+    ) : base(playerNames, settings, gameEngine) { }
 
     public Card? GetCardWithValue(IEnumerable<Card> cards, int? value) =>
         cards.FirstOrDefault(card => card.CardValue == (CardValue)value!);
