@@ -15,13 +15,11 @@ public class GameHubGameUpdateHandler : IGameUpdateHandler
 
     public async Task HandleGameUpdate(string roomId, GameStateDto gameStateDto)
     {
-        var jsonData = JsonConvert.SerializeObject(gameStateDto);
-        await hubContext.Clients.Group(roomId).SendAsync("UpdateGameState", jsonData);
+        await hubContext.Clients.Group(roomId).SendAsync("UpdateGameState", gameStateDto);
     }
 
     public async Task HandleLobbyUpdate(string roomId, LobbyStateDto lobbyStateDto)
     {
-        var jsonData = JsonConvert.SerializeObject(lobbyStateDto);
-        await hubContext.Clients.Group(roomId).SendAsync("UpdateLobbyState", jsonData);
+        await hubContext.Clients.Group(roomId).SendAsync("UpdateLobbyState", lobbyStateDto);
     }
 }

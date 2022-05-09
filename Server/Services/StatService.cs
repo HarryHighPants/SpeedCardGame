@@ -10,11 +10,7 @@ public class StatService
 {
     private readonly IServiceScopeFactory scopeFactory;
 
-    public StatService(
-        IServiceScopeFactory scopeFactory,
-        IGameService gameService,
-        IBotService botService
-    )
+    public StatService(IServiceScopeFactory scopeFactory)
     {
         this.scopeFactory = scopeFactory;
     }

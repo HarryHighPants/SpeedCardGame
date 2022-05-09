@@ -1,13 +1,12 @@
 namespace Server;
 
 using Engine.Helpers;
-using Engine.Models;
 
 public interface IGameService
 {
-    public Task JoinRoom(string roomId, Guid persistentPlayerId, BotType? botType);
-    public Task LeaveRoom(string roomId, Guid persistentPlayerId);
-    public Task UpdateName(string roomId, string updatedName, Guid persistentPlayerId);
+    public Task<Result> JoinRoom(string roomId, Guid persistentPlayerId, BotType? botType);
+    public Task<Result> LeaveRoom(string roomId, Guid persistentPlayerId);
+    public Task<Result> UpdateName(string roomId, string updatedName, Guid persistentPlayerId);
 
     public Task<Result> StartGame(string roomId, Guid persistentPlayerId);
     public Task<Result> TryPickupFromKitty(string roomId, Guid persistentPlayerId);

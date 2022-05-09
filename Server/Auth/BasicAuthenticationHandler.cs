@@ -28,6 +28,7 @@ namespace Server.Auth
                     ?.Split("Bearer ")
                     .Skip(1)
                     .FirstOrDefault();
+
             if (accessToken == null)
             {
                 return Task.FromResult(AuthenticateResult.Fail("No Access token specified!"));

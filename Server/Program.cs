@@ -20,6 +20,7 @@ builder.Services
         }
     );
 builder.Services.AddSingleton<IGameService, InMemoryGameService>();
+builder.Services.AddSingleton<IGameUpdateHandler, GameHubGameUpdateHandler>();
 builder.Services.AddSingleton<IBotService, BotService>();
 builder.Services.AddSingleton<StatService, StatService>();
 builder.Services.AddSingleton<EloService, EloService>();
@@ -69,6 +70,9 @@ using (var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>(
 
 app.UseRouting();
 app.UseCors();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 
 // configure HTTP request pipeline
