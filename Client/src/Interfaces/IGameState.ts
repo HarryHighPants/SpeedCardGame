@@ -3,7 +3,7 @@ import { IPlayer } from './IPlayer'
 
 export interface IGameState {
     players: IPlayer[]
-    centerPiles: CenterPile[] | {}[]
+    centerPiles: CenterPile[]
     lastMove: string
     winnerId?: string
     mustTopUp: boolean

@@ -59,5 +59,5 @@ public record GameState
 
 public record CenterPile
 {
-    public ImmutableList<Card> Cards = ImmutableList<Card>.Empty;
+    public ImmutableList<Card> Cards { get; init; } = ImmutableList<Card>.Empty;
 }

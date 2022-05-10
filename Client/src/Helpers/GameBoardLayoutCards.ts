@@ -1,10 +1,8 @@
 import { CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard } from '../Interfaces/ICard'
-import {CenterPile, IGameState} from '../Interfaces/IGameState'
+import { IGameState } from '../Interfaces/IGameState'
 import React from 'react'
-import { clamp } from './Utilities'
 import GameBoardLayout from './GameBoardLayout'
 import gameBoardLayout from './GameBoardLayout'
-import game from '../Components/Game'
 
 class GameBoardLayoutCards {
     private gameBoardLayout: GameBoardLayout
@@ -29,7 +27,7 @@ class GameBoardLayoutCards {
         let newRenderableCards = [] as IRenderableCard[]
 
         // Add players cards
-        this.gameState.players.map((p, i) => {
+        this.gameState.players.forEach((p, i) => {
             let ourPlayer = p.id == ourId
 
             // Add the players hand cards
@@ -60,15 +58,12 @@ class GameBoardLayoutCards {
         })
 
         // Add the center pile cards
-        if (typeof(this.gameState.centerPiles) === typeof(CenterPile[]))
-        {
-            let centerPiles = this.gameState.centerPiles.reduce<IRenderableCard[]>((result, cp, cpIndex) => {
-                cp.cards.map((c) => result.push(this.GetRenderableCard(c, cpIndex, false, CardLocationType.Center)))
-                return result
-            }, [] as IRenderableCard[])
-            newRenderableCards.push(...centerPiles)
-        }
-        
+        let centerPiles = this.gameState.centerPiles.reduce<IRenderableCard[]>((result, cp, cpIndex) => {
+            cp.cards.map((c) => result.push(this.GetRenderableCard(c, cpIndex, false, CardLocationType.Center)))
+            return result
+        }, [] as IRenderableCard[])
+        newRenderableCards.push(...centerPiles)
+
         return newRenderableCards
     }
 
