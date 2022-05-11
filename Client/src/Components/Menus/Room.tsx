@@ -33,6 +33,7 @@ const Room = ({ onGameStarted }: Props) => {
     const [roomId, roomIdRef] = useRoomId()
     const [connectionStatus, setConnectionStatus] = useState<HubConnectionState | undefined>()
     const [persistentId, setPersistentId] = useState<string>(() => localStorage.getItem('persistentId') ?? uuid())
+    const [hashedPersistentId, setHashedPersistentId] = useState<string>()
     const [winningPlayer, setWinningPlayer] = useState<IPlayer>()
     const [playerWon, setPlayerWon] = useState<boolean>(false)
     const [losingPlayer, setLosingPlayer] = useState<IPlayer>()
@@ -51,6 +52,10 @@ const Room = ({ onGameStarted }: Props) => {
     useEffect(() => {
         console.log('setting persistent Id', persistentId)
         localStorage.setItem('persistentId', persistentId)
+
+        fetch(`${config.apiGateway.URL}/api/id-hash/${persistentId}`)
+            .then((response) => response.text())
+            .then((data) => setHashedPersistentId(data))
     }, [persistentId])
 
     useEffect(() => {
@@ -66,10 +71,11 @@ const Room = ({ onGameStarted }: Props) => {
     }, [gameState?.winnerId])
 
     const CreateConnection = () => {
-        console.log('connecting to: ', config.apiGateway.URL)
+        let hubUrl = `${config.apiGateway.URL}/server`
+        console.log('connecting to: ', hubUrl)
         // Builds the SignalR connection, mapping it to /server
         let signalRConnection = new signalR.HubConnectionBuilder()
-            .withUrl(config.apiGateway.URL, {
+            .withUrl(hubUrl, {
                 // skipNegotiation: true,
                 // transport: signalR.HttpTransportType.WebSockets,
                 accessTokenFactory: () => persistentId,
@@ -136,7 +142,7 @@ const Room = ({ onGameStarted }: Props) => {
                     <Game
                         key={persistentId + roomId}
                         connection={connection}
-                        persistentId={persistentId}
+                        playerId={hashedPersistentId}
                         gameState={gameState}
                         roomId={roomId}
                     />
@@ -154,7 +160,7 @@ const Room = ({ onGameStarted }: Props) => {
             <Lobby
                 roomId={roomId}
                 connection={connection}
-                playerId={persistentId}
+                playerId={hashedPersistentId}
                 gameState={gameState}
                 onBack={() => connection?.stop()}
             />

@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.Models.Database;
 
 namespace Server.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("shield")]
 public class ShieldController : ControllerBase
 {

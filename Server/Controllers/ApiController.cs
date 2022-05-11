@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Server.Helpers;
 
 namespace Server.Controllers;
 
@@ -9,6 +11,7 @@ using Models.Database;
 using Services;
 
 [ApiController]
+[AllowAnonymous]
 [Route("api")]
 public class ApiController : ControllerBase
 {
@@ -17,6 +20,13 @@ public class ApiController : ControllerBase
     public ApiController(GameResultContext gameResultContext)
     {
         this.gameResultContext = gameResultContext;
+    }
+    
+    
+    [HttpGet("id-hash/{persistentPlayerId}")]
+    public IActionResult GetIdHash(Guid persistentPlayerId)
+    {
+        return Ok(persistentPlayerId.ToString().Hash());
     }
 
     [HttpGet("latest-daily-stats")]

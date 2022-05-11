@@ -34,7 +34,7 @@ const AutomatedGame = () => {
         setCurrentGameState(GetCurrentGameState())
     }, [currentStateIndex])
 
-    return <Game connection={undefined} persistentId={bottomPlayerId} gameState={currentGameState} roomId={""}/>
+    return <Game connection={undefined} playerId={bottomPlayerId} gameState={currentGameState} roomId={""}/>
 }
 
 export default AutomatedGame

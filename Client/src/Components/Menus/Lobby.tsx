@@ -58,7 +58,6 @@ const Lobby = ({ connection, playerId, roomId, gameState, onBack }: Props) => {
     }, [gameState])
 
     const UpdateLobbyData = (updatedLobby: ILobby) => {
-        console.log(updatedLobby)
         setLobbyData(updatedLobby)
         setInLobby(updatedLobby !== null)
     }

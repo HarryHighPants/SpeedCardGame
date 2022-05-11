@@ -14,7 +14,7 @@ import { debounce } from 'lodash'
 
 interface Props {
     connection: signalR.HubConnection | undefined
-    persistentId: string | undefined | null
+    playerId: string | undefined
     gameState: IGameState
     roomId: string
 }
@@ -26,7 +26,7 @@ const getGameBoardDimensions = () => {
     } as IPos
 }
 
-const Game = ({ roomId, connection, persistentId, gameState }: Props) => {
+const Game = ({ roomId, connection, playerId, gameState }: Props) => {
     const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>(getGameBoardDimensions())
     const [gameBoardLayout, setGameBoardLayout] = useState<GameBoardLayout>()
     const [flippedCenterPiles, setflippedCenterPiles] = useState(false)
@@ -34,7 +34,7 @@ const Game = ({ roomId, connection, persistentId, gameState }: Props) => {
 
     useEffect(() => {
         let newGameState = gameState
-        if (gameState.players[0].id === persistentId) {
+        if (gameState.players[0].id === playerId) {
             // We need to invert the center piles so that 0 is on the right
             // This way we will have a perfectly mirrored board simplifying sending card IPos to the other player
             setflippedCenterPiles(true)
@@ -99,7 +99,7 @@ const Game = ({ roomId, connection, persistentId, gameState }: Props) => {
                 <GameBoard
                     sendMovingCard={SendMovedCard}
                     connection={connection}
-                    playerId={persistentId}
+                    playerId={playerId}
                     gameState={localGameState}
                     gameBoardLayout={gameBoardLayout}
                     sendPlayCard={SendPlayCard}

@@ -1,3 +1,5 @@
+using Server.Helpers;
+
 namespace Server;
 
 using System.Linq;
@@ -34,8 +36,7 @@ public class GameStateDto
             ?.PersistentPlayerId.ToString();
     }
 
-    // todo: hash playerId
     private static string GetPlayersId(Player player, List<GameParticipant> connections) =>
-        connections.SingleOrDefault(c => c.PlayerIndex == player.Id)?.PersistentPlayerId.ToString()
+        connections.SingleOrDefault(c => c.PlayerIndex == player.Id)?.PersistentPlayerId.ToString().Hash()
         ?? player.Id.ToString();
 }
