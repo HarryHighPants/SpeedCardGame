@@ -8,6 +8,7 @@ import CelebrateShaker from '../CelebrateShake'
 import toast from 'react-hot-toast'
 import { convertTZ } from '../../Helpers/Utilities'
 import Countdown from 'react-countdown'
+import config from '../../Config'
 
 const getResetTime = () => {
     const aestDate = convertTZ(new Date(), 'Australia/Brisbane')
@@ -15,29 +16,23 @@ const getResetTime = () => {
 }
 
 interface Props {
-    connection: signalR.HubConnection | undefined
+    persistentId: string
+    gameOver: boolean
 }
 
-const DailyStats = ({ connection }: Props) => {
+const DailyStats = ({ persistentId, gameOver }: Props) => {
     const [dailyResults, setDailyResults] = useState<IDailyResults>()
-    const [nextGameDate, setNextGameDate] = useState<number>(() => getResetTime())
-    const [myPlayerName, setMyPlayerName] = useState<string>(() =>
-        JSON.parse(localStorage.getItem('playerName') ?? `"Player"`)
-    )
+    const [nextGameDate] = useState<number>(() => getResetTime())
+    const [myPlayerName] = useState<string>(() => JSON.parse(localStorage.getItem('playerName') ?? `"Player"`))
 
     useEffect(() => {
-        if (!connection) return
-        connection.on('UpdateDailyResults', UpdateDailyResults)
-
-        return () => {
-            connection.off('UpdateDailyResults', UpdateDailyResults)
-        }
-    }, [connection])
-
-    const UpdateDailyResults = (data: any) => {
-        let dailyResultsData: IDailyResults = JSON.parse(data)
-        setDailyResults(dailyResultsData)
-    }
+        fetch(`${config.apiGateway.URL}/api/daily-stats/${persistentId}`)
+            .then((response) => response.json())
+            .then((data) => setDailyResults(data))
+            .catch((error) => {
+                console.log(error)
+            })
+    }, [gameOver])
 
     const onShare = () => {
         if (!dailyResults) {

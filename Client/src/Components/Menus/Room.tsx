@@ -17,7 +17,7 @@ import WinnerPopup from '../WinnerPopup'
 import useRoomId from '../../Hooks/useRoomId'
 import toast, { Toaster } from 'react-hot-toast'
 import { IPlayer } from '../../Interfaces/IPlayer'
-import { GameType } from '../../Interfaces/ILobby'
+import { BotDifficulty, GameType } from '../../Interfaces/ILobby'
 import config from '../../Config'
 import { v4 as uuid } from 'uuid'
 import DailyStats from './DailyStats'
@@ -120,8 +120,8 @@ const Room = ({ onGameStarted }: Props) => {
 
     const JoinRoom = () => {
         if (!roomIdRef?.current) return
-        let botDifficulty = searchParams.get('difficulty') ?? '-1'
-        connectionRef.current?.invoke('JoinRoom', roomIdRef?.current, parseInt(botDifficulty))
+        let botDifficulty = searchParams.get('difficulty')
+        connectionRef.current?.invoke('JoinRoom', roomIdRef?.current, !!botDifficulty ? parseInt(botDifficulty) : null)
     }
 
     const UpdateGameState = (updatedGameState: IGameState) => {
@@ -149,6 +149,7 @@ const Room = ({ onGameStarted }: Props) => {
                     <HomeButton onClick={stopConnection} />
                     {!!gameState.winnerId && (
                         <WinnerPopup
+                            persistentId={persistentId}
                             winnerName={winningPlayer?.name}
                             loserName={losingPlayer?.name}
                             cardsRemaining={losingPlayerCardsRemaining}
@@ -164,7 +165,9 @@ const Room = ({ onGameStarted }: Props) => {
                 gameState={gameState}
                 onBack={() => connection?.stop()}
             />
-            <DailyStats connection={connection} />
+            {parseInt(searchParams.get('difficulty') ?? '0') === BotDifficulty.Daily && (
+                <DailyStats persistentId={persistentId} gameOver={!!gameState?.winnerId} />
+            )}
         </>
     )
 }

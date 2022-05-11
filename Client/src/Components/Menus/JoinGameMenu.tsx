@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import MenuHeader from './MenuHeader'
 import Popup from "../Popup";
+import RankingStats from "../RankingStats";
+import {IRankingStats} from "../../Interfaces/IRankingStats";
 
 const JoinGameMenu = () => {
 	const [gameId, setGameId] = useState('')
@@ -28,6 +30,7 @@ const JoinGameMenu = () => {
 					Join Game
 				</StyledButton>
 			</form>
+			<RankingStats stats={{oldRank:3,newRank:3,previousElo:1581,newElo:1714} as IRankingStats}/>
 		</Popup>
 	)
 }

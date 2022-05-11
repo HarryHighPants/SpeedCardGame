@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { IPlayerConnection, Rank } from '../../Interfaces/ILobby'
+import {IPlayerConnection, Rank, RankColour} from '../../Interfaces/ILobby'
 
 const LobbyPlayer = (
     connectionId: string,
@@ -8,22 +8,6 @@ const LobbyPlayer = (
     onUpdateName: (newName: string) => void,
     index: number
 ) => {
-    const getRankColour = (rank: Rank) => {
-        switch (rank) {
-            case 0:
-                return '#b8b8b8'
-            case 1:
-                return '#ff8d63'
-            case 2:
-                return '#ffd26f'
-            case 3:
-                return '#6fd9ff'
-            case 4:
-                return '#ff5050'
-            case 5:
-                return '#ea75ff'
-        }
-    }
 
     return (
         <div key={`lobby-player-${player.playerId}`} style={{ display: 'flex' }}>
@@ -45,7 +29,7 @@ const LobbyPlayer = (
                 ) : (
                     <PlayerName key={player.playerId}>{player.name}</PlayerName>
                 )}
-                <RankText style={{ color: getRankColour(player.rank) }}>{Rank[player.rank]}</RankText>
+                <RankText style={{ color: RankColour[player.rank] }}>{Rank[player.rank]}</RankText>
             </div>
         </div>
     )

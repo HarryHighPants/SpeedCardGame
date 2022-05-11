@@ -19,4 +19,21 @@ export enum Rank {
     'Speed Demon',
 }
 
+export enum RankColour {
+    '#b8b8b8',
+    '#ff8d63',
+    '#ffd26f',
+    '#6fd9ff',
+    '#ff5050',
+    '#ea75ff',
+}
+
+export enum BotDifficulty {
+    'Easy',
+    'Medium',
+    'Hard',
+    'Impossible',
+    'Daily',
+}
+
 export type GameType = 'bot' | 'multiplayer'

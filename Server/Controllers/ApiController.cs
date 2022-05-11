@@ -29,19 +29,19 @@ public class ApiController : ControllerBase
         return Ok(persistentPlayerId.ToString().Hash());
     }
 
-    [HttpGet("latest-daily-stats")]
+    [HttpGet("daily-stats/{persistentPlayerId}")]
     public IActionResult GetDailyResultDto(Guid persistentPlayerId)
     {
-        var latestGame = GetPlayersLatestGame(persistentPlayerId, true);
+        var latestGame = GetPlayersDailyGame(persistentPlayerId);
         if (latestGame == null)
         {
-            return BadRequest("Could not find a daily game for player");
+            return BadRequest("Player hasn't completed todays game");
         }
 
         return Ok(new DailyResultDto(persistentPlayerId, latestGame));
     }
 
-    [HttpGet("latest-ranking-stats")]
+    [HttpGet("latest-ranking-stats/{persistentPlayerId}")]
     public IActionResult GetRankingStats(Guid persistentPlayerId)
     {
         var latestGame = GetPlayersLatestGame(persistentPlayerId);
@@ -70,10 +70,10 @@ public class ApiController : ControllerBase
         );
     }
 
-    [HttpGet("player/{playerId}")]
-    public IActionResult TopPlayers(Guid playerId)
+    [HttpGet("player/{persistentPlayerId}")]
+    public IActionResult TopPlayers(Guid persistentPlayerId)
     {
-        var player = gameResultContext.Players.Find(playerId);
+        var player = gameResultContext.Players.Find(persistentPlayerId);
         if (player == null)
         {
             return BadRequest("Could not find player with that id");
@@ -88,14 +88,25 @@ public class ApiController : ControllerBase
         return Ok(true);
     }
 
-    private GameResultDao? GetPlayersLatestGame(Guid persistentPlayerId, bool dailyGameOnly = false)
+    private GameResultDao? GetPlayersLatestGame(Guid persistentPlayerId)
     {
         return gameResultContext.GameResults
-            .OrderBy(g => g.Created)
+            .OrderByDescending(g => g.Created)
             .Include(g=>g.Winner)
             .Include(g=>g.Loser)
             .FirstOrDefault(g =>
-                (!dailyGameOnly || g.Daily) && 
+                g.Winner.Id == persistentPlayerId
+                 || g.Loser.Id == persistentPlayerId);
+    }
+    
+    private GameResultDao? GetPlayersDailyGame(Guid persistentPlayerId)
+    {
+        return gameResultContext.GameResults
+            .OrderByDescending(g => g.Created)
+            .Include(g=>g.Winner)
+            .Include(g=>g.Loser)
+            .FirstOrDefault(g =>
+                g.Daily && g.DailyIndex == InMemoryGameService.GetDayIndex() &&
                 (g.Winner.Id == persistentPlayerId
                  || g.Loser.Id == persistentPlayerId));
     }

@@ -33,7 +33,7 @@ public class GameStateDto
         LastMove = gameState.LastMove;
         WinnerId = connections
             .SingleOrDefault(c => c.PlayerIndex == gameState.WinnerIndex)
-            ?.PersistentPlayerId.ToString();
+            ?.PersistentPlayerId.ToString().Hash();
     }
 
     private static string GetPlayersId(Player player, List<GameParticipant> connections) =>
