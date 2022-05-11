@@ -9,11 +9,12 @@ public class RankingStatsDto
 	public int PreviousElo { get; set; }
 	public int NewElo { get; set; }
 
-	public RankingStatsDto(int previousElo, int newElo)
+	public RankingStatsDto(int currentElo, int eloChangeAmt)
 	{
+		var previousElo = currentElo - eloChangeAmt;
 		OldRank = EloService.GetRank(previousElo);
-		NewRank = EloService.GetRank(newElo);
+		NewRank = EloService.GetRank(currentElo);
 		PreviousElo = previousElo;
-		NewElo = newElo;
+		NewElo = currentElo;
 	}
 }

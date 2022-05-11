@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 public class GameResultContext : DbContext
 {
-    public DbSet<GameResultDao> GameResults { get; set; }
+    public DbSet<GameResultDao?> GameResults { get; set; }
     public DbSet<PlayerDao> Players { get; set; }
 
     public GameResultContext(DbContextOptions<GameResultContext> options) : base(options) { }
@@ -16,7 +16,6 @@ public class GameResultContext : DbContext
 public class GameResultDao
 {
     public Guid Id { get; set; }
-
     public DateTime Created { get; set; }
     public PlayerDao Winner { get; set; }
     public PlayerDao Loser { get; set; }
@@ -24,6 +23,10 @@ public class GameResultDao
     public int LostBy { get; set; }
     public bool Daily { get; set; }
     public int DailyIndex { get; set; }
+    
+    public int EloGained { get; set; }
+
+    public int EloLost { get; set; }
 }
 
 [Table("Player")]

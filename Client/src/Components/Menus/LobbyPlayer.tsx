@@ -26,10 +26,10 @@ const LobbyPlayer = (
     }
 
     return (
-        <div key={`lobby-player-${player.connectionId}`} style={{ display: 'flex' }}>
+        <div key={`lobby-player-${player.playerId}`} style={{ display: 'flex' }}>
             <p style={{ margin: 0, paddingRight: 10, width: 13 }}>{index + 1}. </p>
             <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                {player.connectionId == connectionId ? (
+                {player.playerId == connectionId ? (
                     <input
                         style={{
                             marginTop: -5,
@@ -37,13 +37,13 @@ const LobbyPlayer = (
                             fontSize: 'medium',
                             fontFamily: 'inherit',
                         }}
-                        key={player.connectionId}
+                        key={player.playerId}
                         maxLength={20}
                         value={myPlayerName}
                         onChange={(e) => onUpdateName(e.target.value)}
                     />
                 ) : (
-                    <PlayerName key={player.connectionId}>{player.name}</PlayerName>
+                    <PlayerName key={player.playerId}>{player.name}</PlayerName>
                 )}
                 <RankText style={{ color: getRankColour(player.rank) }}>{Rank[player.rank]}</RankText>
             </div>

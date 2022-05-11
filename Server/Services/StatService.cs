@@ -26,7 +26,7 @@ public class StatService
         var loser = await GetPlayerDao(participants[1]);
 
         SetWinsAndLosses(winner, loser, dailyGame);
-        EloService.SetPlayerElo(ref winner, ref loser);
+        var (eloGained, eloLost) = EloService.SetPlayerElo(ref winner, ref loser);
 
         using var scope = scopeFactory.CreateScope();
         var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
@@ -47,7 +47,9 @@ public class StatService
                 Winner = winner,
                 Loser = loser,
                 Daily = dailyGame,
-                DailyIndex = InMemoryGameService.GetDayIndex()
+                DailyIndex = InMemoryGameService.GetDayIndex(),
+                EloGained = eloGained,
+                EloLost = eloLost
             }
         );
 
@@ -73,41 +75,6 @@ public class StatService
         }
     }
 
-    // Todo: called from api
-    public DailyResultDto? GetDailyResultDto(Guid persistentPlayerId)
-    {
-        var dailyMatch = GetDailyResult(persistentPlayerId);
-        if (dailyMatch == null)
-        {
-            return null;
-        }
-
-        return new DailyResultDto(persistentPlayerId, dailyMatch);
-    }
-
-    // Todo: called from api
-    // public async Task<RankingStatsDto> GetRankingStats(
-    //     GameState gameState,
-    //     bool playerWon,
-    //     List<GameParticipant> participants,
-    //     bool dailyGame
-    // )
-    // {
-    //     // Get the players
-    //     var winner = await GetPlayerDao(participants[0]);
-    //     var loser = await GetPlayerDao(participants[1]);
-    //     var player = await GetPlayerDao(participants.Single(p => p.PersistentPlayerId == playerId));
-
-    //     // Get the players Elo before the game
-    //     var startingElo = playerWon ? winner.Elo : loser.Elo;
-    //     EloService.SetPlayerElo(ref winner, ref loser);
-
-    //     // Get the players Elo after the game
-    //     var updatedElo = playerDaos.Single(p => p.Id == playerId).Elo;
-
-    //     return new RankingStatsDto(startingElo, updatedElo);
-    // }
-
     private async Task<PlayerDao> GetPlayerDao(GameParticipant gameParticipant)
     {
         using var scope = scopeFactory.CreateScope();
@@ -128,20 +95,5 @@ public class StatService
         player.Name = gameParticipant.Name;
         await gameResultContext.SaveChangesAsync();
         return player;
-    }
-
-    private GameResultDao? GetDailyResult(Guid persistentPlayerId)
-    {
-        using var scope = scopeFactory.CreateScope();
-        var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
-        return gameResultContext.GameResults
-            .Include(gr => gr.Loser)
-            .Include(gr => gr.Winner)
-            .FirstOrDefault(
-                gr =>
-                    gr.Daily
-                    && gr.DailyIndex == InMemoryGameService.GetDayIndex()
-                    && (gr.Winner.Id == persistentPlayerId || gr.Loser.Id == persistentPlayerId)
-            );
     }
 }

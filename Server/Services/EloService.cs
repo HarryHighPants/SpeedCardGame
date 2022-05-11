@@ -17,7 +17,7 @@ public class EloService
 
     public static readonly int StartingElo = 250;
 
-    public static (int winnerEloChange, int loserEloChange) SetPlayerElo(
+    public static (int eloGained, int eloLost) SetPlayerElo(
         ref PlayerDao winner,
         ref PlayerDao loser
     )
@@ -25,11 +25,11 @@ public class EloService
         int eloK = 20;
 
         int delta = (int)(eloK * (1 - ExpectationToWin(winner.Elo, loser.Elo)));
-        var winnerEloChange = (int)(delta * PlayerK(winner.Wins + winner.Losses));
-        var loserEloChange = (int)(delta * PlayerK(loser.Wins + loser.Losses));
-        winner.Elo += winnerEloChange;
-        loser.Elo -= loserEloChange;
-        return (winnerEloChange, loserEloChange);
+        var eloGained = (int)(delta * PlayerK(winner.Wins + winner.Losses));
+        var eloLost = (int)(delta * PlayerK(loser.Wins + loser.Losses));
+        winner.Elo += eloGained;
+        loser.Elo -= eloLost;
+        return (eloGained, eloLost);
     }
 
     /// <summary>
