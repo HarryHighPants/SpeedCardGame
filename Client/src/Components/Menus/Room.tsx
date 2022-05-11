@@ -1,6 +1,6 @@
 import * as signalR from '@microsoft/signalr'
 import { HubConnection, HubConnectionState, ILogger, LogLevel } from '@microsoft/signalr'
-import { memo, useCallback, useEffect, useMemo } from 'react'
+import { memo, useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { IGameState } from '../../Interfaces/IGameState'
 import Game from '../../Components/Game'
@@ -10,7 +10,7 @@ import styled from 'styled-components'
 import { HiOutlineHome } from 'react-icons/hi'
 import Popup from '../Popup'
 import HomeButton from '../HomeButton'
-import useState from 'react-usestateref'
+import useStateRef from 'react-usestateref'
 import { motion } from 'framer-motion'
 import CelebrateShaker from '../CelebrateShake'
 import WinnerPopup from '../WinnerPopup'
@@ -28,7 +28,7 @@ interface Props {
 
 const Room = ({ onGameStarted }: Props) => {
     let navigate = useNavigate()
-    const [connection, setConnection, connectionRef] = useState<HubConnection>()
+    const [connection, setConnection, connectionRef] = useStateRef<HubConnection>()
     const [gameState, setGameState] = useState<IGameState>()
     const [roomId, roomIdRef] = useRoomId()
     const [connectionStatus, setConnectionStatus] = useState<HubConnectionState | undefined>()
@@ -119,7 +119,6 @@ const Room = ({ onGameStarted }: Props) => {
     }
 
     const UpdateGameState = (updatedGameState: IGameState) => {
-        console.log(updatedGameState)
         if (!gameState) {
             onGameStarted()
         }
@@ -152,7 +151,13 @@ const Room = ({ onGameStarted }: Props) => {
                     )}
                 </>
             )}
-            <Lobby roomId={roomId} connection={connection} playerId={persistentId} gameState={gameState} onBack={() => connection?.stop()} />
+            <Lobby
+                roomId={roomId}
+                connection={connection}
+                playerId={persistentId}
+                gameState={gameState}
+                onBack={() => connection?.stop()}
+            />
             <DailyStats connection={connection} />
         </>
     )
