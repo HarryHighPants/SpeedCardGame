@@ -14,8 +14,9 @@ import { debounce } from 'lodash'
 
 interface Props {
     connection: signalR.HubConnection | undefined
-    connectionId: string | undefined | null
+    persistentId: string | undefined | null
     gameState: IGameState
+    roomId: string
 }
 
 const getGameBoardDimensions = () => {
@@ -25,7 +26,7 @@ const getGameBoardDimensions = () => {
     } as IPos
 }
 
-const Game = ({ connection, connectionId, gameState }: Props) => {
+const Game = ({ roomId, connection, persistentId, gameState }: Props) => {
     const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>(getGameBoardDimensions())
     const [gameBoardLayout, setGameBoardLayout] = useState<GameBoardLayout>()
     const [flippedCenterPiles, setflippedCenterPiles] = useState(false)
@@ -33,7 +34,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 
     useEffect(() => {
         let newGameState = gameState
-        if (gameState.players[0].id === connection?.connectionId) {
+        if (gameState.players[0].id === persistentId) {
             // We need to invert the center piles so that 0 is on the right
             // This way we will have a perfectly mirrored board simplifying sending card IPos to the other player
             setflippedCenterPiles(true)
@@ -66,20 +67,20 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
 
     const SendPlayCard = (topCard: ICard, centerPileIndex: number) => {
         let correctedCenterPileIndex = flippedCenterPiles ? (centerPileIndex + 1) % 2 : centerPileIndex
-        connection?.invoke('TryPlayCard', topCard.id, correctedCenterPileIndex).catch((e) => console.log(e))
+        connection?.invoke('TryPlayCard', roomId, topCard.id, correctedCenterPileIndex).catch((e) => console.log(e))
     }
 
     const SendPickupFromKitty = () => {
-        connection?.invoke('TryPickupFromKitty').catch((e) => console.log(e))
+        connection?.invoke('TryPickupFromKitty', roomId).catch((e) => console.log(e))
     }
 
     const SendRequestTopUp = () => {
-        connection?.invoke('TryRequestTopUp').catch((e) => console.log(e))
+        connection?.invoke('TryRequestTopUp', roomId).catch((e) => console.log(e))
     }
 
     const SendMovedCard = debounce(
         (movedCard: IMovedCardPos | undefined) => {
-            connection?.invoke('UpdateMovingCard', movedCard).catch((e) => console.log(e))
+            connection?.invoke('UpdateMovingCard', roomId, movedCard).catch((e) => console.log(e))
         },
         100,
         { leading: true, trailing: true, maxWait: 100 }
@@ -98,7 +99,7 @@ const Game = ({ connection, connectionId, gameState }: Props) => {
                 <GameBoard
                     sendMovingCard={SendMovedCard}
                     connection={connection}
-                    playerId={connectionId}
+                    playerId={persistentId}
                     gameState={localGameState}
                     gameBoardLayout={gameBoardLayout}
                     sendPlayCard={SendPlayCard}

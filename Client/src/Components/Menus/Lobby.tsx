@@ -13,12 +13,13 @@ import { IDailyResults } from '../../Interfaces/IDailyResults'
 
 interface Props {
     connection: signalR.HubConnection | undefined
+    playerId: string | undefined
     roomId: string | undefined
     gameState: IGameState | undefined
     onBack: () => void
 }
 
-const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
+const Lobby = ({ connection, playerId, roomId, gameState, onBack }: Props) => {
     let navigate = useNavigate()
     const [lobbyData, setLobbyData] = useState<ILobby>()
     const [dailyResults, setDailyResults] = useState<IDailyResults>()
@@ -53,7 +54,7 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
     useEffect(() => {
         let activePlayers = (gameState?.players.filter((p) => p.id !== '0') ?? []).map((p) => p.id)
         setActivePlayers(activePlayers)
-        setSpectating(activePlayers.length >= 2 && !activePlayers.find((p) => p === connection?.connectionId))
+        setSpectating(activePlayers.length >= 2 && !activePlayers.find((p) => p === playerId))
     }, [gameState])
 
     const UpdateLobbyData = (updatedLobby: ILobby) => {
@@ -111,10 +112,10 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
                 <Group>
                     <PlayersTitle>Players:</PlayersTitle>
                     <PlayersContainer>
-                        {lobbyData != null && !!connection?.connectionId ? (
+                        {lobbyData != null && !!playerId ? (
                             <>
                                 {lobbyData?.connections?.map((p, i) =>
-                                    LobbyPlayer(connection?.connectionId as string, myPlayerName, p, UpdateName, i)
+                                    LobbyPlayer(playerId, myPlayerName, p, UpdateName, i)
                                 )}
                             </>
                         ) : (
@@ -129,7 +130,7 @@ const Lobby = ({ connection, roomId, gameState, onBack }: Props) => {
                     <p>Game in progress</p>
                 ) : (
                     lobbyData != null &&
-                    !!connection?.connectionId && (
+                    !!playerId && (
                         <StartButton disabled={waitingForPlayers} onClick={() => onStartGame()}>
                             Start Game
                         </StartButton>

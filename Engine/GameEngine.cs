@@ -72,7 +72,7 @@ public class GameEngine
         newGameState = state with { Players = newPlayers };
 
         // Check - If the game has ended
-        var winnerResult = Checks.TryGetWinner(gameState);
+        var winnerResult = Checks.TryGetWinner(newGameState);
         if (winnerResult.Success)
         {
             newGameState = Actions.UpdateWinner(newGameState, winnerResult.Data);

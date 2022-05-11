@@ -30,10 +30,13 @@ public class StatService
 
         using var scope = scopeFactory.CreateScope();
         var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
-
+        gameResultContext.Attach(winner);
+        gameResultContext.Attach(loser);
+        
         var cardsRemaining = gameState.Players
             .Select(p => p.HandCards.Count + p.KittyCards.Count)
             .Sum();
+        
         gameResultContext.GameResults.Add(
             new GameResultDao
             {

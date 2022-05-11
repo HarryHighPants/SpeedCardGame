@@ -33,7 +33,6 @@ const Room = ({ onGameStarted }: Props) => {
     const [roomId, roomIdRef] = useRoomId()
     const [connectionStatus, setConnectionStatus] = useState<HubConnectionState | undefined>()
     const [persistentId, setPersistentId] = useState<string>(() => localStorage.getItem('persistentId') ?? uuid())
-    const [connectionId, setConnectionId] = useState<string | null>()
     const [winningPlayer, setWinningPlayer] = useState<IPlayer>()
     const [playerWon, setPlayerWon] = useState<boolean>(false)
     const [losingPlayer, setLosingPlayer] = useState<IPlayer>()
@@ -61,7 +60,7 @@ const Room = ({ onGameStarted }: Props) => {
         let losingPlayer = gameState?.players.find((p) => p.id !== gameState.winnerId)
         setLosingPlayer(losingPlayer)
 
-        setPlayerWon(gameState?.winnerId === connectionId)
+        setPlayerWon(gameState?.winnerId === persistentId)
 
         setLosingPlayerCardsRemaining((losingPlayer?.handCards.length ?? 0) + (losingPlayer?.kittyCardsCount ?? 0))
     }, [gameState?.winnerId])
@@ -83,7 +82,6 @@ const Room = ({ onGameStarted }: Props) => {
 
         signalRConnection?.start().then(() => {
             setConnection(signalRConnection)
-            setConnectionId(signalRConnection.connectionId)
             ConnectionStatusUpdated()
         })
     }
@@ -137,10 +135,11 @@ const Room = ({ onGameStarted }: Props) => {
             {!!gameState && (
                 <>
                     <Game
-                        key={connectionId + roomId}
+                        key={persistentId + roomId}
                         connection={connection}
-                        connectionId={connectionId}
+                        persistentId={persistentId}
                         gameState={gameState}
+                        roomId={roomId}
                     />
                     <HomeButton onClick={stopConnection} />
                     {!!gameState.winnerId && (
@@ -153,7 +152,7 @@ const Room = ({ onGameStarted }: Props) => {
                     )}
                 </>
             )}
-            <Lobby roomId={roomId} connection={connection} gameState={gameState} onBack={() => connection?.stop()} />
+            <Lobby roomId={roomId} connection={connection} playerId={persistentId} gameState={gameState} onBack={() => connection?.stop()} />
             <DailyStats connection={connection} />
         </>
     )
