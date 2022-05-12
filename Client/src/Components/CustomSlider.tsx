@@ -33,7 +33,7 @@ const CustomSlider = ({
                                 transform: 'translateX(100%)',
                             }}
                         >
-                            {handleAdditionalText}
+                            <b>{handleAdditionalText}</b>
                         </p>
                     </div>
                 </SliderHandle>

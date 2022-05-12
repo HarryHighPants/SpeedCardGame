@@ -21,17 +21,16 @@ public class StatService
         bool dailyGame
     )
     {
-        Console.WriteLine($"Game has ended");
-        var winner = await GetPlayerDao(participants[0]);
-        var loser = await GetPlayerDao(participants[1]);
+        var winnerParticipant = participants.Single(p => p.PlayerIndex == gameState.WinnerIndex);
+        var loserParticipant = participants.Single(p => p.PlayerIndex != gameState.WinnerIndex);
+        
+        using var scope = scopeFactory.CreateScope();
+        var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
+        var winner = await GetPlayerDao(winnerParticipant, gameResultContext);
+        var loser = await GetPlayerDao(loserParticipant, gameResultContext);
 
         SetWinsAndLosses(winner, loser, dailyGame);
         var (eloGained, eloLost) = EloService.SetPlayerElo(ref winner, ref loser);
-
-        using var scope = scopeFactory.CreateScope();
-        var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
-        gameResultContext.Attach(winner);
-        gameResultContext.Attach(loser);
         
         var cardsRemaining = gameState.Players
             .Select(p => p.HandCards.Count + p.KittyCards.Count)
@@ -75,10 +74,8 @@ public class StatService
         }
     }
 
-    private async Task<PlayerDao> GetPlayerDao(GameParticipant gameParticipant)
+    private async Task<PlayerDao> GetPlayerDao(GameParticipant gameParticipant, GameResultContext gameResultContext)
     {
-        using var scope = scopeFactory.CreateScope();
-        var gameResultContext = scope.ServiceProvider.GetRequiredService<GameResultContext>();
         var player = await gameResultContext.Players.FindAsync(gameParticipant.PersistentPlayerId);
         if (player == null)
         {
@@ -93,7 +90,6 @@ public class StatService
         }
 
         player.Name = gameParticipant.Name;
-        await gameResultContext.SaveChangesAsync();
         return player;
     }
 }

@@ -33,7 +33,7 @@ function RankingStats({ stats }: Props) {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', margin: '50px 30px' }}>
-            {/*<h2 style={{marginBottom: -35}}>Rank</h2>*/}
+            <h4 style={{marginBottom: 10}}>Your Rank Progress:</h4>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <RankText rank={getRank()} value={minElo()} />
                 <RankText rank={getRank() + 1} value={maxElo()} textAlignEnd />
@@ -41,8 +41,8 @@ function RankingStats({ stats }: Props) {
             <CustomSlider
                 percentRemaining={percentageRemaining()}
                 handleText={animatedElo.toString()}
-                handleAdditionalText={(eloDiff() < 0 ? '-' : '+') + eloDiff().toString()}
-                additionalTextColour={eloDiff() < 0 ? '#b72d2d' : '#52c716'}
+                handleAdditionalText={(eloDiff() < 0 ? '-' : '+') + Math.abs(eloDiff()).toString()}
+                additionalTextColour={eloDiff() < 0 ? '#fa3c3c' : '#71ea31'}
                 backgroundColour={`linear-gradient(to right, ${RankColour[getRank()]}, ${
                     RankTransitionColour[getRank()]
                 }, ${RankColour[getRank() + 1]})`}

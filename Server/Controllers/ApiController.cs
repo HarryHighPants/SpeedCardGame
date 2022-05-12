@@ -92,6 +92,7 @@ public class ApiController : ControllerBase
     {
         return gameResultContext.GameResults
             .OrderByDescending(g => g.Created)
+            .Where(g => g.Created != DateTime.MinValue)
             .Include(g=>g.Winner)
             .Include(g=>g.Loser)
             .FirstOrDefault(g =>
