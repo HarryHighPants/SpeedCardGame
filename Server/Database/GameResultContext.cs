@@ -23,9 +23,7 @@ public class GameResultDao
     public int LostBy { get; set; }
     public bool Daily { get; set; }
     public int DailyIndex { get; set; }
-    
     public int EloGained { get; set; }
-
     public int EloLost { get; set; }
 }
 

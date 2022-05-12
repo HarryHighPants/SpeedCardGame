@@ -28,6 +28,14 @@ export enum RankColour {
     '#ea75ff',
 }
 
+export enum RankTransitionColour {
+    '#e1a48d',
+    '#ffb063',
+    '#73ff6f',
+    '#c460ff',
+    '#ff4aa5',
+}
+
 export enum BotDifficulty {
     'Easy',
     'Medium',

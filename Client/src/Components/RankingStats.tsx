@@ -1,60 +1,61 @@
 import { IRankingStats } from '../Interfaces/IRankingStats'
-import { Rank, RankColour } from '../Interfaces/ILobby'
-import styled from 'styled-components'
+import { Rank, RankColour, RankTransitionColour } from '../Interfaces/ILobby'
+import { percentageInRange } from '../Helpers/Utilities'
+import { useSpring } from 'react-spring'
+import { useState } from 'react'
+import CustomSlider from "./CustomSlider";
 
 interface Props {
     stats: IRankingStats
 }
 
 function RankingStats({ stats }: Props) {
-    const minElo = (): number => stats.newElo - (stats.newElo % 500)
-    const maxElo = (): number => stats.newElo + (500 - (stats.newElo % 500))
+    const [animatedElo, setAnimatedElo] = useState(stats.previousElo)
 
-    const getCurrentColour = (newRank: Rank, newElo: number): string => {
-     return "#ffffff"
-        // lerpColor(RankColour[newRank], RankColour[newRank + 1])
+    useSpring({
+        from: { number: stats.previousElo },
+        to: { number: stats.newElo },
+        onChange({ value }) {
+            setAnimatedElo(parseInt(value.number))
+        },
+        config: { friction: 50, tension: 30, mass: 20 },
+    })
+
+    const getRank = (): Rank => Math.floor(animatedElo / 500)
+    const minElo = (): number => animatedElo - (animatedElo % 500)
+    const maxElo = (): number => animatedElo + (500 - (animatedElo % 500))
+    const eloDiff = () => animatedElo - stats.previousElo
+
+    const percentageRemaining = () => {
+        let progressPercent = percentageInRange(animatedElo, minElo(), maxElo())
+        return Math.abs(100 - progressPercent)
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', margin: '50px 30px' }}>
             {/*<h2 style={{marginBottom: -35}}>Rank</h2>*/}
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <RankText rank={stats.newRank} value={minElo()}/>
-                <RankText rank={stats.newRank + 1} value={maxElo()}/>
+                <RankText rank={getRank()} value={minElo()} />
+                <RankText rank={getRank() + 1} value={maxElo()} textAlignEnd />
             </div>
-            <RankSlider
-                $startColour={RankColour[stats.newRank]}
-                $endColour={RankColour[stats.newRank + 1]}
-                $thumbColour={getCurrentColour(stats.newRank, stats.newElo)}
-                type="range"
-                min={minElo()}
-                max={maxElo()}
-                value={stats.newElo}
+            <CustomSlider
+                percentRemaining={percentageRemaining()}
+                handleText={animatedElo.toString()}
+                handleAdditionalText={(eloDiff() < 0 ? '-' : '+') + eloDiff().toString()}
+                additionalTextColour={eloDiff() < 0 ? '#b72d2d' : '#52c716'}
+                backgroundColour={`linear-gradient(to right, ${RankColour[getRank()]}, ${
+                    RankTransitionColour[getRank()]
+                }, ${RankColour[getRank() + 1]})`}
             />
-            <p>{stats.newElo}</p>
         </div>
     )
 }
 
-const RankSlider = styled.input<{ $startColour: string; $endColour: string; $thumbColour: string }>`
-    -webkit-appearance: none;
-    height: 10px;
-    background: linear-gradient(to right, ${(p) => p.$startColour}, ${(p) => p.$endColour});
-    border-radius: 20px;
-
-    &::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 7px;
-        height: 25px;
-        background: ${(p) => p.$thumbColour};
-        cursor: pointer;
-        border-radius: 30px;
-    }
-`
-
-const RankText = ({ rank, value }: { rank: Rank, value: number }) => <div>
-    <h5 style={{ color: RankColour[rank] }}>{Rank[rank]}</h5>
-    <p style={{fontSize: 15}}>{value}</p>
-</div>
+const RankText = ({ rank, value, textAlignEnd }: { rank: Rank; value: number; textAlignEnd?: boolean }) => (
+    <div>
+        <h5 style={{ color: RankColour[rank], margin: 0 }}>{Rank[rank]}</h5>
+        <p style={{ fontSize: 15, margin: 0, textAlign: textAlignEnd ? 'end' : 'start' }}>{value}</p>
+    </div>
+)
 
 export default RankingStats

@@ -67,7 +67,7 @@ export const GetRandomInt = (max: number) => {
  * lerpColor('#000000', '#ffffff', 0.5)
  * @returns {String}
  */
-function lerpColor(a:string, b:string, amount: number) {
+export function lerpColor(a:string, b:string, amount: number) {
 
     var ah = parseInt(a.replace(/#/g, ''), 16),
         ar = ah >> 16, ag = ah >> 8 & 0xff, ab = ah & 0xff,
@@ -78,4 +78,11 @@ function lerpColor(a:string, b:string, amount: number) {
         rb = ab + amount * (bb - ab);
 
     return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + rb | 0).toString(16).slice(1);
+}
+
+export const percentageInRange = (input: number, min: number, max: number): number =>{
+    let range = max - min
+    let correctedStartValue = input - min
+    let percentage = (correctedStartValue * 100) / range
+    return percentage
 }

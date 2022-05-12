@@ -30,7 +30,6 @@ const JoinGameMenu = () => {
 					Join Game
 				</StyledButton>
 			</form>
-			<RankingStats stats={{oldRank:3,newRank:3,previousElo:1581,newElo:1714} as IRankingStats}/>
 		</Popup>
 	)
 }
