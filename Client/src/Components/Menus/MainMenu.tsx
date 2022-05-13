@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { Route, Routes, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { uniqueNamesGenerator } from 'unique-names-generator'
 import animals from '../../Assets/Animals.json'
 import adjectives from '../../Assets/Adjectives.json'
@@ -7,6 +6,14 @@ import MenuHeader from './MenuHeader'
 import Popup from '../Popup'
 import styled from 'styled-components'
 import MenuButton from './MenuButton'
+import TutorialButton from '../TutorialButton'
+import IconButton from '../IconButton'
+import { AiFillGithub } from 'react-icons/ai'
+import { githubUrl } from '../../Constants'
+import MenuButtonGlow from './MenuButtonGlow'
+import { getResetTime } from '../../Helpers/DailyHelper'
+import { useEffect, useState } from 'react'
+import config from '../../Config'
 
 interface Props {}
 
@@ -14,6 +21,15 @@ const botDifficulties = ['Easy', 'Medium', 'Hard', 'Impossible']
 
 const MainMenu = (props: Props) => {
     let navigate = useNavigate()
+    const [persistentId, setPersistentId] = useState<string>(() => localStorage.getItem('persistentId') ?? uuid())
+    const [dailyGameAvailable, setDailyGameAvailable] = useState(false)
+
+    useEffect(() => {
+        fetch(`${config.apiGateway.URL}/api/daily-stats/${persistentId}`)
+            .then((response) => response.json())
+            .then((data) => setDailyGameAvailable(false))
+            .catch((error) => setDailyGameAvailable(true))
+    }, [])
 
     const OnCreateGame = (bot?: boolean, difficulty?: number) => {
         // Generate a new gameId
@@ -33,12 +49,24 @@ const MainMenu = (props: Props) => {
         <Popup key={'mainMenuPopup'} id={'mainMenuPopup'}>
             <MenuHeader />
             <div>
-                <MenuDescription>New to Speed?</MenuDescription>
-                <MenuButton onClick={() => navigate('/tutorial')}>How to play</MenuButton>
-                <MenuDescription>Daily Challenge</MenuDescription>
-                <MenuButton key={`bot-daily`} onClick={() => OnCreateGame(true, 4)}>
+                <TutorialButton onClick={() => navigate('/tutorial')} />
+                <IconButton
+                    icon={AiFillGithub}
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                    }}
+                    onClick={() => window.open(githubUrl, '_blank')}
+                />
+                <MenuButtonGlow
+                    defaultButton={!dailyGameAvailable}
+                    key={`bot-daily`}
+                    onClick={() => OnCreateGame(true, 4)}
+                >
                     Verse Daily Challenger
-                </MenuButton>
+                </MenuButtonGlow>
+
                 <MenuDescription>Play against a friend</MenuDescription>
                 <MenuButton onClick={() => navigate('/join')}>Join Game</MenuButton>
                 <MenuButton onClick={() => OnCreateGame()}>Create Game</MenuButton>
@@ -61,3 +89,7 @@ const MenuDescription = styled.h4`
 `
 
 export default MainMenu
+
+function uuid(): string {
+    throw new Error('Function not implemented.')
+}

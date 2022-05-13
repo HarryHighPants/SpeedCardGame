@@ -129,7 +129,8 @@ const Lobby = ({ connection, playerId, roomId, gameState, onBack }: Props) => {
                     <p>Game in progress</p>
                 ) : (
                     lobbyData != null &&
-                    !!playerId && (
+                    !!playerId &&
+                    !waitingForPlayers && (
                         <StartButton disabled={waitingForPlayers} onClick={() => onStartGame()}>
                             Start Game
                         </StartButton>
@@ -184,6 +185,7 @@ const StartButton = styled.button`
         height: 100%;
         top: 0;
         transition: transform 0.4s ease-in-out;
+        pointer-events: none;
         background: linear-gradient(
             to right,
             transparent 1%,
@@ -195,6 +197,10 @@ const StartButton = styled.button`
 
     &:hover:before {
         transform: translateX(15em);
+    }
+
+    &:active {
+        transform: scale(0.85);
     }
 `
 

@@ -9,11 +9,7 @@ import toast from 'react-hot-toast'
 import { convertTZ } from '../../Helpers/Utilities'
 import Countdown from 'react-countdown'
 import config from '../../Config'
-
-const getResetTime = () => {
-    const aestDate = convertTZ(new Date(), 'Australia/Brisbane')
-    return new Date(aestDate).setHours(24, 0, 0, 0)
-}
+import { getResetTime } from '../../Helpers/DailyHelper'
 
 interface Props {
     persistentId: string

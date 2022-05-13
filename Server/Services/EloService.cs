@@ -23,8 +23,9 @@ public class EloService
     )
     {
         int eloK = 20;
+        int baseEloDelta = 5;
 
-        int delta = (int)(eloK * (1 - ExpectationToWin(winner.Elo, loser.Elo)));
+        int delta = (int)(eloK * (1 - ExpectationToWin(winner.Elo, loser.Elo))) + baseEloDelta;
         var eloGained = (int)(delta * PlayerK(winner.Wins + winner.Losses));
         var eloLost = (int)(delta * PlayerK(loser.Wins + loser.Losses));
         winner.Elo += eloGained;

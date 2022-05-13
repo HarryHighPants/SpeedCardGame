@@ -10,6 +10,7 @@ import { HiShare } from 'react-icons/hi'
 import config from '../Config'
 import { IRankingStats } from '../Interfaces/IRankingStats'
 import RankingStats from "./RankingStats";
+import MenuButton from "./Menus/MenuButton";
 
 interface Props {
     persistentId: string
@@ -92,7 +93,7 @@ const WinnerPopup = ({ persistentId, winnerName, loserName, cardsRemaining, play
     )
 }
 
-const BottomButton = styled.button`
+const BottomButton = styled(MenuButton)`
     height: 30px;
     padding: 0 10px;
     margin: 25px 5px 5px;

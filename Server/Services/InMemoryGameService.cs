@@ -241,10 +241,8 @@ public class InMemoryGameService : IGameService
 
             var playerId = gameParticipantResult.Data.PlayerIndex;
             var playCardResult = game.TryPlayCard(playerId, cardId, centerPilIndex);
-            Console.WriteLine(gameParticipantResult.Data.Name + " played a " + cardId);
             if (playCardResult.Failure)
             {
-                Console.WriteLine(gameParticipantResult.Data.Name + " failed to play a " + cardId);
                 return playCardResult;
             }
 
