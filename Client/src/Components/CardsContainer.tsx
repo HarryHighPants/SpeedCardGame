@@ -29,8 +29,7 @@ const CardsContainer = ({
     flippedCenterPiles,
 }: Props) => {
     const [renderableCards, setRenderableCards] = useState<IRenderableCard[]>([] as IRenderableCard[])
-    const renderableCardsRef = useRef()
-    // @ts-ignore
+    const renderableCardsRef = useRef<IRenderableCard[]>()
     renderableCardsRef.current = renderableCards
 
     useEffect(() => {
@@ -51,29 +50,31 @@ const CardsContainer = ({
 
     useEffect(() => {
         if (!connection) return
-        connection.on('MovingCardUpdated', UpdateMovingCard)
+        connection.on('UpdateMovingCard', UpdateMovingCard)
 
         return () => {
-            connection.off('MovingCardUpdated', UpdateMovingCard)
+            connection.off('UpdateMovingCard', UpdateMovingCard)
         }
     }, [connection])
 
     const UpdateMovingCard = (data: IMovedCardPos) => {
-        // @ts-ignore
-        let movingCard = renderableCardsRef.current?.find((c) => c.id === data.CardId)
-
-        movingCard.isCustomPos = data?.Pos !== null
+        let movingCard = renderableCardsRef.current?.find((c) => c.id === data.cardId)
+        if(!movingCard){
+            return "Moving card not found"
+        }
+        
+        movingCard.isCustomPos = data.pos !== null
         let updatedPos = gameBoardLayout.getCardPosPixels(
-            !!data?.Pos
-                ? GameBoardLayout.FlipPosition(data?.Pos)
+            !!data.pos
+                ? GameBoardLayout.FlipPosition(data.pos)
                 : gameBoardLayout.GetCardDefaultPosition(
                       false,
-                      data.Location,
-                      data.Location === CardLocationType.Center && flippedCenterPiles
-                          ? data.Index === 0
+                      movingCard.location,
+                    movingCard.location === CardLocationType.Center && flippedCenterPiles
+                          ? movingCard.pileIndex === 0
                               ? 1
                               : 0
-                          : data.Index
+                          : movingCard.pileIndex
                   )
         )
         movingCard.pos = updatedPos
@@ -85,7 +86,7 @@ const CardsContainer = ({
         let cardIndex = -1
         if (draggingCard.location === CardLocationType.Hand) {
             gameState.players.forEach((p) => {
-                if (p.id === playerId) {
+                if (p.idHash === playerId) {
                     cardIndex = p.handCards.findIndex((c) => c.id === draggingCard.id)
                 }
             })
@@ -93,12 +94,10 @@ const CardsContainer = ({
         let movedCard =
             rect !== undefined
                 ? ({
-                      CardId: draggingCard.id,
-                      Pos: endDrag
+                      cardId: draggingCard.id,
+                      pos: endDrag
                           ? null
                           : GameBoardLayout.GetCardRectToPercent(rect, gameBoardLayout.gameBoardDimensions),
-                      Location: draggingCard.location,
-                      Index: cardIndex,
                   } as IMovedCardPos)
                 : undefined
         sendMovingCard(movedCard)

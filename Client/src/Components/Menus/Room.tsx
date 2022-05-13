@@ -59,10 +59,10 @@ const Room = ({ onGameStarted }: Props) => {
     }, [persistentId])
 
     useEffect(() => {
-        let winningpPlayer = gameState?.players.find((p) => p.id === gameState.winnerId)
+        let winningpPlayer = gameState?.players.find((p) => p.idHash === gameState.winnerId)
         setWinningPlayer(winningpPlayer)
 
-        let losingPlayer = gameState?.players.find((p) => p.id !== gameState.winnerId)
+        let losingPlayer = gameState?.players.find((p) => p.idHash !== gameState.winnerId)
         setLosingPlayer(losingPlayer)
 
         setPlayerWon(gameState?.winnerId === persistentId)
@@ -76,15 +76,15 @@ const Room = ({ onGameStarted }: Props) => {
         // Builds the SignalR connection, mapping it to /server
         let signalRConnection = new signalR.HubConnectionBuilder()
             .withUrl(hubUrl, {
-                // skipNegotiation: true,
-                // transport: signalR.HttpTransportType.WebSockets,
+                skipNegotiation: true,
+                transport: signalR.HttpTransportType.WebSockets,
                 accessTokenFactory: () => persistentId,
             })
             .configureLogging(signalR.LogLevel.Debug)
             .build()
 
-        signalRConnection.serverTimeoutInMilliseconds = 15000
-        signalRConnection.keepAliveIntervalInMilliseconds = 7500
+        // signalRConnection.serverTimeoutInMilliseconds = 15000
+        // signalRConnection.keepAliveIntervalInMilliseconds = 7500
 
         signalRConnection?.start().then(() => {
             setConnection(signalRConnection)

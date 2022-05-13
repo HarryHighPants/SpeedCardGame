@@ -5,6 +5,7 @@ import MenuHeader from './MenuHeader'
 import Popup from "../Popup";
 import RankingStats from "../RankingStats";
 import {IRankingStats} from "../../Interfaces/IRankingStats";
+import MenuButton from "./MenuButton";
 
 const JoinGameMenu = () => {
 	const [gameId, setGameId] = useState('')
@@ -26,9 +27,9 @@ const JoinGameMenu = () => {
 			<form onSubmit={(e) => onSubmit(e)}>
 				<Instructions>Enter game code:</Instructions>
 				<StyledInput placeholder={'Game1234'} onChange={(e) => setGameId(e.target.value)} />
-				<StyledButton disabled={gameId.length < 3} type={'submit'}>
+				<MenuButton disabled={gameId.length < 3} type={'submit'}>
 					Join Game
-				</StyledButton>
+				</MenuButton>
 			</form>
 		</Popup>
 	)
@@ -42,10 +43,5 @@ const StyledInput = styled.input`
 	margin: 5px;
 	height: 25px;
 `
-
-const StyledButton = styled.button`
-	height: 31px;
-`
-
 
 export default JoinGameMenu

@@ -31,7 +31,7 @@ export type GameStateReducerAction =
 export const gameStateReducer = (state: IGameState, action: GameStateReducerAction): IGameState => {
     switch (action.type) {
         case 'Pickup':
-            let pickupPlayer = state.players.find((p) => p.id === action.playerId)
+            let pickupPlayer = state.players.find((p) => p.idHash === action.playerId)
             if (pickupPlayer == null) {
                 return state
             }
@@ -41,7 +41,7 @@ export const gameStateReducer = (state: IGameState, action: GameStateReducerActi
             return { ...state }
 
         case 'Play':
-            let player = state.players.find((p: IPlayer) => p.id === action.playerId)
+            let player = state.players.find((p: IPlayer) => p.idHash === action.playerId)
             if (player == null) {
                 return state
             }

@@ -82,11 +82,11 @@ public record Card
 
 public enum CardPileName
 {
-    Undefined,
-    Hand,
-    Kitty,
-    TopUp,
-    Center
+    Undefined = 0,
+    Hand = 1,
+    Kitty = 2,
+    TopUp = 3,
+    Center = 4
 }
 
 public struct CardLocation

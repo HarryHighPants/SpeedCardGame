@@ -11,28 +11,36 @@ using Services;
 
 public interface IGameHubClient
 {
-	public Task UpdateGameState(GameStateDto gameStateDto);
-	public Task UpdateLobbyState(LobbyStateDto lobbyStateDto);
+    public Task UpdateGameState(GameStateDto gameStateDto);
+    public Task UpdateLobbyState(LobbyStateDto lobbyStateDto);
+    public Task UpdateMovingCard(UpdateMovingCardData movingCard);
 }
 
 [Authorize]
 public class GameHub : Hub<IGameHubClient>
 {
     private readonly IGameService gameService;
+    private readonly CardLocationService cardLocationService;
 
     private Guid UserIdentifier =>
         Guid.Parse(
             Context.UserIdentifier ?? throw new InvalidOperationException("User not signed in")
         );
 
-    public GameHub(IGameService gameService)
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        await gameService.LeaveAllRooms(UserIdentifier);
+        await base.OnDisconnectedAsync(exception);
+    }
+
+    public GameHub(IGameService gameService, CardLocationService cardLocationService)
     {
         this.gameService = gameService;
+        this.cardLocationService = cardLocationService;
     }
 
     public async Task JoinRoom(string roomId, BotType? botType = null)
     {
-	    
         Console.WriteLine($"Join room, {UserIdentifier}  room: {roomId}");
 
         // Add gameParticipant to the group with roomId
@@ -74,49 +82,10 @@ public class GameHub : Hub<IGameHubClient>
 
     public async Task UpdateMovingCard(string roomId, UpdateMovingCardData updateMovingCard)
     {
-        //todo: create a card location service
-        //todo: that potentially uses the gameService to determine the user owns that card
-
-        // // Check gameParticipant owns the card
-        // var cardLocation = gameService.GetCardLocation(UserIdentifier, updateMovingCard.CardId);
-        // if (cardLocation == null)
-        // {
-        // 	await SendConnectionMessage("No card found with that Id");
-        // 	throw new HubException("No card found with that Id",
-        // 		new UnauthorizedAccessException("No card found with that Id"));
-        // }
-        //
-        // var authorisedUpdate = updateMovingCard;
-        // var authorised = gameService.ConnectionOwnsCard(UserIdentifier, updateMovingCard.CardId);
-        // if (!authorised)
-        // {
-        // 	authorisedUpdate = authorisedUpdate with {Pos = null};
-        // }
-        //
-        // authorisedUpdate.Location = (int)cardLocation.Value.PileName;
-        // authorisedUpdate.Index = cardLocation.Value.PileName == CardPileName.Hand
-        // 	? cardLocation.Value.PileIndex ?? -1
-        // 	: cardLocation.Value.CenterIndex ?? -1;
-        //
-        // // Send update to the others in the group
-        // var roomId = gameService.GetConnectionsRoomId(UserIdentifier);
-        // var jsonData = JsonConvert.SerializeObject(authorisedUpdate);
-        // await Clients.OthersInGroup(roomId).SendAsync("MovingCardUpdated", jsonData);
+        var movingCard = await cardLocationService.UpdateMovingCard(roomId, UserIdentifier, updateMovingCard);
+        // Send update to the others in the group
+        await Clients.OthersInGroup(roomId).UpdateMovingCard(movingCard);
     }
-
-    //
-    // public DailyResultDto? RequestDailyResults()
-    // {
-    // 	var dailyResult = statService.GetDailyResultDto(UserIdentifier);
-    //
-    // 	// Send the SendDailyResult to the player
-    // 	return dailyResult;
-    // }
-    //
-    // public async Task<RankingStatsDto> RequestEloInfo(GameParticipant gameParticipant, string roomId)
-    // {
-    // 	return await statService.GetRankingStats(gameParticipant.PersistentPlayerId, roomId);
-    // }
 
     private void ThrowIfErrorResult(Result result)
     {

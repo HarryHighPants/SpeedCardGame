@@ -4,7 +4,7 @@ using Engine.Models;
 
 public record PlayerDto
 {
-	public string Id { get; init; }
+	public string IdHash { get; init; }
 	public string Name { get; init; } = "";
 	public List<Card> HandCards { get; init; }
 	public int? TopKittyCardId { get; init; }
@@ -15,7 +15,7 @@ public record PlayerDto
 
 	public PlayerDto(Player player, string playerId)
 	{
-		Id = playerId;
+		IdHash = playerId;
 		Name = player.Name;
 		HandCards = player.HandCards.ToList();
 		KittyCardsCount = player.KittyCards.Count;

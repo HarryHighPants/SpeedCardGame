@@ -28,7 +28,7 @@ class GameBoardLayoutCards {
 
         // Add players cards
         this.gameState.players.forEach((p, i) => {
-            let ourPlayer = p.id == ourId
+            let ourPlayer = p.idHash == ourId
 
             // Add the players hand cards
             let handCards = p.handCards.map((hc, cIndex) => {
@@ -163,6 +163,7 @@ class GameBoardLayoutCards {
                 ...card,
                 ourCard: ourPlayer,
                 location: location,
+                pileIndex: index,
                 pos: pos,
                 isCustomPos: previousCard?.isCustomPos ?? false,
                 zIndex: zIndex,

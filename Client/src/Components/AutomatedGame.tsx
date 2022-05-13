@@ -5,7 +5,7 @@ import { BackgroundData } from '../Assets/BackgroundGameData'
 
 const AutomatedGame = () => {
     const backgroundDataCount = BackgroundData.length
-    const bottomPlayerId = (JSON.parse(BackgroundData[0]) as IGameState).players[1].id
+    const bottomPlayerId = (BackgroundData[0]).players[1].idHash
 
     const GetCurrentGameState = () => {
         let stateIndex = currentStateIndex
@@ -13,7 +13,7 @@ const AutomatedGame = () => {
             stateIndex = 0
             setCurrentStateIndex(stateIndex)
         }
-        return JSON.parse(BackgroundData[stateIndex])
+        return BackgroundData[stateIndex]
     }
 
     const [currentStateIndex, setCurrentStateIndex] = useState(0)
@@ -34,7 +34,7 @@ const AutomatedGame = () => {
         setCurrentGameState(GetCurrentGameState())
     }, [currentStateIndex])
 
-    return <Game connection={undefined} playerId={bottomPlayerId} gameState={currentGameState} roomId={""}/>
+    return <Game connection={undefined} playerId={bottomPlayerId} gameState={currentGameState} roomId={''} />
 }
 
 export default AutomatedGame

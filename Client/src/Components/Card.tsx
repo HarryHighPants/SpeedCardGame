@@ -126,6 +126,7 @@ const Card = memo(({ card, onDragEnd, draggingCardUpdated }: Props) => {
             dragTransition={defaultTransition}
         >
             <CardImg
+                style={{pointerEvents: "none"}}
                 draggable="false"
                 width={80}
                 height={116.1}

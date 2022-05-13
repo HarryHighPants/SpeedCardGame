@@ -25,7 +25,7 @@ public class EngineChecks
     }
 
     public bool CanPlayerRequestTopUp(GameState gameState, int playerIndex) =>
-        gameState.MustTopUp && !gameState.Players[playerIndex].RequestingTopUp;
+        gameState.WinnerIndex == null && gameState.MustTopUp && !gameState.Players[playerIndex].RequestingTopUp;
 
     public bool MustTopUp(GameState gameState) =>
         !gameState.Players.Any(
@@ -65,6 +65,11 @@ public class EngineChecks
         int centerPileIndex
     )
     {
+        if (gameState.WinnerIndex != null)
+        {
+            return Result.Error<GameState>("Game already over");
+        }
+        
         if (centerPileIndex >= gameState.CenterPiles.Count)
         {
             return Result.Error<GameState>($"No center pile found at index {centerPileIndex}");
@@ -153,6 +158,11 @@ public class EngineChecks
 
     public Result CanPickupFromKitty(GameState gameState, int playerId)
     {
+        if (gameState.WinnerIndex != null)
+        {
+            return Result.Error("Game already over");
+        }
+        
         var player = gameState.GetPlayer(playerId);
 
         // Check the player has room in their hand

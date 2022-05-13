@@ -34,7 +34,7 @@ const Game = ({ roomId, connection, playerId, gameState }: Props) => {
 
     useEffect(() => {
         let newGameState = gameState
-        if (gameState.players[0].id === playerId) {
+        if (gameState.players[0].idHash === playerId) {
             // We need to invert the center piles so that 0 is on the right
             // This way we will have a perfectly mirrored board simplifying sending card IPos to the other player
             setflippedCenterPiles(true)
@@ -91,7 +91,7 @@ const Game = ({ roomId, connection, playerId, gameState }: Props) => {
             <Player
                 mustTopUp={gameState.mustTopUp}
                 connection={connection}
-                key={`player-${localGameState.players[0].id}`}
+                key={`player-${localGameState.players[0].idHash}`}
                 player={localGameState.players[0]}
                 onTop={true}
             />
@@ -112,7 +112,7 @@ const Game = ({ roomId, connection, playerId, gameState }: Props) => {
                 mustTopUp={gameState.mustTopUp}
                 connection={connection}
                 onRequestTopUp={SendRequestTopUp}
-                key={`player-${localGameState.players[1].id}`}
+                key={`player-${localGameState.players[1].idHash}`}
                 player={localGameState.players[1]}
                 onTop={false}
             />

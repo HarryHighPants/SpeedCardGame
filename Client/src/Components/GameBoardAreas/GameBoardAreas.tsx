@@ -17,7 +17,7 @@ const GameBoardAreas = ({ ourId, gameState, renderableAreas }: Props) => {
 
     useEffect(() => {
         gameState.players.map((p) => {
-            p.id === ourId ? setOurKittyCount(p.kittyCardsCount) : setOtherKittyCount(p.kittyCardsCount)
+            p.idHash === ourId ? setOurKittyCount(p.kittyCardsCount) : setOtherKittyCount(p.kittyCardsCount)
         })
     }, [gameState.players])
 

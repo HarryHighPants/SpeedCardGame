@@ -15,6 +15,7 @@ public class GameHubGameUpdateHandler : IGameUpdateHandler
 
     public async Task HandleGameUpdate(string roomId, GameStateDto gameStateDto)
     {
+        Console.WriteLine("Sending gamestate: " + gameStateDto.LastMove);
         await hubContext.Clients.Group(roomId).UpdateGameState(gameStateDto);
     }
 

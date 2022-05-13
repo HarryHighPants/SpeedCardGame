@@ -15,13 +15,14 @@ builder.Services
     .AddHubOptions<GameHub>(
         options =>
         {
-            options.ClientTimeoutInterval = TimeSpan.FromSeconds(15);
-            options.KeepAliveInterval = TimeSpan.FromSeconds(7.5);
+            // options.ClientTimeoutInterval = TimeSpan.FromSeconds(15);
+            // options.KeepAliveInterval = TimeSpan.FromSeconds(7.5);
         }
     );
 builder.Services.AddSingleton<IGameService, InMemoryGameService>();
 builder.Services.AddSingleton<IGameUpdateHandler, GameHubGameUpdateHandler>();
 builder.Services.AddSingleton<IBotService, BotService>();
+builder.Services.AddSingleton<CardLocationService, CardLocationService>();
 builder.Services.AddSingleton<StatService, StatService>();
 builder.Services.AddSingleton<EloService, EloService>();
 builder.Services.AddSingleton(new GameEngine(new EngineChecks(), new EngineActions()));

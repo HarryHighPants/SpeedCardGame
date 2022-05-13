@@ -48,7 +48,7 @@ const Player = ({ player, onRequestTopUp, onTop, connection, mustTopUp }: Props)
 
     return (
         <PlayerContainer style={{ backgroundImage: `url(${backgroundImg})` }}>
-            <AdditionalInfo id={'player-info-' + player.id} key={'player-info-' + player.id} topOfBoard={onTop}>
+            <AdditionalInfo id={'player-info-' + player.idHash} key={'player-info-' + player.idHash} topOfBoard={onTop}>
                 {!!additionalInfo && <PlayerInfo key={additionalInfo.id} playerInfo={additionalInfo} />}
             </AdditionalInfo>
             <PlayerName>{player.name}</PlayerName>
