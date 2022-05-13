@@ -17,26 +17,26 @@ public abstract class Result
 
     public TR Map<TR>(Func<TR> success, Func<IErrorResult, TR> error)
     {
-	    if (Success)
-	    {
-		    return success();
-	    }
-	    else
-	    {
-		    return error((IErrorResult)this);
-	    }
+        if (Success)
+        {
+            return success();
+        }
+        else
+        {
+            return error((IErrorResult)this);
+        }
     }
 
     public Result MapError(Func<IErrorResult, Result> error)
     {
-	    if (Success)
-	    {
-		    return Result.Successful();
-	    }
-	    else
-	    {
-		    return error((IErrorResult)this);
-	    }
+        if (Success)
+        {
+            return Result.Successful();
+        }
+        else
+        {
+            return error((IErrorResult)this);
+        }
     }
 }
 
@@ -52,27 +52,28 @@ public abstract class Result<T> : Result, IEnumerable<T>
             Success
                 ? _data
                 : throw new Exception(
-                    $"You can't access .{nameof(Data)} when .{nameof(Success)} is false. Error Message:{(this as IErrorResult)?.Message}");
+                      $"You can't access .{nameof(Data)} when .{nameof(Success)} is false. Error Message:{(this as IErrorResult)?.Message}"
+                  );
         set => _data = value;
     }
 
     public TR Map<TR>(Func<T, TR> success, Func<IErrorResult, TR> error)
     {
-	    if (Success)
-	    {
-		    return success(Data);
-	    }
-	    else
-	    {
-		    return error((IErrorResult)this);
-	    }
+        if (Success)
+        {
+            return success(Data);
+        }
+        else
+        {
+            return error((IErrorResult)this);
+        }
     }
 
     public IEnumerator<T> GetEnumerator()
     {
         if (Success)
         {
-            return new List<T> {_data}.GetEnumerator();
+            return new List<T> { _data }.GetEnumerator();
         }
 
         return new List<T>().GetEnumerator();
@@ -93,9 +94,7 @@ public class SuccessResult<T> : Result<T>
 
 public class ErrorResult : Result, IErrorResult
 {
-    public ErrorResult(string message) : this(message, Array.Empty<Error>())
-    {
-    }
+    public ErrorResult(string message) : this(message, Array.Empty<Error>()) { }
 
     public ErrorResult(string message, IReadOnlyCollection<Error> errors)
     {
@@ -110,9 +109,7 @@ public class ErrorResult : Result, IErrorResult
 
 public class ErrorResult<T> : Result<T>, IErrorResult
 {
-    public ErrorResult(string message) : this(message, Array.Empty<Error>())
-    {
-    }
+    public ErrorResult(string message) : this(message, Array.Empty<Error>()) { }
 
     public ErrorResult(string message, IReadOnlyCollection<Error> errors) : base(default)
     {
@@ -127,9 +124,7 @@ public class ErrorResult<T> : Result<T>, IErrorResult
 
 public class Error
 {
-    public Error(string details) : this(null, details)
-    {
-    }
+    public Error(string details) : this(null, details) { }
 
     public Error(string code, string details)
     {

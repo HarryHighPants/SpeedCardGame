@@ -10,5 +10,6 @@ public record Player
     public ImmutableList<Card> KittyCards { get; init; }
     public ImmutableList<Card> TopUpCards { get; init; }
     public bool RequestingTopUp { get; init; }
+    public bool CanRequestTopUp { get; init; }
     public string LastMove { get; init; } = "";
 }

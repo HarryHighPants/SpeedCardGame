@@ -4,14 +4,15 @@ using Models.Database;
 
 public class DailyResultDto
 {
-	public string BotName;
-	public bool PlayerWon;
-	public int LostBy;
+	public string BotName { get; set; }
+	public bool PlayerWon { get; set; }
+	public int LostBy { get; set; }
 
-	public int DailyWinStreak;
-	public int MaxDailyWinStreak;
-	public int DailyWins;
-	public int DailyLosses;
+	public int DailyWinStreak { get; set; }
+	public int MaxDailyWinStreak { get; set; }
+	public int DailyWins { get; set; }
+	public int DailyLosses { get; set; }
+
 	public DailyResultDto(Guid playerId, GameResultDao game)
 	{
 		PlayerWon = game.Winner.Id == playerId;

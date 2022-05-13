@@ -9,6 +9,9 @@ public record GameState
     public ImmutableList<CenterPile> CenterPiles { get; init; }
     public ImmutableList<Move> MoveHistory { get; init; }
     public string LastMove { get; init; } = "";
+    public int? WinnerIndex { get; init; }
+
+    public bool MustTopUp { get; init; }
 
     public Player? GetPlayer(int? id)
     {
@@ -56,5 +59,5 @@ public record GameState
 
 public record CenterPile
 {
-    public ImmutableList<Card> Cards = ImmutableList<Card>.Empty;
+    public ImmutableList<Card> Cards { get; init; } = ImmutableList<Card>.Empty;
 }

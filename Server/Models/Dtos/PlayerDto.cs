@@ -4,7 +4,7 @@ using Engine.Models;
 
 public record PlayerDto
 {
-	public string Id { get; set; }
+	public string IdHash { get; init; }
 	public string Name { get; init; } = "";
 	public List<Card> HandCards { get; init; }
 	public int? TopKittyCardId { get; init; }
@@ -13,15 +13,15 @@ public record PlayerDto
 	public bool CanRequestTopUp { get; init; }
 	public string LastMove { get; init; } = "";
 
-	public PlayerDto(Player player, bool canRequestTopUp)
+	public PlayerDto(Player player, string playerId)
 	{
-		Id = player.Id.ToString();
+		IdHash = playerId;
 		Name = player.Name;
 		HandCards = player.HandCards.ToList();
 		KittyCardsCount = player.KittyCards.Count;
 		RequestingTopUp = player.RequestingTopUp;
 		TopKittyCardId = player.KittyCards.Count >= 1 ? player.KittyCards.Last().Id : null;
-		CanRequestTopUp = canRequestTopUp;
+		CanRequestTopUp = player.CanRequestTopUp;
 		LastMove = player.LastMove;
 	}
 }

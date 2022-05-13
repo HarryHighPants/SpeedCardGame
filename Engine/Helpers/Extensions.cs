@@ -33,7 +33,9 @@ public static class Extensions
     }
 
     public static (ImmutableList<T> poppedList, ImmutableList<T> poppedItems) PopRange<T>(
-        this ImmutableList<T> poppedList, int amount)
+        this ImmutableList<T> poppedList,
+        int amount
+    )
     {
         var poppedItems = new List<T>(amount);
         while (amount-- > 0 && poppedList.Count > 0)
@@ -52,7 +54,11 @@ public static class Extensions
         return poppedItem;
     }
 
-    public static IEnumerable<T> ReplaceElementAt<T>(this IEnumerable<T> source, int index, T element)
+    public static IEnumerable<T> ReplaceElementAt<T>(
+        this IEnumerable<T> source,
+        int index,
+        T element
+    )
     {
         var i = 0;
         foreach (var item in source)

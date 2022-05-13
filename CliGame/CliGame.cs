@@ -6,10 +6,11 @@ using Engine.Models;
 
 public class CliGame : Game
 {
-    public CliGame(List<string>? playerNames = null, Settings? settings = null, GameEngine? gameEngine = null)
-    {
-	    Initialise(playerNames, settings, gameEngine);
-    }
+    public CliGame(
+        List<string>? playerNames = null,
+        Settings? settings = null,
+        GameEngine? gameEngine = null
+    ) : base(playerNames, settings, gameEngine) { }
 
     public Card? GetCardWithValue(IEnumerable<Card> cards, int? value) =>
         cards.FirstOrDefault(card => card.CardValue == (CardValue)value!);

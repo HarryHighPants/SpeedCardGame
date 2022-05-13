@@ -12,58 +12,60 @@ public enum BotDifficulty
 
 public class BotRunnerCli
 {
-	public static BotData Bot { get; private set; }
-	public static void SetDifficulty(BotDifficulty difficulty) => Bot = Bots[difficulty];
+    public static BotData Bot { get; private set; }
 
-    private static readonly Dictionary<BotDifficulty, BotData> Bots = new()
-    {
+    public static void SetDifficulty(BotDifficulty difficulty) => Bot = Bots[difficulty];
+
+    private static readonly Dictionary<BotDifficulty, BotData> Bots =
+        new()
         {
-            BotDifficulty.Easy,
-            new BotData
             {
-                Name = "Limping Liam",
-                CustomIntroMessage = "He can't jump far",
-                CustomLoseMessage = "Oh no",
-                CustomWinMessage = "Easy",
-                QuickestResponseTimeMs = 3000,
-                SlowestResponseTimeMs = 5000
-            }
-        },
-        {
-            BotDifficulty.Medium,
-            new BotData
+                BotDifficulty.Easy,
+                new BotData
+                {
+                    Name = "Limping Liam",
+                    CustomIntroMessage = "He can't jump far",
+                    CustomLoseMessage = "Oh no",
+                    CustomWinMessage = "Easy",
+                    QuickestResponseTimeMs = 3000,
+                    SlowestResponseTimeMs = 5000
+                }
+            },
             {
-                Name = "Harrowing Hayden",
-                CustomIntroMessage = "He's a bit of a trickster so watch out",
-                CustomLoseMessage = "Damn, he's tricky",
-                CustomWinMessage = "Down goes the trickster",
-                QuickestResponseTimeMs = 2000,
-                SlowestResponseTimeMs = 4000
-            }
-        },
-        {
-            BotDifficulty.Hard,
-            new BotData
+                BotDifficulty.Medium,
+                new BotData
+                {
+                    Name = "Harrowing Hayden",
+                    CustomIntroMessage = "He's a bit of a trickster so watch out",
+                    CustomLoseMessage = "Damn, he's tricky",
+                    CustomWinMessage = "Down goes the trickster",
+                    QuickestResponseTimeMs = 2000,
+                    SlowestResponseTimeMs = 4000
+                }
+            },
             {
-                Name = "Masterful Mikaela",
-                CustomIntroMessage = "She can't be trusted",
-                CustomLoseMessage = "Oof, rough one",
-                CustomWinMessage = "Down falls Mikaela and her wicked ways",
-                QuickestResponseTimeMs = 1000,
-                SlowestResponseTimeMs = 2000
-            }
-        },
-        {
-            BotDifficulty.Impossible,
-            new BotData
+                BotDifficulty.Hard,
+                new BotData
+                {
+                    Name = "Masterful Mikaela",
+                    CustomIntroMessage = "She can't be trusted",
+                    CustomLoseMessage = "Oof, rough one",
+                    CustomWinMessage = "Down falls Mikaela and her wicked ways",
+                    QuickestResponseTimeMs = 1000,
+                    SlowestResponseTimeMs = 2000
+                }
+            },
             {
-                Name = "Chaotic Kate",
-                CustomIntroMessage = "rip lol",
-                CustomLoseMessage = "No chance",
-                CustomWinMessage = "No one will ever see this message so it doesn't matter",
-                QuickestResponseTimeMs = 500,
-                SlowestResponseTimeMs = 1500
+                BotDifficulty.Impossible,
+                new BotData
+                {
+                    Name = "Chaotic Kate",
+                    CustomIntroMessage = "rip lol",
+                    CustomLoseMessage = "No chance",
+                    CustomWinMessage = "No one will ever see this message so it doesn't matter",
+                    QuickestResponseTimeMs = 500,
+                    SlowestResponseTimeMs = 1500
+                }
             }
-        }
-    };
+        };
 }

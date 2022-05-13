@@ -6,13 +6,13 @@ export interface IConfig {
 
 const dev = {
 	apiGateway: {
-		URL: `http://${window.location.hostname}:5169/server`,
+		URL: `http://${window.location.hostname}:5169`,
 	},
 };
 
 const prod = {
 	apiGateway: {
-		URL: `https://server.harryab.com:10000/server`,
+		URL: `https://server.harryab.com:10000`,
 	},
 };
 

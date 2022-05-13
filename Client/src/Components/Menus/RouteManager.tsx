@@ -7,29 +7,30 @@ import GameBoard from '../GameBoard'
 import AutomatedGame from '../AutomatedGame'
 import { useParams } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
-import Tutorial from "./Tutorial";
+import Tutorial from './Tutorial'
 
 const RouteManager = () => {
-	const [gameStarted, setGameStarted] = useState(false)
-	let location = useLocation()
+    const [gameStarted, setGameStarted] = useState(false)
+    let location = useLocation()
 
-	useEffect(() => {
-		if (location.pathname === '/' || location.pathname === "") {
-			setGameStarted(false)
-		}
-	}, [location.pathname])
+    useEffect(() => {
+        if (location.pathname === '/' || location.pathname === '') {
+            setGameStarted(false)
+        }
+    }, [location.pathname])
 
-	return (
-		<>
-			<Routes>
-				<Route path="/" element={<MainMenu />} />
-				<Route path="/join" element={<JoinGameMenu />} />
-				<Route path="/tutorial" element={<Tutorial />} />
-				<Route path=":roomId" element={<Room onGameStarted={() => setGameStarted(true)} />} />
-			</Routes>
-			{!gameStarted && <AutomatedGame />}
-		</>
-	)
+    return (
+        <>
+            <Routes>
+                <Route path="/" element={<MainMenu />} />
+                <Route path="/join" element={<JoinGameMenu />} />
+                <Route path="/tutorial" element={<Tutorial />} />
+                <Route path=":roomId" element={<Room onGameStarted={() => setGameStarted(true)} />} />
+            </Routes>
+            {/*/Todo: re-record game json*/}
+            {!gameStarted && <AutomatedGame />}
+        </>
+    )
 }
 
 export default RouteManager

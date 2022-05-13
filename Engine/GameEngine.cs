@@ -16,23 +16,27 @@ public class GameEngine
     public const int CardsInKitty = 15;
     public const int CardsInTopUp = 5;
 
-    private readonly EngineActions actions;
+    private readonly EngineActions Actions;
     public readonly EngineChecks Checks;
 
-    public GameEngine(EngineChecks? engineChecks = null, EngineActions? engineActions = null)
+    public GameEngine(EngineChecks engineChecks, EngineActions engineActions)
     {
-        Checks = engineChecks ?? new EngineChecks();
-        actions = engineActions ?? new EngineActions();
+        Checks = engineChecks;
+        Actions = engineActions;
     }
 
-    public GameState NewGame(List<string>? playerNames = null, Settings? settings = null) =>
-        actions.NewGame(playerNames, settings);
-
+    public GameState NewGame(List<string>? playerNames, Settings settings) =>
+        Actions.NewGame(playerNames, settings);
 
     /// <returns>Player Index</returns>
     public Result<int> TryGetWinner(GameState gameState) => Checks.TryGetWinner(gameState);
 
-    public Result<GameState> TryPlayCard(GameState gameState, int playerId, int cardId, int centerPileIndex)
+    public Result<GameState> TryPlayCard(
+        GameState gameState,
+        int playerId,
+        int cardId,
+        int centerPileIndex
+    )
     {
         // Check - Move is valid
         var moveValid = Checks.PlayersMoveValid(gameState, playerId, cardId, centerPileIndex);
@@ -43,15 +47,38 @@ public class GameEngine
 
         // Action - Play card
         var card = gameState.GetCard(cardId);
-        var newGameState = actions.PlayCard(gameState, card, centerPileIndex);
+        var newGameState = Actions.PlayCard(gameState, card, centerPileIndex);
 
         // Action - Reset anyone's requesting top up if they can now play
         var state = newGameState;
-        var newPlayers = state.Players.Select((player, i) =>
-            player.RequestingTopUp && Checks.PlayerHasPlay(state, i).Success
-                ? player with {RequestingTopUp = false}
-                : player).ToImmutableList();
-        newGameState = state with {Players = newPlayers};
+        var newPlayers = state.Players
+            .Select(
+                (player, i) =>
+                    player.RequestingTopUp && Checks.PlayerHasPlay(state, i).Success
+                        ? player with
+                          {
+                              RequestingTopUp = false
+                          }
+                        : player
+            )
+            .Select(
+                player =>
+                    player with
+                    {
+                        CanRequestTopUp = Checks.CanPlayerRequestTopUp(gameState, player.Id)
+                    }
+            )
+            .ToImmutableList();
+        newGameState = state with { Players = newPlayers };
+
+        // Check - If the game has ended
+        var winnerResult = Checks.TryGetWinner(newGameState);
+        if (winnerResult.Success)
+        {
+            newGameState = Actions.UpdateWinner(newGameState, winnerResult.Data);
+        }
+
+        newGameState = this.SetTopUpRequests(newGameState);
 
         return Result.Successful(newGameState);
     }
@@ -59,18 +86,19 @@ public class GameEngine
     public Result<GameState> TryRequestTopUp(GameState gameState, int playerId)
     {
         // Check - Player can top up
-        var requestTopUpResult = Checks.CanRequestTopUp(gameState, playerId);
-        if (requestTopUpResult is ErrorResult requestTopUpResultError)
+        if (!Checks.CanPlayerRequestTopUp(gameState, playerId))
         {
-            return Result.Error<GameState>(requestTopUpResultError.Message);
+            return Result.Error<GameState>("Can't request top up");
         }
 
         // Action - Request top up
-        var newGameState = actions.RequestTopUp(gameState, playerId);
+        var newGameState = Actions.RequestTopUp(gameState, playerId);
 
         // Action - Top up if possible
         var topUpResult = TryTopUp(newGameState);
         newGameState = topUpResult.Success ? topUpResult.Data : newGameState;
+
+        newGameState = this.SetTopUpRequests(newGameState);
 
         return Result.Successful(newGameState);
     }
@@ -87,20 +115,39 @@ public class GameEngine
         }
 
         // Action - Pickup card
-        return Result.Successful(actions.PickupCard(gameState, playerId));
+        newGameState = Actions.PickupCard(newGameState, playerId);
+
+        newGameState = this.SetTopUpRequests(newGameState);
+
+        return Result.Successful(newGameState);
     }
 
     // Private
     private Result<GameState> TryTopUp(GameState gameState)
     {
         // Check - We can top up
-        var canTopUpResult = Checks.CanTopUp(gameState);
-        if (canTopUpResult is IErrorResult canTopUpError)
+        var canTopUpResult = Checks.AllPlayersRequestingTopUp(gameState);
+        if (!canTopUpResult)
         {
-            return Result.Error<GameState>(canTopUpError.Message);
+            return Result.Error<GameState>("Can't Top up");
         }
 
         // Action - Top Up
-        return actions.TopUp(gameState);
+        return Actions.TopUp(gameState);
+    }
+
+    private GameState SetTopUpRequests(GameState gameState)
+    {
+        var newGameState = gameState;
+        foreach (var player in newGameState.Players)
+        {
+            newGameState = Actions.SetCanRequestTopUp(
+                newGameState,
+                player.Id,
+                Checks.CanPlayerRequestTopUp(newGameState, player.Id)
+            );
+        }
+
+        return Actions.SetMustTopUp(newGameState, Checks.MustTopUp(newGameState));
     }
 }

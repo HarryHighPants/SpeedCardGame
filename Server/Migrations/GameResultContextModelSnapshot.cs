@@ -37,6 +37,12 @@ namespace Server.Migrations
                     b.Property<int>("DailyIndex")
                         .HasColumnType("integer");
 
+                    b.Property<int>("EloGained")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EloLost")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("LoserId")
                         .HasColumnType("uuid");
 
@@ -75,6 +81,9 @@ namespace Server.Migrations
 
                     b.Property<int>("Elo")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("IsBot")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Losses")
                         .HasColumnType("integer");

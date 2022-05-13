@@ -1,15 +1,17 @@
+using Server.Helpers;
+
 namespace Server;
 
 public class ConnectionDto
 {
-	public string ConnectionId;
-	public string Name;
-	public Rank Rank;
+	public string PlayerId { get; set; }
+	public string Name { get; set; }
+	public Rank Rank { get; set; }
 
-	public ConnectionDto(Connection connection)
+	public ConnectionDto(GameParticipant gameParticipant)
 	{
-		ConnectionId = connection.ConnectionId;
-		Name = connection.Name;
-		Rank = connection.Rank ?? 0;
+		PlayerId = gameParticipant.PersistentPlayerId.ToString().Hash();
+		Name = gameParticipant.Name;
+		Rank = gameParticipant.Rank ?? 0;
 	}
 }

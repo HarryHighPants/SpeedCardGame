@@ -14,22 +14,19 @@ public record Card
             var handIndex = player.HandCards.IndexOf(this);
             if (handIndex != -1)
             {
-                return new CardLocation(CardPileName.Hand, handIndex, player.Id,
-                    null);
+                return new CardLocation(CardPileName.Hand, handIndex, player.Id, null);
             }
 
             var kittyIndex = player.KittyCards.IndexOf(this);
             if (kittyIndex != -1)
             {
-                return new CardLocation(CardPileName.Kitty, kittyIndex, player.Id,
-                    null);
+                return new CardLocation(CardPileName.Kitty, kittyIndex, player.Id, null);
             }
 
             var topUpIndex = player.TopUpCards.IndexOf(this);
             if (topUpIndex != -1)
             {
-                return new CardLocation(CardPileName.TopUp, topUpIndex, player.Id,
-                    null);
+                return new CardLocation(CardPileName.TopUp, topUpIndex, player.Id, null);
             }
         }
 
@@ -39,16 +36,18 @@ public record Card
             var centerPileIndex = centerPile.Cards.IndexOf(this);
             if (centerPileIndex != -1)
             {
-                return new CardLocation(CardPileName.Center, centerPileIndex, null,
-                    i);
+                return new CardLocation(CardPileName.Center, centerPileIndex, null, i);
             }
         }
 
         return default;
     }
 
-    public static string CardsToString(IReadOnlyList<Card> cards, bool minified = false, bool includeSuit = false) =>
-        string.Join(", ", cards.Select(c => c.ToString(minified, includeSuit)));
+    public static string CardsToString(
+        IReadOnlyList<Card> cards,
+        bool minified = false,
+        bool includeSuit = false
+    ) => string.Join(", ", cards.Select(c => c.ToString(minified, includeSuit)));
 
     public string ToString(bool minified = false, bool includeSuit = false)
     {
@@ -64,24 +63,30 @@ public record Card
     }
 
     public string ToString(Settings settings) =>
-        ToString(settings.MinifiedCardStrings,
-            settings.IncludeSuitInCardStrings);
+        ToString(settings.MinifiedCardStrings, settings.IncludeSuitInCardStrings);
 
-    public static string ToString(GameState gameState, int? cardId, bool? minified = null, bool? includeSuit = null)
+    public static string ToString(
+        GameState gameState,
+        int? cardId,
+        bool? minified = null,
+        bool? includeSuit = null
+    )
     {
         var cardResult = gameState.GetCard(cardId);
-        return cardResult?.ToString(minified ?? gameState.Settings.MinifiedCardStrings,
-            includeSuit ?? gameState.Settings.IncludeSuitInCardStrings) ?? "";
+        return cardResult?.ToString(
+                minified ?? gameState.Settings.MinifiedCardStrings,
+                includeSuit ?? gameState.Settings.IncludeSuitInCardStrings
+            ) ?? "";
     }
 }
 
 public enum CardPileName
 {
-    Undefined,
-    Hand,
-    Kitty,
-    TopUp,
-    Center
+    Undefined = 0,
+    Hand = 1,
+    Kitty = 2,
+    TopUp = 3,
+    Center = 4
 }
 
 public struct CardLocation

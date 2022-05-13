@@ -1,39 +1,26 @@
+using Engine.Models;
+
 namespace Server;
 
 using Engine.Helpers;
-using Engine.Models;
 
 public interface IGameService
 {
-	public void JoinRoom(string roomId, string connectionId, Guid persistentPlayerId, int? customGameSeed = null);
-	public int ConnectionsInRoomCount(string roomId);
-	public List<Connection> ConnectionsInRoom(string roomId);
+    public Task<Result> JoinRoom(string roomId, Guid persistentPlayerId, BotType? botType);
+    public Task<Result> LeaveRoom(string roomId, Guid persistentPlayerId);
+    public Task<Result> LeaveAllRooms(Guid persistentPlayerId);
+    public Task<Result> UpdateName(string roomId, string updatedName, Guid persistentPlayerId);
 
-	public void LeaveRoom(string roomId, string connectionId);
+    public Task<Result> StartGame(string roomId, Guid persistentPlayerId);
+    public Task<Result> TryPickupFromKitty(string roomId, Guid persistentPlayerId);
+    public Task<Result> TryRequestTopUp(string roomId, Guid persistentPlayerId);
 
-	public void UpdateName(string updatedName, string connectionId);
+    public Task<Result> TryPlayCard(
+        string roomId,
+        Guid persistentPlayerId,
+        int cardId,
+        int centerPilIndex
+    );
 
-	public Result StartGame(string connectionId);
-
-	public Connection GetConnectionsPlayer(string connectionId);
-
-	public string GetConnectionsRoomId(string connectionId);
-	public string GetPlayersRoomId(Guid persistentPlayerId);
-	public string GetPlayersConnectionId(Guid persistentPlayerId);
-
-
-	public Result TryPickupFromKitty(string connectionId);
-
-	public Result TryRequestTopUp(string connectionId);
-
-	public Result TryPlayCard(string connectionId, int cardId, int centerPilIndex);
-
-	public WebGame GetGame(string roomId);
-
-	public Result<GameStateDto> GetGameStateDto(string roomId);
-
-	public Result<LobbyStateDto> GetLobbyStateDto(string roomId);
-	public bool GameStarted(string roomId);
-	public bool ConnectionOwnsCard(string connectionId, int cardId);
-	public CardLocation? GetCardLocation(string connectionId, int cardId);
+    public Task<Result<GameStateDto>> GetGameState(string roomId);
 }

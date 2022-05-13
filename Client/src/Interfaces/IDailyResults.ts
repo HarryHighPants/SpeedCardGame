@@ -1,9 +1,9 @@
 export interface IDailyResults {
-	BotName: string
-	PlayerWon: boolean
-	LostBy: number
-	DailyWinStreak: number
-	MaxDailyWinStreak: number
-	DailyWins: number
-	DailyLosses: number
+    botName: string
+    playerWon: boolean
+    lostBy: number
+    dailyWinStreak: number
+    maxDailyWinStreak: number
+    dailyWins: number
+    dailyLosses: number
 }

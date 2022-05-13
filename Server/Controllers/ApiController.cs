@@ -1,3 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Server.Helpers;
+
 namespace Server.Controllers;
 
 using System.Linq;
@@ -7,106 +11,128 @@ using Models.Database;
 using Services;
 
 [ApiController]
+[AllowAnonymous]
 [Route("api")]
 public class ApiController : ControllerBase
 {
-	private readonly GameResultContext gameResultContext;
+    private readonly GameResultContext gameResultContext;
 
-	public ApiController(GameResultContext gameResultContext)
-	{
-		this.gameResultContext = gameResultContext;
-	}
+    public ApiController(GameResultContext gameResultContext)
+    {
+        this.gameResultContext = gameResultContext;
+    }
+    
+    
+    [HttpGet("id-hash/{persistentPlayerId}")]
+    public IActionResult GetIdHash(Guid persistentPlayerId)
+    {
+        return Ok(persistentPlayerId.ToString().Hash());
+    }
 
-	[HttpGet]
-	public IActionResult GetGamesPlayed()
-	{
-		return Ok(gameResultContext.GameResults.Count());
-	}
+    [HttpGet("daily-stats/{persistentPlayerId}")]
+    public IActionResult GetDailyResultDto(Guid persistentPlayerId)
+    {
+        var latestGame = GetPlayersDailyGame(persistentPlayerId);
+        if (latestGame == null)
+        {
+            return BadRequest("Player hasn't completed todays game");
+        }
 
-	[HttpGet("top-players")]
-	public IActionResult TopPlayers()
-	{
-		return Ok(gameResultContext.Players.OrderByDescending(p=>p.Elo).Take(10).Select(p=>new PlayerApi(p)).ToList());
-	}
+        return Ok(new DailyResultDto(persistentPlayerId, latestGame));
+    }
 
-	[HttpGet("player/{playerId}")]
-	public IActionResult TopPlayers(Guid playerId)
-	{
-		var player = gameResultContext.Players.Find(playerId);
-		if (player == null)
-		{
-			return BadRequest("Could not find player with that id");
-		}
-		return Ok(new PlayerApi(player));
-	}
+    [HttpGet("latest-ranking-stats/{persistentPlayerId}")]
+    public IActionResult GetRankingStats(Guid persistentPlayerId)
+    {
+        var latestGame = GetPlayersLatestGame(persistentPlayerId);
 
-	[HttpGet("ping")]
-	public IActionResult Ping()
-	{
-		return Ok(true);
-	}
+        if (latestGame == null)
+        {
+            return BadRequest("Could not find a game for player");
+        }
+        
+        var won = latestGame.Winner.Id == persistentPlayerId;
+        var playerDao = won ? latestGame.Winner : latestGame.Loser;
+        var eloChangeAmt = won ? latestGame.EloGained : -latestGame.EloLost;
+        var rankingStats = new RankingStatsDto(playerDao.Elo, eloChangeAmt);
+        return Ok(rankingStats);
+    }
 
-	[HttpGet("ping-shield-data")]
-	public IActionResult PingShieldData()
-	{
-		var shieldData = new ShieldData("Server status", "Online", "green");
-		return Ok(shieldData);
-	}
+    [HttpGet("top-players")]
+    public IActionResult TopPlayers()
+    {
+        return Ok(
+            gameResultContext.Players
+                .OrderByDescending(p => p.Elo)
+                .Take(10)
+                .Select(p => new PlayerApi(p))
+                .ToList()
+        );
+    }
 
-	[HttpGet("daily-games-shield-data")]
-	public IActionResult DailyGamesShieldData()
-	{
-		var playersCount = GamesPlayed(1);
-		var shieldData = new ShieldData("Games today", playersCount.ToString());
-		return Ok(shieldData);
-	}
+    [HttpGet("player/{persistentPlayerId}")]
+    public IActionResult TopPlayers(Guid persistentPlayerId)
+    {
+        var player = gameResultContext.Players.Find(persistentPlayerId);
+        if (player == null)
+        {
+            return BadRequest("Could not find player with that id");
+        }
 
-	[HttpGet("weekly-games-shield-data")]
-	public IActionResult WeeklyGamesShieldData()
-	{
-		var playersCount = GamesPlayed(7);
-		var shieldData = new ShieldData("Weekly Games", playersCount.ToString());
-		return Ok(shieldData);
-	}
+        return Ok(new PlayerApi(player));
+    }
 
-	[HttpGet("monthly-games-shield-data")]
-	public IActionResult MonthlyGamesShieldData()
-	{
-		var playersCount = GamesPlayed(31);
-		var shieldData = new ShieldData("Monthly Games", playersCount.ToString());
-		return Ok(shieldData);
-	}
+    [HttpGet("ping")]
+    public IActionResult Ping()
+    {
+        return Ok(true);
+    }
 
-	private int GamesPlayed(int? inDays = null)
-	{
-		var dateFrom = DateTime.UtcNow.Subtract(TimeSpan.FromDays(inDays ?? 0));
-		return gameResultContext.GameResults.Count(g => inDays == null || g.Created > dateFrom);
-	}
+    private GameResultDao? GetPlayersLatestGame(Guid persistentPlayerId)
+    {
+        return gameResultContext.GameResults
+            .OrderByDescending(g => g.Created)
+            .Where(g => g.Created != DateTime.MinValue)
+            .Include(g=>g.Winner)
+            .Include(g=>g.Loser)
+            .FirstOrDefault(g =>
+                g.Winner.Id == persistentPlayerId
+                 || g.Loser.Id == persistentPlayerId);
+    }
+    
+    private GameResultDao? GetPlayersDailyGame(Guid persistentPlayerId)
+    {
+        return gameResultContext.GameResults
+            .OrderByDescending(g => g.Created)
+            .Include(g=>g.Winner)
+            .Include(g=>g.Loser)
+            .FirstOrDefault(g =>
+                g.Daily && g.DailyIndex == InMemoryGameService.GetDayIndex() &&
+                (g.Winner.Id == persistentPlayerId
+                 || g.Loser.Id == persistentPlayerId));
+    }
 
-	// https://shields.io/endpoint
-	record ShieldData(string label, string message, string? color = "lightgrey", int? schemaVersion = 1);
+    class PlayerApi
+    {
+        public string Name { get; set; }
+        public int Elo { get; set; }
+        public string Rank { get; set; }
+        public int Wins { get; set; }
+        public int Losses { get; set; }
+        public int DailyLosses { get; set; }
+        public int DailyWins { get; set; }
+        public int DailyStreak { get; set; }
 
-	class PlayerApi
-	{
-		public string Name { get; set; }
-		private int Elo { get; set; }
-		private string Rank { get; set; }
-		private int Wins { get; set; }
-		private int Losses { get; set; }
-		private int DailyLosses { get; set; }
-		private int DailyWins { get; set; }
-		private int DailyStreak { get; set; }
-
-		public PlayerApi(PlayerDao playerDoa)
-		{
-			Name = playerDoa.Name;
-			Elo = playerDoa.Elo;
-			Rank = InMemoryGameService.GetRank(playerDoa.Elo).ToString();
-			DailyWins = playerDoa.DailyWins;
-			DailyLosses = playerDoa.DailyLosses;
-			Wins = playerDoa.Wins;
-			Losses = playerDoa.Losses;
-			DailyStreak = playerDoa.DailyWinStreak;
-		}
-	}
+        public PlayerApi(PlayerDao playerDoa)
+        {
+            Name = playerDoa.Name;
+            Elo = playerDoa.Elo;
+            Rank = EloService.GetRank(playerDoa.Elo).ToString();
+            DailyWins = playerDoa.DailyWins;
+            DailyLosses = playerDoa.DailyLosses;
+            Wins = playerDoa.Wins;
+            Losses = playerDoa.Losses;
+            DailyStreak = playerDoa.DailyWinStreak;
+        }
+    }
 }

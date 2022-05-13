@@ -1,7 +1,8 @@
 internal class Reader
 {
     private static Thread inputThread;
-    private static AutoResetEvent getInput, gotInput;
+    private static AutoResetEvent getInput,
+        gotInput;
     private static string? input;
     private static bool reading = true;
 

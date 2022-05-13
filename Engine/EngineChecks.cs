@@ -24,53 +24,26 @@ public class EngineChecks
         return Result.Error<int>("No winner yet!");
     }
 
-    public Result CanTopUp(GameState gameState)
+    public bool CanPlayerRequestTopUp(GameState gameState, int playerIndex) =>
+        gameState.WinnerIndex == null && gameState.MustTopUp && !gameState.Players[playerIndex].RequestingTopUp;
+
+    public bool MustTopUp(GameState gameState) =>
+        !gameState.Players.Any(
+            p =>
+                PlayerHasPlay(gameState, p.Id).Success
+                || CanPickupFromKitty(gameState, p.Id).Success
+        );
+
+    public bool AllPlayersRequestingTopUp(GameState gameState) =>
+        gameState.Players.All(p => p.RequestingTopUp);
+
+    public Result<(Card card, int centerPile)> PlayerHasPlay(
+        GameState gameState,
+        int playerId,
+        List<bool>? centerPilesAvailable = null
+    )
     {
-        // Check all players are requesting top up
-        var allPlayersRequestingTopUp = AllPlayersRequestingTopUp(gameState);
-        if (allPlayersRequestingTopUp is ErrorResult allPlayersRequestingTopUpError)
-        {
-            return Result.Error(allPlayersRequestingTopUpError.Message);
-        }
-
-        return new SuccessResult();
-    }
-
-    public Result CanRequestTopUp(GameState gameState, int playerIndex)
-    {
-        // Check player isn't already topped up
-        if (gameState.Players[playerIndex].RequestingTopUp)
-        {
-            return Result.Error("Already requesting to top up");
-        }
-
-        // Check the player can't play
-        var hasPlayResult = PlayerHasPlay(gameState, playerIndex);
-        if (hasPlayResult.Success)
-        {
-            return Result.Error("Player can play a card");
-        }
-
-        // Check the player can't pickup
-        var pickupFromKittyResult = CanPickupFromKitty(gameState, playerIndex);
-        if (pickupFromKittyResult.Success)
-        {
-            return Result.Error("Player can pickup from kitty");
-        }
-
-        // We can't do anything else so top up is valid
-        return new SuccessResult();
-    }
-
-    private Result AllPlayersRequestingTopUp(GameState gameState) =>
-        // Check all players are requesting top up
-        !gameState.Players.All(p => p.RequestingTopUp)
-            ? Result.Error("Not all players are requesting top up")
-            : new SuccessResult();
-
-    public Result<(Card card, int centerPile)> PlayerHasPlay(GameState gameState, int playerId, List<bool>? centerPilesAvailable = null)
-    {
-	    var availablePiles = centerPilesAvailable ?? new List<bool> {true, true};
+        var availablePiles = centerPilesAvailable ?? new List<bool> { true, true };
         var player = gameState.GetPlayer(playerId);
 
         foreach (var card in player.HandCards)
@@ -85,8 +58,18 @@ public class EngineChecks
         return Result.Error<(Card card, int centerPile)>("No valid play for player");
     }
 
-    public Result PlayersMoveValid(GameState gameState, int playerId, int cardId, int centerPileIndex)
+    public Result PlayersMoveValid(
+        GameState gameState,
+        int playerId,
+        int cardId,
+        int centerPileIndex
+    )
     {
+        if (gameState.WinnerIndex != null)
+        {
+            return Result.Error<GameState>("Game already over");
+        }
+        
         if (centerPileIndex >= gameState.CenterPiles.Count)
         {
             return Result.Error<GameState>($"No center pile found at index {centerPileIndex}");
@@ -98,7 +81,8 @@ public class EngineChecks
         if (cardLocationResult.PlayerId != playerId)
         {
             return Result.Error<GameState>(
-                $"{card.ToString(gameState.Settings)} not in players hand");
+                $"{card.ToString(gameState.Settings)} not in players hand"
+            );
         }
 
         switch (cardLocationResult.PileName)
@@ -108,7 +92,8 @@ public class EngineChecks
                 if (!ValidPlay(card, gameState.CenterPiles[centerPileIndex].Cards.Last()))
                 {
                     return Result.Error<GameState>(
-                        $"Can't play {card.ToString(gameState.Settings)} onto {gameState.CenterPiles[centerPileIndex].Cards.Last().ToString(gameState.Settings)}");
+                        $"Can't play {card.ToString(gameState.Settings)} onto {gameState.CenterPiles[centerPileIndex].Cards.Last().ToString(gameState.Settings)}"
+                    );
                 }
 
                 return Result.Successful();
@@ -116,7 +101,9 @@ public class EngineChecks
             case CardPileName.Kitty:
             case CardPileName.TopUp:
             case CardPileName.Center:
-                return Result.Error<GameState>($"Can't play a card in the {cardLocationResult.PileName} pile");
+                return Result.Error<GameState>(
+                    $"Can't play a card in the {cardLocationResult.PileName} pile"
+                );
 
             case CardPileName.Undefined:
             default:
@@ -129,10 +116,14 @@ public class EngineChecks
     /// <param name="gameState"></param>
     /// <param name="card"></param>
     /// <returns>Result with CenterPileindex as data</returns>
-    public Result<int> CardHasPlay(GameState gameState, Card card, List<bool>? centerPilesAvailable = null)
+    public Result<int> CardHasPlay(
+        GameState gameState,
+        Card card,
+        List<bool>? centerPilesAvailable = null
+    )
     {
-	    var pilesAvailable = centerPilesAvailable ?? new List<bool> {true, true};
-	    for (var i = 0; i < gameState.CenterPiles.Count; i++)
+        var pilesAvailable = centerPilesAvailable ?? new List<bool> { true, true };
+        for (var i = 0; i < gameState.CenterPiles.Count; i++)
         {
             if (!pilesAvailable[i] || gameState.CenterPiles[i].Cards.Count < 1)
             {
@@ -167,6 +158,11 @@ public class EngineChecks
 
     public Result CanPickupFromKitty(GameState gameState, int playerId)
     {
+        if (gameState.WinnerIndex != null)
+        {
+            return Result.Error("Game already over");
+        }
+        
         var player = gameState.GetPlayer(playerId);
 
         // Check the player has room in their hand
