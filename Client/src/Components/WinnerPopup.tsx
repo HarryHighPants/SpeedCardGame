@@ -11,12 +11,14 @@ import config from '../Config'
 import { IRankingStats } from '../Interfaces/IRankingStats'
 import RankingStats from "./RankingStats";
 import MenuButton from "./Menus/MenuButton";
+import GameResults from "./GameResults";
+import ShareButton from "./ShareButton";
 
 interface Props {
     persistentId: string
     playerWon: boolean
-    winnerName: string | undefined
-    loserName: string | undefined
+    winnerName: string
+    loserName: string
     cardsRemaining: number
 }
 
@@ -47,38 +49,13 @@ const WinnerPopup = ({ persistentId, winnerName, loserName, cardsRemaining, play
         setReplayUrl(`/${roomIdWithoutNumbers}${roomNumber + 1}${window.location.search}`)
     }
 
-    const onShare = () => {
-        let outcomeText =
-            (playerWon ? `👑 beat ${loserName}` : `☠️ lost against ${winnerName}`) +
-            ` by ${cardsRemaining} card${cardsRemaining > 1 ? 's' : ''}`
-        let shareText = `${outcomeText}\n♦️speed.harryab.com`
-        navigator.clipboard.writeText(shareText)
-        toast.success('Share text copied to clipboard!')
-    }
-
     return (
         <Popup id={'WinnerPopup'} onHomeButton={true} customZIndex={62}>
             <h2>Game over</h2>
-            <h4
-                style={{
-                    marginTop: 50,
-                    marginBottom: 0,
-                }}
-            >
-                Winner is:
-            </h4>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'end' }}>
-                <CelebrateShaker />
-                <h1 style={{ margin: '0 25px' }}>{winnerName}</h1>
-                <CelebrateShaker startDelay={0.2} />
-            </div>
+            
+            <GameResults persistentId={persistentId} winnerName={winnerName}/>
 
-            {rankingStats!! && <RankingStats stats={rankingStats} />}
-
-            <BottomButton style={{ marginTop: 25 }} onClick={() => onShare()}>
-                Share
-                <HiShare style={{ marginBottom: -2, marginLeft: 5 }} />
-            </BottomButton>
+            <ShareButton playerWon={playerWon} opponentName={playerWon ? loserName : winnerName} cardsRemaining={cardsRemaining}/>
 
             <BottomButton
                 style={{ marginTop: 25 }}

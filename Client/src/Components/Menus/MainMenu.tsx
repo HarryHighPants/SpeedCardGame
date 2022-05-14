@@ -11,9 +11,9 @@ import IconButton from '../IconButton'
 import { AiFillGithub } from 'react-icons/ai'
 import { githubUrl } from '../../Constants'
 import MenuButtonGlow from './MenuButtonGlow'
-import { getResetTime } from '../../Helpers/DailyHelper'
 import { useEffect, useState } from 'react'
 import config from '../../Config'
+import { v4 as uuid } from 'uuid'
 
 interface Props {}
 
@@ -89,7 +89,3 @@ const MenuDescription = styled.h4`
 `
 
 export default MainMenu
-
-function uuid(): string {
-    throw new Error('Function not implemented.')
-}
