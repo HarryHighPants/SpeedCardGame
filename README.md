@@ -7,10 +7,10 @@
     An online version of the real-time card game Speed.<br>Play against bots or your friends!<br/><br>
     <a href="https://github.com/HarryHighPants/SpeedCardGame/blob/master/LICENSE.md"><img alt="GitHub" src="https://img.shields.io/github/license/harryhighpants/SpeedCardGame"></a>
     <a href="https://github.com/HarryHighPants/SpeedCardGame/actions"><img alt="Docker" src="https://img.shields.io/github/workflow/status/harryhighpants/speedcardgame/Docker?logo=GitHubActions&logoColor=white">
-    <a href="https://speed.harryab.com" target="_blank"><img alt="Server status" src="https://img.shields.io/endpoint?label=Server%20status&logo=Statuspal&url=https%3A%2F%2Fserver.harryab.com%3A10000%2Fapi%2Fping-shield-data"></a>
+    <a href="https://speed.harryab.com" target="_blank"><img alt="Server status" src="https://img.shields.io/endpoint?label=Server%20status&logo=Statuspal&url=https%3A%2F%2Fserver.harryab.com%3A10000%2Fapi%2Fping"></a>
     <br>
     <br>
-    <a href="https://speed.harryab.com" target="_blank"><img alt="Custom badge" src="https://img.shields.io/endpoint?color=orange&logo=youTubeGaming&style=for-the-badge&url=https%3A%2F%2Fserver.harryab.com%3A10000%2Fapi%2Fdaily-games-shield-data"></a>
+    <a href="https://speed.harryab.com" target="_blank"><img alt="Custom badge" src="https://img.shields.io/endpoint?color=orange&logo=youTubeGaming&style=for-the-badge&url=https%3A%2F%2Fserver.harryab.com%3A10000%2Fshield%2Fdaily-games"></a>
 </p>
     
 ## Description
