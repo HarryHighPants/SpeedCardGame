@@ -1,5 +1,5 @@
 // Establish a cache name
-const cacheName = 'SpeedServiceWorker_v1.0.0.1';
+const cacheName = 'SpeedServiceWorker_v1.2.0';
 
 self.addEventListener('install', (event) => {
 	event.waitUntil(caches.open(cacheName));

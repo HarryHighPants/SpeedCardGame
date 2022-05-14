@@ -41,6 +41,13 @@ public class ShieldController : ControllerBase
         var shieldData = new ShieldData("Monthly Games", playersCount.ToString());
         return Ok(shieldData);
     }
+    
+    [HttpGet("status")]
+    public IActionResult ServerStatus()
+    {
+        var shieldData = new ShieldData("Server Status", "Active", "green");
+        return Ok(shieldData);
+    }
 
     private int GamesPlayed(int? inDays = null)
     {
