@@ -13,6 +13,7 @@ const MenuHeader = () => {
 const HeaderImg = styled.img`
     width: 100%;
     margin: -20px 0 20px 0;
+    pointer-events: none;
 `
 
 export default MenuHeader

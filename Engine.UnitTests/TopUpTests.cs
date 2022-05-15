@@ -7,22 +7,6 @@ using Xunit;
 
 public class TopUpTests
 {
-    [Theory]
-    [InlineData(5, 6, false)]
-    [InlineData(5, 7, true)]
-    public void RequestTopUp_Theory(int centerCard, int player1Card, bool expectedCanRequestTopUp)
-    {
-        // Arrange
-        var gameState = ModelGenerator.CreateGameBasic(centerCard, player1Card: player1Card);
-
-        // Act
-        // See if we can request top up
-        var gameEngine = new GameEngine();
-        var canRequestTopUpResult = gameEngine.TryRequestTopUp(gameState, 0);
-
-        // Assertion
-        Assert.Equal(expectedCanRequestTopUp, canRequestTopUpResult.Success);
-    }
 
     [Theory]
     [InlineData(new[] { 1, 2, 3 }, new[] { 4, 5, 6 }, new[] { 7 }, new[] { 8 }, true)]
@@ -48,11 +32,12 @@ public class TopUpTests
             player1TopUps: nullablePlayer1TopUps,
             player1RequestingTopup: true,
             player2TopUps: nullablePlayer2TopUps,
-            player2RequestingTopup: false
+            player2RequestingTopup: false,
+            mustTopUp:true
         );
 
         // Act
-        var gameEngine = new GameEngine();
+        var gameEngine = new GameEngine(new EngineChecks(), new EngineActions());
         var topUpResult = gameEngine.TryRequestTopUp(gameState, 1);
 
         // Assertion
@@ -84,37 +69,6 @@ public class TopUpTests
         }
     }
 
-    [Fact]
-    public void Replenish()
-    {
-        // Arrange
-        var gameState = ModelGenerator.CreateGameCustom(
-            new List<int?> { 1, 2, 3 },
-            new List<int?> { 4, 5, 6 },
-            player1RequestingTopup: true,
-            player2RequestingTopup: false
-        );
-
-        // Act
-        var gameEngine = new GameEngine();
-        var replenishedResult = gameEngine.TryRequestTopUp(gameState, 1);
-
-        // Assertion
-        Assert.True(replenishedResult.Success);
-        // Check the players have their top up piles replenished
-        var totalCenterPileCards = 6;
-        var numberOfCenterPiles = 2;
-        Assert.Equal(
-            totalCenterPileCards - numberOfCenterPiles,
-            replenishedResult.Data.Players[0].TopUpCards.Count
-                + replenishedResult.Data.Players[1].TopUpCards.Count
-        );
-
-        // Check the players have topped up the center piles
-        Assert.Single(replenishedResult.Data.CenterPiles[0].Cards);
-        Assert.Single(replenishedResult.Data.CenterPiles[1].Cards);
-    }
-
     // Once a move takes place if a player requesting top up can now move then they should no longer be requesting top up
     [Theory]
     [InlineData(new[] { 1 }, new[] { 2, 9 }, new[] { 3 }, false)]
@@ -142,7 +96,7 @@ public class TopUpTests
 
         // Act
         // Player 1 moves
-        var gameEngine = new GameEngine();
+        var gameEngine = new GameEngine(new EngineChecks(), new EngineActions());
         var playResult = gameEngine.TryPlayCard(
             gameState,
             0,

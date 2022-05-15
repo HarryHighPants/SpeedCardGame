@@ -29,7 +29,7 @@ public class PickupCardTests
 
         // Act
         // See if we can pickup
-        var gameEngine = new GameEngine();
+        var gameEngine = new GameEngine(new EngineChecks(), new EngineActions());
         var canPickupResult = gameEngine.Checks.CanPickupFromKitty(gameState, 0);
 
         // Try to pickup

@@ -14,6 +14,7 @@ public interface IGameHubClient
     public Task UpdateGameState(GameStateDto gameStateDto);
     public Task UpdateLobbyState(LobbyStateDto lobbyStateDto);
     public Task UpdateMovingCard(UpdateMovingCardData movingCard);
+    public Task ErrorMessage(string message);
 }
 
 [Authorize]
@@ -67,18 +68,16 @@ public class GameHub : Hub<IGameHubClient>
     }
 
     public async Task StartGame(string roomId) =>
-        ThrowIfErrorResult(await gameService.StartGame(roomId, UserIdentifier));
+        await HandleErrorResult(await gameService.StartGame(roomId, UserIdentifier));
 
     public async Task TryPlayCard(string roomId, int cardId, int centerPileId) =>
-        ThrowIfErrorResult(
-            await gameService.TryPlayCard(roomId, UserIdentifier, cardId, centerPileId)
-        );
+        await HandleErrorResult(await gameService.TryPlayCard(roomId, UserIdentifier, cardId, centerPileId));
 
     public async Task TryPickupFromKitty(string roomId) =>
-        ThrowIfErrorResult(await gameService.TryPickupFromKitty(roomId, UserIdentifier));
+        await HandleErrorResult(await gameService.TryPickupFromKitty(roomId, UserIdentifier));
 
     public async Task TryRequestTopUp(string roomId) =>
-        ThrowIfErrorResult(await gameService.TryRequestTopUp(roomId, UserIdentifier));
+        await HandleErrorResult(await gameService.TryRequestTopUp(roomId, UserIdentifier));
 
     public async Task UpdateMovingCard(string roomId, UpdateMovingCardData updateMovingCard)
     {
@@ -87,11 +86,12 @@ public class GameHub : Hub<IGameHubClient>
         await Clients.OthersInGroup(roomId).UpdateMovingCard(movingCard);
     }
 
-    private void ThrowIfErrorResult(Result result)
+    private async Task HandleErrorResult(Result result)
     {
         if (result is IErrorResult resultError)
         {
-            throw new HubException(resultError.Message);
+            await Clients.Caller.ErrorMessage(resultError.Message);
+            Console.WriteLine(resultError.Message);
         }
     }
 }

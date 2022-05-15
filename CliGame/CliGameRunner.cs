@@ -8,7 +8,9 @@ using Helpers;
 public class CliGameRunner
 {
     private readonly Random random = new();
-    private CliGame Game { get; set; } = new();
+
+    private CliGame Game { get; set; } =
+        new(null, new Settings(), new GameEngine(new EngineChecks(), new EngineActions()));
 
     public void PlayGame(bool skipIntro = false)
     {
@@ -16,8 +18,9 @@ public class CliGameRunner
         CliGameIoHelper.GameIntro(skipIntro);
 
         Game = new CliGame(
-            new List<string> { BotRunnerCli.Bot.Name, "You" },
-            new Settings { MinifiedCardStrings = true, IncludeSuitInCardStrings = false }
+            new List<string> {BotRunnerCli.Bot.Name, "You"},
+            new Settings {MinifiedCardStrings = true, IncludeSuitInCardStrings = false},
+            new GameEngine(new EngineChecks(), new EngineActions())
         );
         CliGameIoHelper.UpdateMessage(Game.State, "Game started!");
 
@@ -42,8 +45,8 @@ public class CliGameRunner
         {
             return Reader.ReadLine(
                 random.Next(
-                    (int)BotRunnerCli.Bot.QuickestResponseTimeMs,
-                    (int)BotRunnerCli.Bot.SlowestResponseTimeMs
+                    (int) BotRunnerCli.Bot.QuickestResponseTimeMs,
+                    (int) BotRunnerCli.Bot.SlowestResponseTimeMs
                 )
             );
         }
@@ -97,7 +100,7 @@ public class CliGameRunner
 
     private void PlayCard(string input)
     {
-        var splitInput = input.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        var splitInput = input.Split(new[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries);
         var inputCardValue = splitInput.Length > 0 ? splitInput[0].ExtractInt() : null;
         if (inputCardValue == null)
         {
@@ -128,7 +131,7 @@ public class CliGameRunner
         }
 
         // See if the center card is valid
-        var centerPileResult = Game.CardWithValueIsInCenterPile(Game.State, (int)centerCard);
+        var centerPileResult = Game.CardWithValueIsInCenterPile(Game.State, (int) centerCard);
         if (centerPileResult is IErrorResult centerPileResultError)
         {
             CliGameIoHelper.UpdateMessage(Game.State, centerPileResultError.Message);

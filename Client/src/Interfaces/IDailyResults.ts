@@ -1,4 +1,5 @@
 export interface IDailyResults {
+    completedToday: boolean
     botName: string
     playerWon: boolean
     lostBy: number

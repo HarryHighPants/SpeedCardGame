@@ -29,7 +29,7 @@ public class PlayCardTests
 
         // Act
         // See if we have a play
-        var gameEngine = new GameEngine();
+        var gameEngine = new GameEngine(new EngineChecks(), new EngineActions());
         var hasPlayResult = gameEngine.Checks.PlayerHasPlay(gameState, 0);
 
         // Try to play it
@@ -67,7 +67,7 @@ public class PlayCardTests
         var gameState = ModelGenerator.CreateGameBasic(5, player1Card: 4, player2Card: 6);
 
         // Act
-        var gameEngine = new GameEngine();
+        var gameEngine = new GameEngine(new EngineChecks(), new EngineActions());
         var tryPlayResult = gameEngine.TryPlayCard(
             gameState,
             0,
@@ -93,7 +93,7 @@ public class PlayCardTests
         };
 
         // Try to play it
-        var gameEngine = new GameEngine();
+        var gameEngine = new GameEngine(new EngineChecks(), new EngineActions());
         Assert.Throws<NullReferenceException>(
             () => gameEngine.TryPlayCard(gameState, 0, randomCard.Id, 0)
         );

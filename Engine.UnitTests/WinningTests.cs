@@ -27,7 +27,7 @@ public class WinningTests
         );
 
         // Act
-        var gameEngine = new GameEngine();
+        var gameEngine = new GameEngine(new EngineChecks(), new EngineActions());
         var winnerResult = gameEngine.TryGetWinner(gameState);
 
         // Assertion

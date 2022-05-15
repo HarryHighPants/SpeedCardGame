@@ -54,7 +54,6 @@ const GameBoard = ({
 	}
 
 	const OnPickupFromKitty = () => {
-		console.log('Attempt pickup from kitty')
 		sendPickupFromKitty()
 		dispatchLocalGameState({ type: 'Pickup', playerId: playerId })
 	}

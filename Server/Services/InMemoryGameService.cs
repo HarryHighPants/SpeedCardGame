@@ -99,16 +99,20 @@ public class InMemoryGameService : IGameService
         // Remove the connection to the room
         var room = rooms[roomId];
         room.Connections.RemoveAll(c => c.PersistentPlayerId == persistentPlayerId);
-        room.StopBots?.Cancel();
 
-        if (room.Connections.Count <= 0)
+        if (room.Connections.Count <= 0 || room.IsBotGame)
         {
+            room.StopBots?.Cancel();
             rooms.TryRemove(roomId, out _);
         }
         else
         {
             UpdateRoomsPlayerIds(roomId);
-            await Task.WhenAll(SendCurrentGameState(roomId), SendCurrentLobbyState(roomId));
+            await SendCurrentLobbyState(roomId);
+            if (room.HasGameStarted)
+            {
+                await SendCurrentGameState(roomId);
+            }
         }
 
         return Result.Successful();

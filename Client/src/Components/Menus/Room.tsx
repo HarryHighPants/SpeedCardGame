@@ -41,13 +41,13 @@ const Room = ({ onGameStarted }: Props) => {
     const [searchParams, setSearchParams] = useSearchParams()
 
     useEffect(() => {
-        if (!!roomId) {
+        if (!!roomId && !!persistentId) {
             if (connectionRef.current?.state === HubConnectionState.Connected) {
                 connectionRef.current?.stop()
             }
             CreateConnection()
         }
-    }, [roomId])
+    }, [roomId, persistentId])
 
     useEffect(() => {
         console.log('setting persistent Id', persistentId)
@@ -80,7 +80,7 @@ const Room = ({ onGameStarted }: Props) => {
                 transport: signalR.HttpTransportType.WebSockets,
                 accessTokenFactory: () => persistentId,
             })
-            .configureLogging(signalR.LogLevel.Debug)
+            .configureLogging(signalR.LogLevel.Information)
             .build()
 
         // signalRConnection.serverTimeoutInMilliseconds = 15000
@@ -95,7 +95,6 @@ const Room = ({ onGameStarted }: Props) => {
     const ConnectionStatusUpdated = () => {
         switch (connectionRef.current?.state) {
             case HubConnectionState.Connected:
-                console.log('connection id', connectionRef.current.connectionId)
                 connectionRef.current?.onclose((error) => {
                     if (!!error) {
                         ConnectionStatusUpdated()
@@ -131,7 +130,10 @@ const Room = ({ onGameStarted }: Props) => {
         setGameState({ ...updatedGameState })
     }
 
-    const stopConnection = useCallback(() => connection?.stop(), [connection])
+    const stopConnection = useCallback(() => {
+        connectionRef.current?.invoke('LeaveRoom', roomIdRef?.current)
+        connection?.stop()
+    }, [connection])
 
     return (
         <>
@@ -147,7 +149,7 @@ const Room = ({ onGameStarted }: Props) => {
                         roomId={roomId}
                     />
                     <HomeButton onClick={stopConnection} />
-                    {(!!gameState.winnerId && winningPlayer && losingPlayer) && (
+                    {!!gameState.winnerId && winningPlayer && losingPlayer && (
                         <WinnerPopup
                             persistentId={persistentId}
                             winnerName={winningPlayer.name}

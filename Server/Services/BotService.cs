@@ -66,7 +66,7 @@ public class BotService : IBotService
         var centerPilesAvailable = new List<bool> { true, true };
         while (
             !cancellationToken.IsCancellationRequested
-            && (actionHandler.GetGameState()).WinnerIndex == null
+            && actionHandler.GetGameState().WinnerIndex == null
         )
         {
             var move = BotRunner.GetMove(

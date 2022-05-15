@@ -22,31 +22,25 @@ interface Props {
 const Lobby = ({ connection, playerId, roomId, gameState, onBack }: Props) => {
     let navigate = useNavigate()
     const [lobbyData, setLobbyData] = useState<ILobby>()
-    const [dailyResults, setDailyResults] = useState<IDailyResults>()
     const [inLobby, setInLobby] = useState<boolean>(false)
     const [myPlayerName, setMyPlayerName] = useState<string>(() =>
         JSON.parse(localStorage.getItem('playerName') ?? `"Player"`)
     )
-    const [searchParams, setSearchParams] = useSearchParams()
     const [waitingForPlayers, setWaitingForPlayers] = useState(true)
     const [activePlayers, setActivePlayers] = useState<string[]>([])
     const [spectating, setSpectating] = useState<boolean>(false)
 
     useEffect(() => {
         if (!connection) return
-        console.log("connection.on('UpdateLobbyState', UpdateLobbyData)")
         connection.on('UpdateLobbyState', UpdateLobbyData)
-        connection.on('UpdateDailyResults', UpdateDailyResults)
 
         return () => {
             connection.off('UpdateLobbyState', UpdateLobbyData)
-            connection.off('UpdateDailyResults', UpdateDailyResults)
         }
     }, [connection])
 
     useEffect(() => {
         if (!inLobby) return
-        console.log('updating name', myPlayerName)
         // Update our name on the server
         connection?.invoke('UpdateName', roomId, myPlayerName)
     }, [myPlayerName, inLobby])
@@ -60,11 +54,6 @@ const Lobby = ({ connection, playerId, roomId, gameState, onBack }: Props) => {
     const UpdateLobbyData = (updatedLobby: ILobby) => {
         setLobbyData(updatedLobby)
         setInLobby(updatedLobby !== null)
-    }
-
-    const UpdateDailyResults = (data: any) => {
-        let dailyResultsData: IDailyResults = JSON.parse(data)
-        setDailyResults(dailyResultsData)
     }
 
     useEffect(() => {

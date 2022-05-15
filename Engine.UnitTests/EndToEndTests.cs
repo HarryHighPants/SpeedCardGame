@@ -19,7 +19,7 @@ public class EndToEndTests
     [Fact]
     public void BotGame()
     {
-        var game = new CliGame();
+        var game = new CliGame(null, new Settings(), new GameEngine(new EngineChecks(), new EngineActions()));
 
         var movesMade = 0;
         while (game.TryGetWinner().Failure && movesMade < 1000)
@@ -43,58 +43,27 @@ public class EndToEndTests
         );
         Assert.True(game.TryGetWinner().Success);
     }
-
-    [Fact]
-    public void TopUpExample()
-    {
-        // Arrange
-        var gameState = ModelGenerator.CreateGameCustom(
-            new List<int?> { 1 },
-            new List<int?> { 1 },
-            new List<int?> { 2 },
-            new List<int?> { 6 },
-            new List<int?> { 4 },
-            player2Cards: new List<int?> { 5, 5 },
-            player2TopUps: new List<int?> { 4 }
-        );
-
-        var gameEngine = new GameEngine();
-        // Act
-        gameState = gameEngine.TryRequestTopUp(gameState, 1).Data;
-        gameState =
-            gameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0).Data;
-        Assert.Equal((CardValue)2, gameState.CenterPiles[0].Cards.Last().CardValue);
-
-        gameState = gameEngine.TryPickupFromKitty(gameState, 0).Data;
-        gameState = gameEngine.TryRequestTopUp(gameState, 0).Data;
-        Assert.Equal((CardValue)4, gameState.CenterPiles[0].Cards.Last().CardValue);
-
-        gameState =
-            gameEngine.TryPlayCard(gameState, 1, gameState.Players[1].HandCards[0].Id, 0).Data;
-        gameState =
-            gameEngine.TryPlayCard(gameState, 0, gameState.Players[0].HandCards[0].Id, 0).Data;
-        var winnerResult = gameEngine.TryGetWinner(gameState);
-
-        // Assertion
-        Assert.Equal(0, winnerResult.Data);
-    }
-
+    
     [Fact]
     public void ReplenishExample()
     {
         // Arrange
         var gameState = ModelGenerator.CreateGameCustom(
             new List<int?> { 6, 6, 1 },
-            new List<int?> { 6, 6, 1 },
-            new List<int?> { 5 },
+            new List<int?> { 6, 6, 2 },
+            new List<int?> { 5, 1 },
             player2Cards: new List<int?> { 5 }
         );
+        
 
         var player1 = gameState.Players[0];
         var player2 = gameState.Players[1];
 
+        // Try to play a card
+        var gameEngine = new GameEngine(new EngineChecks(), new EngineActions());
+        gameState = gameEngine.TryPlayCard(gameState, 0, player1.HandCards[1].Id, 1).Data;
+        
         // Act
-        var gameEngine = new GameEngine();
         gameState = gameEngine.TryRequestTopUp(gameState, 1).Data;
         gameState = gameEngine.TryRequestTopUp(gameState, 0).Data;
         Assert.Single(gameState.CenterPiles[0].Cards);

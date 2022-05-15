@@ -7,9 +7,9 @@ using Engine.Models;
 public class CliGame : Game
 {
     public CliGame(
-        List<string>? playerNames = null,
-        Settings? settings = null,
-        GameEngine? gameEngine = null
+        List<string>? playerNames,
+        Settings settings,
+        GameEngine gameEngine
     ) : base(playerNames, settings, gameEngine) { }
 
     public Card? GetCardWithValue(IEnumerable<Card> cards, int? value) =>

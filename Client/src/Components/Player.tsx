@@ -34,15 +34,14 @@ const Player = ({ player, onRequestTopUp, onTop, connection, mustTopUp }: Props)
         if (connection?.state !== HubConnectionState.Connected) {
             return
         }
-        connection.on('Message', ReceivedMessaged)
+        connection.on('ErrorMessage', ReceivedMessaged)
 
         return () => {
-            connection.off('Message', ReceivedMessaged)
+            connection.off('ErrorMessage', ReceivedMessaged)
         }
     }, [connection, onTop])
 
     const ReceivedMessaged = (message: string) => {
-        console.log('message reciveed', message)
         setAdditionalInfo({ id: uuid(), message: message, messageType: 'Error' })
     }
 

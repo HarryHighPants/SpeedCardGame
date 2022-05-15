@@ -42,7 +42,8 @@ public class ModelGenerator
         List<int?>? player2Cards = null,
         List<int?>? player2Kittys = null,
         List<int?>? player2TopUps = null,
-        bool player2RequestingTopup = false
+        bool player2RequestingTopup = false,
+        bool mustTopUp = false
     ) =>
         new()
         {
@@ -71,7 +72,8 @@ public class ModelGenerator
                 new() { Cards = CreateBasicCards(centerPile2) }
             }.ToImmutableList(),
             MoveHistory = ImmutableList<Move>.Empty,
-            Settings = new Settings { MinifiedCardStrings = true, IncludeSuitInCardStrings = false }
+            Settings = new Settings { MinifiedCardStrings = true, IncludeSuitInCardStrings = false },
+            MustTopUp = mustTopUp
         };
 
     private static Player CreateBasicPlayer(

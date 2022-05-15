@@ -1,16 +1,10 @@
-import * as signalR from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { HiShare } from 'react-icons/hi'
 import Popup from '../Popup'
 import { IDailyResults } from '../../Interfaces/IDailyResults'
-import CelebrateShaker from '../CelebrateShake'
-import toast from 'react-hot-toast'
-import { convertTZ } from '../../Helpers/Utilities'
 import Countdown from 'react-countdown'
 import config from '../../Config'
 import { getResetTime } from '../../Helpers/DailyHelper'
-import RankingStats from "../RankingStats";
 import GameResults from '../GameResults'
 import ShareButton from "../ShareButton";
 
@@ -27,13 +21,13 @@ const DailyStats = ({ persistentId, gameOver }: Props) => {
     useEffect(() => {
         fetch(`${config.apiGateway.URL}/api/daily-stats/${persistentId}`)
             .then((response) => response.json())
-            .then((data) => setDailyResults(data))
+            .then((data: IDailyResults) => setDailyResults(data))
             .catch((error) => {
                 console.log(error)
             })
     }, [gameOver])
 
-    if (!dailyResults) {
+    if (!dailyResults || !dailyResults.completedToday) {
         return <></>
     }
 

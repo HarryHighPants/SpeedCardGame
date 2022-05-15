@@ -33,11 +33,6 @@ public class ApiController : ControllerBase
     public IActionResult GetDailyResultDto(Guid persistentPlayerId)
     {
         var latestGame = GetPlayersDailyGame(persistentPlayerId);
-        if (latestGame == null)
-        {
-            return BadRequest("Player hasn't completed todays game");
-        }
-
         return Ok(new DailyResultDto(persistentPlayerId, latestGame));
     }
 
