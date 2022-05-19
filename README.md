@@ -21,7 +21,7 @@
 
 ## Description
 
-♦️ **Play now at:** [https://speed.harryab.com](speed.harryab.com)
+♦️ **Play now at:** [speed.harryab.com](https://speed.harryab.com)
 
 This is a online version of the card game called [Speed](https://en.wikipedia.org/wiki/Speed_(card_game))
 
