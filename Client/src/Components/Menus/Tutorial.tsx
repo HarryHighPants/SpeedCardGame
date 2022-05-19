@@ -75,6 +75,7 @@ const Tutorial = () => {
 	return (
 		<Popup key={'JoinGamePopup'} id={'JoinGamePopup'} onBackButton={() => navigate('/')}>
 			<h3>Tutorial</h3>
+			<p>1.0.2</p>
 			<SlideContainer
 				drag={'x'}
 				dragConstraints={{ left: -50, right: 50 }}
