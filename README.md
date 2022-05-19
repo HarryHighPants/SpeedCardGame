@@ -50,6 +50,9 @@ This is a online version of the card game called [Speed](https://en.wikipedia.or
 
 - WebSockets: [SignalR](https://dotnet.microsoft.com/en-us/apps/aspnet/signalr)
 
+**Future Features/Issues**
+[View the Trello Board](https://trello.com/b/eymZghZo/speed-online)
+
 ## Running the app
 
 - Running the client
