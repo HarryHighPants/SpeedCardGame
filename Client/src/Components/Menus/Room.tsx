@@ -59,13 +59,13 @@ const Room = ({ onGameStarted }: Props) => {
     }, [persistentId])
 
     useEffect(() => {
-        let winningpPlayer = gameState?.players.find((p) => p.idHash === gameState.winnerId)
-        setWinningPlayer(winningpPlayer)
+        let winningPlayer = gameState?.players.find((p) => p.idHash === gameState.winnerId)
+        setWinningPlayer(winningPlayer)
 
         let losingPlayer = gameState?.players.find((p) => p.idHash !== gameState.winnerId)
         setLosingPlayer(losingPlayer)
 
-        setPlayerWon(gameState?.winnerId === persistentId)
+        setPlayerWon(gameState?.winnerId === hashedPersistentId)
 
         setLosingPlayerCardsRemaining((losingPlayer?.handCards.length ?? 0) + (losingPlayer?.kittyCardsCount ?? 0))
     }, [gameState?.winnerId])
