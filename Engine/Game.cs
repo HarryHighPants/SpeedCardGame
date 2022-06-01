@@ -8,7 +8,9 @@ public abstract class Game
     public Game(List<string>? playerNames, Settings settings, GameEngine gameEngine)
     {
         this.gameEngine = gameEngine;
-        State = this.gameEngine.NewGame(playerNames, settings);
+
+        var result = gameEngine.NewGame(playerNames, settings);
+        State = result.Success ? result.Data : State;
     }
 
     public GameEngine gameEngine { get; protected set; }

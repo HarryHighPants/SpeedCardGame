@@ -14,6 +14,7 @@ import MenuButtonGlow from './MenuButtonGlow'
 import { useEffect, useState } from 'react'
 import config from '../../Config'
 import { v4 as uuid } from 'uuid'
+import {IDailyResults} from "../../Interfaces/IDailyResults";
 
 interface Props {}
 
@@ -27,8 +28,8 @@ const MainMenu = (props: Props) => {
     useEffect(() => {
         fetch(`${config.apiGateway.URL}/api/daily-stats/${persistentId}`)
             .then((response) => response.json())
-            .then((data) => setDailyGameAvailable(false))
-            .catch((error) => setDailyGameAvailable(true))
+            .then((data: IDailyResults) => setDailyGameAvailable(!data.completedToday))
+            .catch((error) => setDailyGameAvailable(false))
     }, [])
 
     const OnCreateGame = (bot?: boolean, difficulty?: number) => {

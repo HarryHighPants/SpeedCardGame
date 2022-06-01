@@ -25,8 +25,12 @@ public class GameEngine
         Actions = engineActions;
     }
 
-    public GameState NewGame(List<string>? playerNames, Settings settings) =>
-        Actions.NewGame(playerNames, settings);
+    public Result<GameState> NewGame(List<string>? playerNames, Settings settings)
+    {
+        var newGameState = Actions.NewGame(playerNames, settings);
+        newGameState = this.SetTopUpRequests(newGameState);
+        return Result.Successful(newGameState);
+    }
 
     /// <returns>Player Index</returns>
     public Result<int> TryGetWinner(GameState gameState) => Checks.TryGetWinner(gameState);

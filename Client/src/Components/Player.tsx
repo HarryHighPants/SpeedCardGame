@@ -100,12 +100,44 @@ const AdditionalInfo = styled.div<{ topOfBoard: boolean }>`
 `
 
 const RequestTopUpButton = styled.button`
-    margin: 15px;
+    @keyframes wiggle {
+        0% {
+            transform: rotate(0deg);
+        }
+        80% {
+            transform: rotate(0deg);
+        }
+        85% {
+            transform: rotate(5deg);
+        }
+        95% {
+            transform: rotate(-5deg);
+        }
+        100% {
+            transform: rotate(0deg);
+        }
+    }
+
+    animation: wiggle 2.5s infinite;
     position: absolute;
     top: 58%;
     height: 40px;
     width: 135px;
     z-index: 52;
+
+  background-color: #f2f1f1;
+  padding: 5px 7px;
+  border: 1px #555555 solid;
+  border-radius: 3px;
+  margin: 0 2px;
+
+  &:hover {
+    background-color: #e1e1e1;
+  }
+
+  &:active {
+    background-color: #c5c5c5;
+  }
 `
 
 const PlayerName = styled.p`
