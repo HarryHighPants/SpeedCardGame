@@ -73,7 +73,7 @@ const Lobby = ({ connection, playerId, roomId, gameState, onBack }: Props) => {
     }
 
     const ShowLobby = () => {
-        return !gameState || !connection || activePlayers.length < 2 || spectating || !lobbyData?.gameStarted
+        return !gameState || !connection || (activePlayers.length < 2 && !gameState.winnerId) || spectating || !lobbyData?.gameStarted
     }
 
     if (!ShowLobby()) {
