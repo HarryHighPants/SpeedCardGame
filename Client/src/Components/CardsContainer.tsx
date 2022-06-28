@@ -1,7 +1,7 @@
 import * as signalR from '@microsoft/signalr'
 import React, { useEffect, useRef, useState } from 'react'
 import { IGameState } from '../Interfaces/IGameState'
-import { CardLocationType, IMovedCardPos, IRenderableCard } from '../Interfaces/ICard'
+import {CardLocationType, IMovedCardPos, IPos, IRenderableCard} from '../Interfaces/ICard'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
 import Card from './Card'
 import { AnimatePresence } from 'framer-motion'
@@ -58,26 +58,43 @@ const CardsContainer = ({
     }, [connection])
 
     const UpdateMovingCard = (data: IMovedCardPos) => {
+        
+        // Reset all cards being moved location
+        let cardsBeingMoved = renderableCardsRef.current?.filter((c) => c.isCustomPos)
+        cardsBeingMoved?.forEach(c=>{
+            c.pos = gameBoardLayout.GetCardDefaultPosition(
+                false,
+                c.location,
+                c.pileIndex
+            )
+            c.isCustomPos = false;
+            c.pos = gameBoardLayout.getCardPosPixels(c.pos)
+            c.forceUpdate()
+        })
+        
         let movingCard = renderableCardsRef.current?.find((c) => c.id === data.cardId)
         if(!movingCard){
             return "Moving card not found"
         }
-        
-        movingCard.isCustomPos = data.pos !== null
-        let updatedPos = gameBoardLayout.getCardPosPixels(
-            !!data.pos
-                ? GameBoardLayout.FlipPosition(data.pos)
-                : gameBoardLayout.GetCardDefaultPosition(
-                      false,
-                      movingCard.location,
-                    movingCard.location === CardLocationType.Center && flippedCenterPiles
-                          ? movingCard.pileIndex === 0
-                              ? 1
-                              : 0
-                          : movingCard.pileIndex
-                  )
-        )
-        movingCard.pos = updatedPos
+
+        movingCard.isCustomPos = !!data.pos
+        if(movingCard.isCustomPos){
+            movingCard.pos = GameBoardLayout.FlipPosition(data.pos as IPos)
+        } else {
+            let movingCardIndex = movingCard.pileIndex
+            // swap the index if its in the center and we have our center piles flipped
+            if(movingCard.location === CardLocationType.Center && flippedCenterPiles){
+                movingCardIndex = movingCardIndex ? 1 : 0
+            }
+            movingCard.pos = gameBoardLayout.GetCardDefaultPosition(
+                false,
+                movingCard.location,
+                movingCardIndex
+            )
+        }
+
+        // We want to get the cardsPosition as pixels
+        movingCard.pos = gameBoardLayout.getCardPosPixels(movingCard.pos)
         movingCard.forceUpdate()
     }
 
