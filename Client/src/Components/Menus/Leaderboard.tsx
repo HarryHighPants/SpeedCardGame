@@ -26,11 +26,11 @@ export const Leaderboard = () => {
             <>
                 <h4 style={{ marginTop: 30, marginBottom: 0}}>{leaderboardResults.botName}</h4>
                 <h5 style={{ marginBottom: 35, marginTop: 0, color: RankColour[leaderboardResults.botRank] }}>{Rank[leaderboardResults.botRank]}</h5>
-                    <LeaderboardWrapper>
-                        {leaderboardResults.players.map((p) => (
-                                <LeaderboardPlayer player={p} />
-                        ))}
-                    </LeaderboardWrapper>
+                <LeaderboardWrapper>
+                    {leaderboardResults.players.map((p) => (
+                        <LeaderboardPlayer player={p} />
+                    ))}
+                </LeaderboardWrapper>
             </>
             ) : (
                 <>
@@ -50,16 +50,17 @@ const LeaderboardPlayer = ({ player }: { player: ILeaderboardPlayer }): JSX.Elem
                 <p  style={{margin: 0, fontSize: 12, color: RankColour[player.rank]}}>{Rank[player.rank]}</p>
             </div>
             <p style={{ marginLeft: 'auto', fontWeight: 'bold', fontSize: 'large' }}>{player.score > 0? '👑' : '☠️'}</p>
-            <p style={{ fontWeight: 'bold', fontSize: 'large' }}>{player.score}</p>
+            <p style={{ fontWeight: 'bold', fontSize: 'large'}}>{player.score}</p>
         </StyledPlayer>
     )
 }
 
 const StyledPlace = styled.p<{ $place: number }>`
     color: ${({ $place }) =>
-        $place === 1 ? '#ffff00' : $place === 2 ? '#e9e9e9' : $place === 3 ? '#d2691e' : '#CBCBCB'};
+        $place === 1 ? '#ffff00' : $place === 2 ? '#e9e9e9' : $place === 3 ? '#d2691e' : 'rgba(203,203,203,0.8)'};
   font-weight: ${({ $place }) => $place < 4 ? 'bold' : 'normal'};
-  font-size: ${({ $place }) => $place < 4 ? 'large' : 'medium'};
+  font-size: ${({ $place }) => $place < 4 ? 'x-large' : 'medium'};
+  width: 15px;
   margin-right: 10px;
 `
 

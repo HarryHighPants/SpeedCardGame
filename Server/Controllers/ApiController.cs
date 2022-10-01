@@ -47,7 +47,7 @@ public class ApiController : ControllerBase
             .Include(g => g.Loser)
             .Where(g =>
                 g.Daily && g.DailyIndex == InMemoryGameService.GetDayIndex())
-            .OrderBy(g => g.Winner.IsBot ? -g.LostBy : g.LostBy);
+            .OrderByDescending(g => g.Winner.IsBot ? -g.LostBy : g.LostBy);
 
         var bot = BotConfigurations.GetBot(BotType.Daily);
         
