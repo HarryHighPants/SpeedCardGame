@@ -6,7 +6,8 @@ import Countdown from 'react-countdown'
 import config from '../../Config'
 import { getResetTime } from '../../Helpers/DailyHelper'
 import GameResults from '../GameResults'
-import ShareButton from "../ShareButton";
+import ShareButton from '../ShareButton'
+import LeaderboardButton from '../LeaderboardButton'
 
 interface Props {
     persistentId: string
@@ -33,7 +34,7 @@ const DailyStats = ({ persistentId, gameOver }: Props) => {
 
     return (
         <Popup id={'DailyStatsPopup'} onHomeButton={true} customZIndex={65}>
-
+            <LeaderboardButton />
             <h5 style={{ marginTop: 30, marginBottom: -5 }}>Statistics</h5>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'end', marginBottom: 30 }}>
                 <Stat value={dailyResults.dailyWins.toString()} description="Wins" />
@@ -42,14 +43,21 @@ const DailyStats = ({ persistentId, gameOver }: Props) => {
                 <Stat value={dailyResults.maxDailyWinStreak.toString()} description="Best streak" />
             </div>
 
-            <GameResults persistentId={persistentId} winnerName={dailyResults.playerWon ? myPlayerName : dailyResults.botName}/>
+            <GameResults
+                persistentId={persistentId}
+                winnerName={dailyResults.playerWon ? myPlayerName : dailyResults.botName}
+            />
 
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: -10 }}>
                 <Stat
                     value={<Countdown date={nextGameDate} zeroPadTime={2} daysInHours />}
                     description="Next opponent"
                 />
-                <ShareButton playerWon={dailyResults.playerWon} opponentName={dailyResults.botName} cardsRemaining={dailyResults.lostBy}/>
+                <ShareButton
+                    playerWon={dailyResults.playerWon}
+                    opponentName={dailyResults.botName}
+                    cardsRemaining={dailyResults.lostBy}
+                />
             </div>
         </Popup>
     )

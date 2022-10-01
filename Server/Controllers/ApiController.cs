@@ -17,7 +17,7 @@ public class ApiController : ControllerBase
 {
     private readonly GameResultContext gameResultContext;
 
-    public ApiController(GameResultContext gameResultContext)
+    public ApiController(GameResultContext gameResultContext, EloService eloService)
     {
         this.gameResultContext = gameResultContext;
     }
@@ -34,6 +34,42 @@ public class ApiController : ControllerBase
     {
         var latestGame = GetPlayersDailyGame(persistentPlayerId);
         return Ok(new DailyResultDto(persistentPlayerId, latestGame));
+    }
+
+    /// <summary>
+    /// Returns the top x players of today
+    /// </summary>
+    [HttpGet("daily-leaderboard")]
+    public IActionResult GetDailyLeaderboardDto()
+    {
+        var todaysGames = gameResultContext.GameResults
+            .Include(g => g.Winner)
+            .Include(g => g.Loser)
+            .Where(g =>
+                g.Daily && g.DailyIndex == InMemoryGameService.GetDayIndex())
+            .OrderBy(g => g.Winner.IsBot ? -g.LostBy : g.LostBy);
+
+        var bot = BotConfigurations.GetBot(BotType.Daily);
+        
+        var leaderboardData = new LeaderboardDto()
+        {
+            TotalPlayers = todaysGames.Count(),
+            BotName = bot.Name,
+            BotRank = EloService.GetRank((int)bot.Elo),
+            Players = todaysGames.Take(7).AsEnumerable().Select((g, i) =>
+            {
+                var player = g.Winner.IsBot ? g.Loser : g.Winner;
+                var playerScore = g.Winner.IsBot ? -g.LostBy : g.LostBy;
+                return new LeaderboardPlayerDto()
+                {
+                    Name = player.Name,
+                    Rank = EloService.GetRank(player.Elo),
+                    Place = i+1,
+                    Score = playerScore
+                };
+            }).ToArray()
+        };
+        return Ok(leaderboardData);
     }
 
     [HttpGet("latest-ranking-stats/{persistentPlayerId}")]

@@ -6,6 +6,6 @@ public enum Rank
     DedicatedRival,
     CertifiedRacer,
     BossAthlete,
-    Acetronaut,
+    AceChampion,
     SpeedDemon
 }

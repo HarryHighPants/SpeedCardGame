@@ -11,7 +11,7 @@ public class EloService
             <= 1000 => Rank.DedicatedRival,
             <= 1500 => Rank.CertifiedRacer,
             <= 2000 => Rank.BossAthlete,
-            <= 2500 => Rank.Acetronaut,
+            <= 2500 => Rank.AceChampion,
             > 2500 => Rank.SpeedDemon
         };
 
