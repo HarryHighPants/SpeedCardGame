@@ -10,16 +10,18 @@ import { Rank, RankColour } from '../../Interfaces/ILobby'
 export const Leaderboard = () => {
     const navigate = useNavigate()
     const [leaderboardResults, setLeaderboardResults] = useState<ILeaderboardResults>()
+    const [fetchError, setFetchError] = useState<string>()
 
     useEffect(() => {
         fetch(`${config.apiGateway.URL}/api/daily-leaderboard`)
             .then((response) => response.json())
             .then((data: ILeaderboardResults) => setLeaderboardResults(data))
             .catch((error) => {
+                setFetchError(error.toString())
                 console.log(error)
             })
     }, [])
-
+    
     return (
         <Popup id={'LeaderboardPopup'} onBackButton={() => navigate(-1)} customZIndex={65}>
             {leaderboardResults ? (
@@ -29,17 +31,27 @@ export const Leaderboard = () => {
                         {Rank[leaderboardResults.botRank]}
                     </h5>
                     <LeaderboardWrapper>
-                        {leaderboardResults.players.map((p) => (
-                            <LeaderboardPlayer player={p} />
+                        {leaderboardResults.players.map((p, i) => (
+                            <LeaderboardPlayer key={'player-'+i} player={p} />
                         ))}
                     </LeaderboardWrapper>
                 </>
-            ) : (
+            ) :
                 <>
-                    <h4 style={{ marginTop: 60, marginBottom: 0 }}>Loading..</h4>
-                    <LoadingSpinner />
+                    <h4 style={{ marginTop: 15, marginBottom: 0 }}>Daily Leaderboard</h4>
+                    {!!fetchError ? 
+                    <>
+                        <h4 style={{ marginTop: 65, marginBottom: -10, color: '#de6e41' }}>Error retrieving data</h4>
+                        <p style={{color: '#de6e41'}}>{fetchError}</p>
+                    </>
+                    : (
+                        <>
+                            <h4 style={{ marginTop: 60, marginBottom: 0 }}>Loading..</h4>
+                            <LoadingSpinner />
+                        </>
+                    )}
                 </>
-            )}
+            }
         </Popup>
     )
 }

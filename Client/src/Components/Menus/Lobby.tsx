@@ -10,6 +10,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import LobbyPlayer from './LobbyPlayer'
 import CopyableText from '../CopyableText'
 import { IDailyResults } from '../../Interfaces/IDailyResults'
+import { HubConnectionState } from '@microsoft/signalr'
+import LoadingSpinner from "../LoadingSpinner";
 
 interface Props {
     connection: signalR.HubConnection | undefined
@@ -17,9 +19,10 @@ interface Props {
     roomId: string | undefined
     gameState: IGameState | undefined
     onBack: () => void
+    connectionError: string | undefined
 }
 
-const Lobby = ({ connection, playerId, roomId, gameState, onBack }: Props) => {
+const Lobby = ({ connection, playerId, roomId, gameState, onBack, connectionError }: Props) => {
     let navigate = useNavigate()
     const [lobbyData, setLobbyData] = useState<ILobby>()
     const [inLobby, setInLobby] = useState<boolean>(false)
@@ -97,20 +100,24 @@ const Lobby = ({ connection, playerId, roomId, gameState, onBack }: Props) => {
                         messageText={'Copied url to clipboard'}
                     />
                 </Group>
-                <Group>
-                    <PlayersTitle>Players:</PlayersTitle>
-                    <PlayersContainer>
-                        {lobbyData != null && !!playerId ? (
-                            <>
+                {connectionError 
+                    ? <div style={{color: '#de6e41'}}>{connectionError}</div> 
+                    : lobbyData != null && !!playerId ?
+                        <Group>
+                            <PlayersTitle>Players:</PlayersTitle>
+                            <PlayersContainer>
                                 {lobbyData?.connections?.map((p, i) =>
                                     LobbyPlayer(playerId, myPlayerName, p, UpdateName, i)
                                 )}
-                            </>
-                        ) : (
-                            <div>Connecting to room..</div>
-                        )}
-                    </PlayersContainer>
-                </Group>
+                            </PlayersContainer>
+                        </Group>
+                    :   
+                        <>
+                            <p style={{marginBottom: -10}}>Connecting to room..</p>
+                            <LoadingSpinner/>
+                        </>
+                }
+                
                 {waitingForPlayers && !!lobbyData && (
                     <p style={{ marginTop: -10, height: 0 }}>Waiting for another player to join..</p>
                 )}

@@ -31,7 +31,7 @@ const Room = ({ onGameStarted }: Props) => {
     const [connection, setConnection, connectionRef] = useStateRef<HubConnection>()
     const [gameState, setGameState] = useState<IGameState>()
     const [roomId, roomIdRef] = useRoomId()
-    const [connectionStatus, setConnectionStatus] = useState<HubConnectionState | undefined>()
+    const [connectionError, setConnectionError] = useState<string>()
     const [persistentId, setPersistentId] = useState<string>(() => localStorage.getItem('persistentId') ?? uuid())
     const [hashedPersistentId, setHashedPersistentId] = useState<string>()
     const [winningPlayer, setWinningPlayer] = useState<IPlayer>()
@@ -39,6 +39,7 @@ const Room = ({ onGameStarted }: Props) => {
     const [losingPlayer, setLosingPlayer] = useState<IPlayer>()
     const [losingPlayerCardsRemaining, setLosingPlayerCardsRemaining] = useState<number>(0)
     const [searchParams, setSearchParams] = useSearchParams()
+    
 
     useEffect(() => {
         if (!!roomId && !!persistentId) {
@@ -89,6 +90,9 @@ const Room = ({ onGameStarted }: Props) => {
         signalRConnection?.start().then(() => {
             setConnection(signalRConnection)
             ConnectionStatusUpdated()
+        }).catch(e=>{
+            console.log(e)
+            setConnectionError('Could not connect to the server')
         })
     }
 
@@ -114,7 +118,6 @@ const Room = ({ onGameStarted }: Props) => {
             default:
                 break
         }
-        setConnectionStatus(connectionRef.current?.state)
     }
 
     const JoinRoom = () => {
@@ -166,6 +169,7 @@ const Room = ({ onGameStarted }: Props) => {
                 playerId={hashedPersistentId}
                 gameState={gameState}
                 onBack={() => connection?.stop()}
+                connectionError={connectionError}
             />
             {parseInt(searchParams.get('difficulty') ?? '0') === BotDifficulty.Daily && (
                 <DailyStats persistentId={persistentId} gameOver={!!gameState?.winnerId} />
