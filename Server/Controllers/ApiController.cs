@@ -47,7 +47,7 @@ public class ApiController : ControllerBase
             .Include(g => g.Loser)
             .Where(g =>
                 g.Daily && g.DailyIndex == InMemoryGameService.GetDayIndex())
-            .OrderByDescending(g => g.Winner.IsBot ? -g.LostBy : g.LostBy);
+            .OrderByDescending(g => g.Winner.IsBot ? -g.LostBy : g.LostBy).ThenBy(g => g.Created);
 
         var bot = BotConfigurations.GetBot(BotType.Daily);
         
@@ -56,7 +56,7 @@ public class ApiController : ControllerBase
             TotalPlayers = todaysGames.Count(),
             BotName = bot.Name,
             BotRank = EloService.GetRank((int)bot.Elo),
-            Players = todaysGames.Take(7).AsEnumerable().Select((g, i) =>
+            Players = todaysGames.Take(50).AsEnumerable().Select((g, i) =>
             {
                 var player = g.Winner.IsBot ? g.Loser : g.Winner;
                 var playerScore = g.Winner.IsBot ? -g.LostBy : g.LostBy;

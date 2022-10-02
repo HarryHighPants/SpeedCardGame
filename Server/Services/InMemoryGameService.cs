@@ -428,9 +428,12 @@ public class InMemoryGameService : IGameService
             .Except(assignedPlayerIds)
             .ToList();
         
-        foreach (var player in unassignedPlayers)
+        foreach (var unassignedPlayer in unassignedPlayers)
         {
-            player.PlayerIndex = playerIdsToAssign.Pop();
+            if (playerIdsToAssign.Count > 0)
+            {
+                unassignedPlayer.PlayerIndex = playerIdsToAssign.Pop();
+            }
         }
     }
 }

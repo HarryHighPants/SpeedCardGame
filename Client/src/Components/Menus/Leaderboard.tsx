@@ -5,7 +5,7 @@ import config from '../../Config'
 import { ILeaderboardPlayer, ILeaderboardResults } from '../../Interfaces/ILeaderboardResults'
 import LoadingSpinner from '../LoadingSpinner'
 import { useNavigate } from 'react-router'
-import {Rank, RankColour} from "../../Interfaces/ILobby";
+import { Rank, RankColour } from '../../Interfaces/ILobby'
 
 export const Leaderboard = () => {
     const navigate = useNavigate()
@@ -23,18 +23,20 @@ export const Leaderboard = () => {
     return (
         <Popup id={'LeaderboardPopup'} onBackButton={() => navigate(-1)} customZIndex={65}>
             {leaderboardResults ? (
-            <>
-                <h4 style={{ marginTop: 30, marginBottom: 0}}>{leaderboardResults.botName}</h4>
-                <h5 style={{ marginBottom: 35, marginTop: 0, color: RankColour[leaderboardResults.botRank] }}>{Rank[leaderboardResults.botRank]}</h5>
-                <LeaderboardWrapper>
-                    {leaderboardResults.players.map((p) => (
-                        <LeaderboardPlayer player={p} />
-                    ))}
-                </LeaderboardWrapper>
-            </>
+                <>
+                    <h4 style={{ marginTop: 30, marginBottom: 0 }}>{leaderboardResults.botName}</h4>
+                    <h5 style={{ marginBottom: 35, marginTop: 0, color: RankColour[leaderboardResults.botRank] }}>
+                        {Rank[leaderboardResults.botRank]}
+                    </h5>
+                    <LeaderboardWrapper>
+                        {leaderboardResults.players.map((p) => (
+                            <LeaderboardPlayer player={p} />
+                        ))}
+                    </LeaderboardWrapper>
+                </>
             ) : (
                 <>
-                    <h4 style={{ marginTop: 60, marginBottom: 0}}>Loading..</h4>
+                    <h4 style={{ marginTop: 60, marginBottom: 0 }}>Loading..</h4>
                     <LoadingSpinner />
                 </>
             )}
@@ -46,11 +48,13 @@ const LeaderboardPlayer = ({ player }: { player: ILeaderboardPlayer }): JSX.Elem
         <StyledPlayer>
             <StyledPlace $place={player.place}>{player.place}</StyledPlace>
             <div>
-                <p style={{margin: 0, marginBottom: -3}}>{player.name}</p>
-                <p  style={{margin: 0, fontSize: 12, color: RankColour[player.rank]}}>{Rank[player.rank]}</p>
+                <p style={{ margin: 0, marginBottom: -3 }}>{player.name}</p>
+                <p style={{ margin: 0, fontSize: 12, color: RankColour[player.rank] }}>{Rank[player.rank]}</p>
             </div>
-            <p style={{ marginLeft: 'auto', fontWeight: 'bold', fontSize: 'large' }}>{player.score > 0? '👑' : '☠️'}</p>
-            <p style={{ fontWeight: 'bold', fontSize: 'large'}}>{player.score}</p>
+            <p style={{ marginLeft: 'auto', fontWeight: 'bold', fontSize: 'large', paddingBottom: 1 }}>
+                {player.score > 0 ? '👑' : '☠️'}
+            </p>
+            <p style={{ fontWeight: 'bold', fontSize: 'large' }}>{player.score}</p>
         </StyledPlayer>
     )
 }
@@ -58,10 +62,10 @@ const LeaderboardPlayer = ({ player }: { player: ILeaderboardPlayer }): JSX.Elem
 const StyledPlace = styled.p<{ $place: number }>`
     color: ${({ $place }) =>
         $place === 1 ? '#ffff00' : $place === 2 ? '#e9e9e9' : $place === 3 ? '#d2691e' : 'rgba(203,203,203,0.8)'};
-  font-weight: ${({ $place }) => $place < 4 ? 'bold' : 'normal'};
-  font-size: ${({ $place }) => $place < 4 ? 'x-large' : 'medium'};
-  width: 15px;
-  margin-right: 10px;
+    font-weight: ${({ $place }) => ($place < 4 ? 'bold' : 'normal')};
+    font-size: ${({ $place }) => ($place < 4 ? 'x-large' : 'medium')};
+    width: 15px;
+    margin-right: 10px;
 `
 
 const StyledPlayer = styled.div`
@@ -75,5 +79,9 @@ const StyledPlayer = styled.div`
 
 const LeaderboardWrapper = styled.div`
     display: flex;
+    max-height: 55vh;
     flex-direction: column;
+    overflow: scroll;
+    margin-right: -10px;
+    padding-right: 10px;
 `
