@@ -7,7 +7,7 @@
       <img alt="GitHub" src="https://img.shields.io/github/license/harryhighpants/SpeedCardGame">
     </a>
     <a href="https://github.com/HarryHighPants/SpeedCardGame/actions">
-      <img alt="Docker" src="https://img.shields.io/github/workflow/status/harryhighpants/speedcardgame/Docker?logo=GitHubActions&logoColor=white">
+      <img alt="Docker" src="https://img.shields.io/github/actions/workflow/status/harryhighpants/speedcardgame/docker-publish.yml?logo=GitHubActions&logoColor=white">
     </a>
     <a href="https://speed.harryab.com" target="_blank">
       <img alt="Server status" src="https://img.shields.io/endpoint?label=Server%20Status&url=https%3A%2F%2Fserver.harryab.com%3A10000%2Fshield%2Fstatus">
