@@ -60,7 +60,3 @@ This is a online version of the card game called [Speed](https://en.wikipedia.or
 - Running the Server: [Server instructions](https://github.com/HarryHighPants/SpeedCardGame/tree/master/Server)
 - Running the CLI version of the
   game: [CLI instructions](https://github.com/HarryHighPants/SpeedCardGame/tree/master/CliGame)
-
-## License
-
-SpeedCardGame is available under the [MIT license](LICENSE.md).
