@@ -14,7 +14,7 @@ COPY ./Server ./Server
 RUN dotnet publish -c Release -o out ./Server/Server.csproj
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim-arm64v8
+FROM mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim
 WORKDIR /app
 COPY --from=build-env /app/out .
 ENV ASPNETCORE_URLS=http://*:5169
