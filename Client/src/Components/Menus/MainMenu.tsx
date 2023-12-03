@@ -14,7 +14,9 @@ import MenuButtonGlow from './MenuButtonGlow'
 import { useEffect, useState } from 'react'
 import config from '../../Config'
 import { v4 as uuid } from 'uuid'
-import {IDailyResults} from "../../Interfaces/IDailyResults";
+import { IDailyResults } from '../../Interfaces/IDailyResults'
+import usePersistentState from '../../Hooks/usePersistentState'
+import { Region } from '../../Helpers/Region'
 
 interface Props {}
 
@@ -22,15 +24,17 @@ const botDifficulties = ['Easy', 'Medium', 'Hard', 'Impossible']
 
 const MainMenu = (props: Props) => {
     let navigate = useNavigate()
-    const [persistentId, setPersistentId] = useState<string>(() => localStorage.getItem('persistentId') ?? uuid())
+    const [selectedRegion] = usePersistentState('region', Region.OCEANIA)
+
+    const [persistentId] = useState<string>(() => localStorage.getItem('persistentId') ?? uuid())
     const [dailyGameAvailable, setDailyGameAvailable] = useState(false)
 
     useEffect(() => {
-        fetch(`${config.apiGateway.URL}/api/daily-stats/${persistentId}`)
+        fetch(`${config.apiGateway[selectedRegion]}/api/daily-stats/${persistentId}`)
             .then((response) => response.json())
             .then((data: IDailyResults) => setDailyGameAvailable(!data.completedToday))
             .catch((error) => setDailyGameAvailable(false))
-    }, [])
+    }, [selectedRegion])
 
     const OnCreateGame = (bot?: boolean, difficulty?: number) => {
         // Generate a new gameId

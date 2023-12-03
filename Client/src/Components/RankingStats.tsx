@@ -5,6 +5,8 @@ import { useSpring } from 'react-spring'
 import { useEffect, useState } from 'react'
 import CustomSlider from './CustomSlider'
 import config from '../Config'
+import usePersistentState from '../Hooks/usePersistentState'
+import { Region } from '../Helpers/Region'
 
 interface Props {
     persistentId: string
@@ -12,13 +14,14 @@ interface Props {
 
 function RankingStats({ persistentId }: Props) {
     const [stats, setStats] = useState<IRankingStats>()
+    const [selectedRegion] = usePersistentState('region', Region.OCEANIA)
 
     useEffect(() => {
         getRankingStats()
-    }, [])
+    }, [selectedRegion])
 
     const getRankingStats = () => {
-        fetch(`${config.apiGateway.URL}/api/latest-ranking-stats/${persistentId}`)
+        fetch(`${config.apiGateway[selectedRegion]}/api/latest-ranking-stats/${persistentId}`)
             .then((response) => response.json())
             .then((data) => setStats(data))
             .catch((error) => {
@@ -26,10 +29,10 @@ function RankingStats({ persistentId }: Props) {
             })
     }
 
-    return !stats ? <></> : <RankingStatsComponent stats={stats}/> 
+    return !stats ? <></> : <RankingStatsComponent stats={stats} />
 }
 
-const RankingStatsComponent = ({stats} : {stats: IRankingStats}) => {
+const RankingStatsComponent = ({ stats }: { stats: IRankingStats }) => {
     const [animatedElo, setAnimatedElo] = useState<number>(stats.previousElo)
 
     useSpring({
@@ -40,7 +43,7 @@ const RankingStatsComponent = ({stats} : {stats: IRankingStats}) => {
         },
         config: { friction: 50, tension: 30, mass: 20 },
     })
-    
+
     const getRank = (): Rank => Math.floor(animatedElo / 500)
     const minElo = (): number => animatedElo - (animatedElo % 500)
     const maxElo = (): number => animatedElo + (500 - (animatedElo % 500))

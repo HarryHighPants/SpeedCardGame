@@ -1,17 +1,14 @@
 import * as signalR from '@microsoft/signalr'
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { GameType, ILobby, IPlayerConnection } from '../../Interfaces/ILobby'
+import { useNavigate } from 'react-router-dom'
+import { ILobby } from '../../Interfaces/ILobby'
 import styled from 'styled-components'
-import { HiOutlineDocumentDuplicate } from 'react-icons/hi'
 import Popup from '../Popup'
 import { IGameState } from '../../Interfaces/IGameState'
-import { AnimatePresence, motion } from 'framer-motion'
 import LobbyPlayer from './LobbyPlayer'
 import CopyableText from '../CopyableText'
-import { IDailyResults } from '../../Interfaces/IDailyResults'
-import { HubConnectionState } from '@microsoft/signalr'
-import LoadingSpinner from "../LoadingSpinner";
+import LoadingSpinner from '../LoadingSpinner'
+import { Region } from '../../Helpers/Region'
 
 interface Props {
     connection: signalR.HubConnection | undefined
@@ -20,9 +17,20 @@ interface Props {
     gameState: IGameState | undefined
     onBack: () => void
     connectionError: string | undefined
+    selectedRegion: Region
+    setSelectedRegion: (region: Region) => void
 }
 
-const Lobby = ({ connection, playerId, roomId, gameState, onBack, connectionError }: Props) => {
+const Lobby = ({
+    connection,
+    playerId,
+    roomId,
+    gameState,
+    onBack,
+    connectionError,
+    selectedRegion,
+    setSelectedRegion,
+}: Props) => {
     let navigate = useNavigate()
     const [lobbyData, setLobbyData] = useState<ILobby>()
     const [inLobby, setInLobby] = useState<boolean>(false)
@@ -75,11 +83,14 @@ const Lobby = ({ connection, playerId, roomId, gameState, onBack, connectionErro
         setMyPlayerName(newName)
     }
 
-    const ShowLobby = () => {
-        return !gameState || !connection || (activePlayers.length < 2 && !gameState.winnerId) || spectating || !lobbyData?.gameStarted
-    }
+    const ShowLobby =
+        !gameState ||
+        !connection ||
+        (activePlayers.length < 2 && !gameState.winnerId) ||
+        spectating ||
+        !lobbyData?.gameStarted
 
-    if (!ShowLobby()) {
+    if (!ShowLobby) {
         return <></>
     }
     return (
@@ -99,25 +110,29 @@ const Lobby = ({ connection, playerId, roomId, gameState, onBack, connectionErro
                         copyText={window.location.href}
                         messageText={'Copied url to clipboard'}
                     />
+                    <select value={selectedRegion} onChange={(e) => setSelectedRegion(e.target.value as Region)}>
+                        <option value={Region.OCEANIA}>Oceania</option>
+                        <option value={Region.AMERICA}>America</option>
+                    </select>
                 </Group>
-                {connectionError 
-                    ? <div style={{color: '#de6e41'}}>{connectionError}</div> 
-                    : lobbyData != null && !!playerId ?
-                        <Group>
-                            <PlayersTitle>Players:</PlayersTitle>
-                            <PlayersContainer>
-                                {lobbyData?.connections?.map((p, i) =>
-                                    LobbyPlayer(playerId, myPlayerName, p, UpdateName, i)
-                                )}
-                            </PlayersContainer>
-                        </Group>
-                    :   
-                        <>
-                            <p style={{marginBottom: -10}}>Connecting to room..</p>
-                            <LoadingSpinner/>
-                        </>
-                }
-                
+                {connectionError ? (
+                    <div style={{ color: '#de6e41' }}>{connectionError}</div>
+                ) : lobbyData != null && !!playerId ? (
+                    <Group>
+                        <PlayersTitle>Players:</PlayersTitle>
+                        <PlayersContainer>
+                            {lobbyData?.connections?.map((p, i) =>
+                                LobbyPlayer(playerId, myPlayerName, p, UpdateName, i)
+                            )}
+                        </PlayersContainer>
+                    </Group>
+                ) : (
+                    <>
+                        <p style={{ marginBottom: -10 }}>Connecting to room..</p>
+                        <LoadingSpinner />
+                    </>
+                )}
+
                 {waitingForPlayers && !!lobbyData && (
                     <p style={{ marginTop: -10, height: 0 }}>Waiting for another player to join..</p>
                 )}

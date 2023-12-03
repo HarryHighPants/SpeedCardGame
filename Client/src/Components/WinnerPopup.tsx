@@ -9,10 +9,12 @@ import styled from 'styled-components'
 import { HiShare } from 'react-icons/hi'
 import config from '../Config'
 import { IRankingStats } from '../Interfaces/IRankingStats'
-import RankingStats from "./RankingStats";
-import MenuButton from "./Menus/MenuButton";
-import GameResults from "./GameResults";
-import ShareButton from "./ShareButton";
+import RankingStats from './RankingStats'
+import MenuButton from './Menus/MenuButton'
+import GameResults from './GameResults'
+import ShareButton from './ShareButton'
+import { Region } from '../Helpers/Region'
+import usePersistentState from '../Hooks/usePersistentState'
 
 interface Props {
     persistentId: string
@@ -24,17 +26,18 @@ interface Props {
 
 const WinnerPopup = ({ persistentId, winnerName, loserName, cardsRemaining, playerWon }: Props) => {
     const navigate = useNavigate()
+    const [selectedRegion] = usePersistentState('region', Region.OCEANIA)
+
     const [replayUrl, setReplayUrl] = useState('')
-    const [searchParams, setSearchParams] = useSearchParams()
     const [rankingStats, setRankingStats] = useState<IRankingStats>()
 
     useEffect(() => {
         updateReplayUrl()
         getRankingStats()
-    }, [])
+    }, [selectedRegion])
 
     const getRankingStats = () => {
-        fetch(`${config.apiGateway.URL}/api/latest-ranking-stats/${persistentId}`)
+        fetch(`${config.apiGateway[selectedRegion]}/api/latest-ranking-stats/${persistentId}`)
             .then((response) => response.json())
             .then((data) => setRankingStats(data))
             .catch((error) => {
@@ -52,10 +55,14 @@ const WinnerPopup = ({ persistentId, winnerName, loserName, cardsRemaining, play
     return (
         <Popup id={'WinnerPopup'} onHomeButton={true} customZIndex={62}>
             <h2>Game over</h2>
-            
-            <GameResults persistentId={persistentId} winnerName={winnerName}/>
 
-            <ShareButton playerWon={playerWon} opponentName={playerWon ? loserName : winnerName} cardsRemaining={cardsRemaining}/>
+            <GameResults persistentId={persistentId} winnerName={winnerName} />
+
+            <ShareButton
+                playerWon={playerWon}
+                opponentName={playerWon ? loserName : winnerName}
+                cardsRemaining={cardsRemaining}
+            />
 
             <BottomButton
                 style={{ marginTop: 25 }}

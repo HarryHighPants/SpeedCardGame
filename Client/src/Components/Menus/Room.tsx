@@ -1,33 +1,28 @@
 import * as signalR from '@microsoft/signalr'
-import { HubConnection, HubConnectionState, ILogger, LogLevel } from '@microsoft/signalr'
-import { memo, useCallback, useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { HubConnection, HubConnectionState } from '@microsoft/signalr'
+import { useCallback, useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { IGameState } from '../../Interfaces/IGameState'
 import Game from '../../Components/Game'
-import TestData from '../../Assets/TestData.js'
 import Lobby from './Lobby'
-import styled from 'styled-components'
-import { HiOutlineHome } from 'react-icons/hi'
-import Popup from '../Popup'
 import HomeButton from '../HomeButton'
 import useStateRef from 'react-usestateref'
-import { motion } from 'framer-motion'
-import CelebrateShaker from '../CelebrateShake'
 import WinnerPopup from '../WinnerPopup'
 import useRoomId from '../../Hooks/useRoomId'
-import toast, { Toaster } from 'react-hot-toast'
+import { Toaster } from 'react-hot-toast'
 import { IPlayer } from '../../Interfaces/IPlayer'
-import { BotDifficulty, GameType } from '../../Interfaces/ILobby'
+import { BotDifficulty } from '../../Interfaces/ILobby'
 import config from '../../Config'
 import { v4 as uuid } from 'uuid'
 import DailyStats from './DailyStats'
+import { Region } from '../../Helpers/Region'
+import usePersistentState from '../../Hooks/usePersistentState'
 
 interface Props {
     onGameStarted: () => void
 }
 
 const Room = ({ onGameStarted }: Props) => {
-    let navigate = useNavigate()
     const [connection, setConnection, connectionRef] = useStateRef<HubConnection>()
     const [gameState, setGameState] = useState<IGameState>()
     const [roomId, roomIdRef] = useRoomId()
@@ -39,7 +34,7 @@ const Room = ({ onGameStarted }: Props) => {
     const [losingPlayer, setLosingPlayer] = useState<IPlayer>()
     const [losingPlayerCardsRemaining, setLosingPlayerCardsRemaining] = useState<number>(0)
     const [searchParams, setSearchParams] = useSearchParams()
-    
+    const [selectedRegion, setSelectedRegion] = usePersistentState('region', Region.OCEANIA)
 
     useEffect(() => {
         if (!!roomId && !!persistentId) {
@@ -48,16 +43,16 @@ const Room = ({ onGameStarted }: Props) => {
             }
             CreateConnection()
         }
-    }, [roomId, persistentId])
+    }, [roomId, persistentId, selectedRegion])
 
     useEffect(() => {
         console.log('setting persistent Id', persistentId)
         localStorage.setItem('persistentId', persistentId)
 
-        fetch(`${config.apiGateway.URL}/api/id-hash/${persistentId}`)
+        fetch(`${config.apiGateway[selectedRegion]}/api/id-hash/${persistentId}`)
             .then((response) => response.text())
             .then((data) => setHashedPersistentId(data))
-    }, [persistentId])
+    }, [persistentId, selectedRegion])
 
     useEffect(() => {
         let winningPlayer = gameState?.players.find((p) => p.idHash === gameState.winnerId)
@@ -72,7 +67,7 @@ const Room = ({ onGameStarted }: Props) => {
     }, [gameState?.winnerId])
 
     const CreateConnection = () => {
-        let hubUrl = `${config.apiGateway.URL}/server`
+        let hubUrl = `${config.apiGateway[selectedRegion]}/server`
         console.log('connecting to: ', hubUrl)
         // Builds the SignalR connection, mapping it to /server
         let signalRConnection = new signalR.HubConnectionBuilder()
@@ -87,13 +82,16 @@ const Room = ({ onGameStarted }: Props) => {
         // signalRConnection.serverTimeoutInMilliseconds = 15000
         // signalRConnection.keepAliveIntervalInMilliseconds = 7500
 
-        signalRConnection?.start().then(() => {
-            setConnection(signalRConnection)
-            ConnectionStatusUpdated()
-        }).catch(e=>{
-            console.log(e)
-            setConnectionError('Could not connect to the server')
-        })
+        signalRConnection
+            ?.start()
+            .then(() => {
+                setConnection(signalRConnection)
+                ConnectionStatusUpdated()
+            })
+            .catch((e) => {
+                console.log(e)
+                setConnectionError('Could not connect to the server')
+            })
     }
 
     const ConnectionStatusUpdated = () => {
@@ -164,6 +162,8 @@ const Room = ({ onGameStarted }: Props) => {
                 </>
             )}
             <Lobby
+                setSelectedRegion={setSelectedRegion}
+                selectedRegion={selectedRegion}
                 roomId={roomId}
                 connection={connection}
                 playerId={hashedPersistentId}

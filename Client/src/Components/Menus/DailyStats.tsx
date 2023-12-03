@@ -8,6 +8,8 @@ import { getResetTime } from '../../Helpers/DailyHelper'
 import GameResults from '../GameResults'
 import ShareButton from '../ShareButton'
 import LeaderboardButton from '../LeaderboardButton'
+import usePersistentState from '../../Hooks/usePersistentState'
+import { Region } from '../../Helpers/Region'
 
 interface Props {
     persistentId: string
@@ -15,18 +17,20 @@ interface Props {
 }
 
 const DailyStats = ({ persistentId, gameOver }: Props) => {
+    const [selectedRegion] = usePersistentState('region', Region.OCEANIA)
+
     const [dailyResults, setDailyResults] = useState<IDailyResults>()
     const [nextGameDate] = useState<number>(() => getResetTime())
     const [myPlayerName] = useState<string>(() => JSON.parse(localStorage.getItem('playerName') ?? `"Player"`))
 
     useEffect(() => {
-        fetch(`${config.apiGateway.URL}/api/daily-stats/${persistentId}`)
+        fetch(`${config.apiGateway[selectedRegion]}/api/daily-stats/${persistentId}`)
             .then((response) => response.json())
             .then((data: IDailyResults) => setDailyResults(data))
             .catch((error) => {
                 console.log(error)
             })
-    }, [gameOver])
+    }, [gameOver, selectedRegion])
 
     if (!dailyResults || !dailyResults.completedToday) {
         return <></>
