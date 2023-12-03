@@ -10,12 +10,16 @@
       <img alt="Docker" src="https://img.shields.io/github/actions/workflow/status/harryhighpants/speedcardgame/docker-publish.yml?logo=GitHubActions&logoColor=white">
     </a>
     <a href="https://speed.harryab.com" target="_blank">
-      <img alt="Server status" src="https://img.shields.io/endpoint?label=Server%20Status&url=https%3A%2F%2Fserver.harryab.com%3A10000%2Fshield%2Fstatus">
+      <img alt="Server status" src="https://img.shields.io/endpoint?label=Oceania%20Server%20Status&url=https%3A%2F%2Fserver.harryab.com%3A10000%2Fshield%2Fstatus">
+    </a>
+    <a href="https://speed.harryab.com" target="_blank">
+      <img alt="Server status" src="https://img.shields.io/endpoint?label=American%20Server%20Status&url=https%3A%2F%2Ffalcon.harryab.com%2Fshield%2Fstatus">
     </a>
     <br>
     <br>
     <a href="https://speed.harryab.com" target="_blank">
-      <img alt="Custom badge" src="https://img.shields.io/endpoint?color=orange&logo=youTubeGaming&style=for-the-badge&url=https%3A%2F%2Fserver.harryab.com%3A10000%2Fshield%2Fdaily-games" />
+      <img alt="Custom badge" src="https://img.shields.io/endpoint?label=Oceania%20Games%20Today&color=orange&logo=youTubeGaming&style=for-the-badge&url=https%3A%2F%2Fserver.harryab.com%3A10000%2Fshield%2Fdaily-games" />
+      <img alt="Custom badge" src="https://img.shields.io/endpoint?label=American%20Games%20Today&color=orange&logo=youTubeGaming&style=for-the-badge&url=https%3A%2F%2Ffalcon.harryab.com%2Fshield%2Fdaily-games" />
     </a>
 </p>
 
