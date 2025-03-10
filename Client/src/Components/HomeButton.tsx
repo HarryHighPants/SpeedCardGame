@@ -5,9 +5,10 @@ import IconButton from './IconButton'
 
 interface Props {
     onClick?: () => void
+    requireConfirmation?: boolean
 }
 
-const HomeButton = ({ onClick }: Props) => {
+const HomeButton = ({ onClick, requireConfirmation }: Props) => {
     const navigate = useNavigate()
 
     return (
@@ -20,6 +21,9 @@ const HomeButton = ({ onClick }: Props) => {
                 zIndex: 60,
             }}
             onClick={() => {
+                if (requireConfirmation) {
+                    if (!window.confirm('Are you sure you want to leave the game?')) return
+                }
                 if (!!onClick) {
                     onClick()
                 }

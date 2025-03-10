@@ -149,7 +149,7 @@ const Room = ({ onGameStarted }: Props) => {
                         gameState={gameState}
                         roomId={roomId}
                     />
-                    <HomeButton onClick={stopConnection} />
+                    <HomeButton onClick={stopConnection} requireConfirmation />
                     {!!gameState.winnerId && winningPlayer && losingPlayer && (
                         <WinnerPopup
                             persistentId={persistentId}

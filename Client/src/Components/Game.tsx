@@ -11,6 +11,7 @@ import { clamp } from '../Helpers/Utilities'
 import GameBoard from './GameBoard'
 import backgroundImg from '../Assets/felt-tiling.jpg'
 import { debounce } from 'lodash'
+import { useNavigate } from 'react-router'
 
 interface Props {
     connection: signalR.HubConnection | undefined
@@ -27,10 +28,28 @@ const getGameBoardDimensions = () => {
 }
 
 const Game = ({ roomId, connection, playerId, gameState }: Props) => {
+    const navigate = useNavigate()
     const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>(getGameBoardDimensions())
     const [gameBoardLayout, setGameBoardLayout] = useState<GameBoardLayout>()
     const [flippedCenterPiles, setflippedCenterPiles] = useState(false)
     const [localGameState, setLocalGameState] = useState<IGameState>(gameState)
+
+    useEffect(() => {
+        const handleBack = () => {
+            if (!window.confirm('Are you sure you want to go back?'))
+                window.history.pushState(null, '', window.location.href)
+            else navigate('/')
+        }
+        window.history.pushState(null, '', window.location.href)
+        window.addEventListener('popstate', handleBack)
+        return () => window.removeEventListener('popstate', handleBack)
+    }, [navigate])
+
+    useEffect(() => {
+        const onUnload = (e: BeforeUnloadEvent) => 'You have unsaved changes. Are you sure you want to leave?'
+        window.addEventListener('beforeunload', onUnload)
+        return () => window.removeEventListener('beforeunload', onUnload)
+    }, [])
 
     useEffect(() => {
         let newGameState = gameState
