@@ -1,12 +1,10 @@
 import * as signalR from '@microsoft/signalr'
-import React, { useEffect, useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { IGameState } from '../Interfaces/IGameState'
-import { CardLocationType, ICard, IMovedCardPos, IPos, IRenderableCard } from '../Interfaces/ICard'
+import { ICard, IMovedCardPos, IPos } from '../Interfaces/ICard'
 import styled from 'styled-components'
 import Player from './Player'
 import GameBoardLayout from '../Helpers/GameBoardLayout'
-import Card from './Card'
-import { LayoutGroup, PanInfo } from 'framer-motion'
 import { clamp } from '../Helpers/Utilities'
 import GameBoard from './GameBoard'
 import backgroundImg from '../Assets/felt-tiling.jpg'
@@ -18,6 +16,7 @@ interface Props {
     playerId: string | undefined
     gameState: IGameState
     roomId: string
+    demoGame?: boolean
 }
 
 const getGameBoardDimensions = () => {
@@ -27,8 +26,9 @@ const getGameBoardDimensions = () => {
     } as IPos
 }
 
-const Game = ({ roomId, connection, playerId, gameState }: Props) => {
+const Game = ({ roomId, connection, playerId, gameState, demoGame }: Props) => {
     const navigate = useNavigate()
+
     const [gameBoardDimensions, setGameBoardDimensions] = useState<IPos>(getGameBoardDimensions())
     const [gameBoardLayout, setGameBoardLayout] = useState<GameBoardLayout>()
     const [flippedCenterPiles, setflippedCenterPiles] = useState(false)
@@ -40,16 +40,18 @@ const Game = ({ roomId, connection, playerId, gameState }: Props) => {
                 window.history.pushState(null, '', window.location.href)
             else navigate('/')
         }
+        if (demoGame || !!gameState.winnerId) return
         window.history.pushState(null, '', window.location.href)
         window.addEventListener('popstate', handleBack)
         return () => window.removeEventListener('popstate', handleBack)
-    }, [navigate])
+    }, [demoGame, gameState.winnerId, navigate])
 
     useEffect(() => {
-        const onUnload = (e: BeforeUnloadEvent) => 'You have unsaved changes. Are you sure you want to leave?'
+        const onUnload = (e: BeforeUnloadEvent) => 'Game in progress. Are you sure you want to leave?'
+        if (demoGame || !!gameState.winnerId) return
         window.addEventListener('beforeunload', onUnload)
         return () => window.removeEventListener('beforeunload', onUnload)
-    }, [])
+    }, [demoGame, gameState.winnerId])
 
     useEffect(() => {
         let newGameState = gameState
