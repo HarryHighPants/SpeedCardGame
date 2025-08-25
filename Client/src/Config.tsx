@@ -14,7 +14,7 @@ const dev = {
 
 const prod = {
     apiGateway: {
-        [Region.OCEANIA]: `https://server.harryab.com:10000`,
+        [Region.OCEANIA]: `https://server.harryab.com/speed`,
         [Region.AMERICA]: `https://falcon.harryab.com`,
     },
 }
